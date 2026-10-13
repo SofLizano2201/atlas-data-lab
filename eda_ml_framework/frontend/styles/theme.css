@@ -1,0 +1,90 @@
+/* Selectores HTML y testids semánticos; sin clases generadas. */
+[data-testid="stSidebar"] {
+    background:#241b29;color:#eee9f1;border-right:1px solid #3a2e40;
+    font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+    transition:width 180ms ease,min-width 180ms ease,max-width 180ms ease;
+}
+[data-testid="stSidebarContent"] {padding:0 12px 16px;scrollbar-gutter:auto;scrollbar-width:thin;}
+[data-testid="stSidebarUserContent"] {padding:0!important;margin:0!important;}
+[data-testid="stSidebarHeader"] button,
+[data-testid="stSidebarHeader"] button * {color:#eee9f1!important;}
+.st-key-atlas_sidebar {min-height:calc(100dvh - 64px);}
+.st-key-atlas_sidebar[data-testid="stVerticalBlock"],
+.st-key-atlas_sidebar > [data-testid="stVerticalBlock"] {gap:0;}
+.st-key-atlas_sidebar_header {position:relative;padding:16px 0 20px;border-bottom:1px solid #3a2e40;}
+.atlas-brand {display:flex;gap:12px;align-items:center;padding:0 32px 0 4px;min-height:40px;}
+.atlas-brand-mark {width:32px;height:32px;flex:none;display:grid;place-items:center;
+    border-radius:10px;background:#35283c;color:#c4aedb;border:1px solid #493851;}
+.atlas-brand-mark svg {width:20px;height:20px;stroke-width:1.75;}
+.atlas-wordmark {display:flex;flex-direction:column;gap:4px;min-width:0;}
+.atlas-product-name {font-size:22px;font-weight:650;letter-spacing:-.6px;line-height:1.1;color:#f3eef5;}
+.atlas-product-subtitle {font-size:9px;letter-spacing:1.1px;white-space:nowrap;color:#b5a7be;line-height:1.4;}
+.atlas-section-label {font-size:10px;letter-spacing:1.3px;font-weight:600;color:#b5a7be;
+    padding:24px 12px 12px;line-height:16px;}
+.st-key-atlas_sidebar_nav[data-testid="stVerticalBlock"],
+.st-key-atlas_sidebar_nav > [data-testid="stVerticalBlock"] {gap:4px;}
+.st-key-atlas_sidebar_nav {margin-top:8px;}
+.st-key-atlas_sidebar_nav button {
+    min-height:44px;height:44px;border-radius:8px;border:1px solid transparent;
+    background:transparent;color:#d5cadc;padding:0 12px;display:flex;align-items:center;
+    justify-content:flex-start;gap:12px;box-shadow:none;font-size:13px;font-weight:450;
+    transition:background 160ms ease,color 160ms ease,border-color 160ms ease;
+}
+.st-key-atlas_sidebar_nav button p {font-size:13px;font-weight:450;line-height:20px;
+    margin:0;color:inherit;white-space:nowrap;}
+.st-key-atlas_sidebar_nav button > div {justify-content:flex-start!important;flex:1;}
+.st-key-atlas_sidebar_nav button [data-testid="stMarkdownContainer"] {text-align:left;}
+.st-key-atlas_sidebar > div:has(.st-key-atlas_sidebar_footer) {margin-top:auto;}
+.st-key-atlas_sidebar_nav button::before,
+.st-key-atlas_sidebar_toggle button::before {
+    content:"";display:block;flex:0 0 19px;width:19px;height:19px;background:currentColor;
+    mask-size:contain;mask-repeat:no-repeat;mask-position:center;
+    -webkit-mask-size:contain;-webkit-mask-repeat:no-repeat;-webkit-mask-position:center;
+}
+.st-key-atlas_sidebar_nav button:hover {background:#302536;color:#f3eef5;border-color:#403048;}
+.st-key-atlas_sidebar_nav button[kind="primary"] {
+    background:#3a2c43;color:#f3eef5;border-color:#4c3957;box-shadow:inset 2px 0 #c4aedb;
+}
+.st-key-atlas_sidebar_nav button[kind="primary"]::before {background:#d3bce9;}
+.st-key-atlas_sidebar_nav button[kind="primary"] p {font-weight:600;}
+.st-key-atlas_sidebar_nav button:focus-visible,
+.st-key-atlas_sidebar_toggle button:focus-visible {outline:2px solid #c4aedb;outline-offset:2px;}
+.st-key-atlas_sidebar_toggle {position:absolute;top:18px;right:0;width:28px!important;}
+.st-key-atlas_sidebar_toggle button {width:28px;min-height:28px;height:28px;padding:0;
+    border:0;border-radius:6px;background:transparent;color:#b5a7be;display:flex;justify-content:center;}
+.st-key-atlas_sidebar_toggle button:hover {background:#35283c;color:#f3eef5;}
+.st-key-atlas_sidebar_toggle button > div {position:absolute;width:0;height:0;overflow:hidden;}
+.st-key-atlas_sidebar_toggle button [data-testid="stMarkdownContainer"] {
+    position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;
+}
+.st-key-atlas_sidebar_footer {margin-top:auto;padding-top:24px;}
+.atlas-dataset-card {display:flex;align-items:center;gap:10px;background:#2d2333;
+    border:1px solid #403248;border-radius:10px;padding:12px;min-width:0;}
+.atlas-dataset-icon {color:#c4aedb;flex:none;display:flex;}
+.atlas-dataset-icon svg {width:18px;height:18px;stroke-width:1.75;}
+.atlas-dataset-copy {min-width:0;display:flex;flex-direction:column;gap:4px;}
+.atlas-dataset-label {font-size:9px;letter-spacing:1px;color:#b5a7be;font-weight:600;}
+.atlas-dataset-name {font-size:12px;color:#eee9f1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.atlas-session-note {display:flex;gap:8px;align-items:flex-start;padding:16px 4px 0;color:#b5a7be;}
+.atlas-session-note svg {width:14px;height:14px;stroke-width:1.75;display:block;margin-top:2px;}
+.atlas-session-copy {font-size:11px;line-height:17px;max-width:190px;}
+.atlas-dataset-card:focus-visible,.atlas-session-note:focus-visible {outline:2px solid #c4aedb;outline-offset:2px;}
+@media(min-width:769px) {
+    [data-testid="stSidebarHeader"] {visibility:hidden;height:12px;min-height:12px;padding:0;}
+    [data-testid="stSidebar"] [data-testid="stSidebarCollapseButton"] {display:none;}
+}
+@media(max-width:768px) {
+    [data-testid="stSidebar"] {width:min(260px,88vw)!important;min-width:0!important;max-width:88vw!important;}
+    .st-key-atlas_sidebar {min-height:calc(100dvh - 90px);}
+    .st-key-atlas_sidebar_toggle {display:none;}
+}
+@media(prefers-reduced-motion:reduce) {
+    [data-testid="stSidebar"],.st-key-atlas_sidebar_nav button {transition:none;}
+}
+[data-testid="stMetric"] {background:#E5DECB;border:1px solid #9FC2CC;
+    border-radius:14px;padding:18px;}
+h1 {letter-spacing:-.035em;}
+.atlas-eyebrow {color:#694D75;font-size:.78rem;letter-spacing:.18em;font-weight:700;}
+.atlas-hero {border-left:5px solid #1B5299;padding:1rem 1.5rem;
+    background:#E5DECB;border-radius:0 16px 16px 0;margin-bottom:1.5rem;}
+button[kind="primary"] {background:#1B5299;color:#F1ECCE;}

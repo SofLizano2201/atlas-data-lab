@@ -1,0 +1,29 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "atlas-eda-ml"
+version = "1.0.0"
+description = "Framework académico de EDA y Machine Learning"
+requires-python = ">=3.11,<3.14"
+dependencies = ["pandas>=2.2,<3", "numpy>=1.26,<3", "scipy>=1.12,<2", "scikit-learn>=1.7,<1.8", "streamlit>=1.40,<2", "plotly>=5.24,<7", "matplotlib>=3.8,<4", "seaborn>=0.13,<1", "joblib>=1.3,<2", "openpyxl>=3.1,<4", "pyarrow>=16,<24"]
+
+[project.optional-dependencies]
+test = ["pytest>=8,<10", "ruff>=0.9,<1"]
+umap = ["umap-learn>=0.5,<0.6"]
+medoids = ["scikit-learn-extra>=0.3,<0.4"]
+xgboost = ["xgboost>=2,<4"]
+
+[tool.setuptools.packages.find]
+include = ["framework*", "frontend*"]
+
+[tool.setuptools.package-data]
+frontend = ["styles/*.css", "assets/lucide/*.svg", "assets/lucide/LICENSE"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["."]
+
+[tool.ruff]
+line-length = 100
