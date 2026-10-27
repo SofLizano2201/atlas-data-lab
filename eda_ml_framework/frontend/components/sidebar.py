@@ -21,13 +21,13 @@ class NavItem:
 
 NAV_ITEMS = (
     NavItem("🏠 Inicio", "Inicio", "house", "home"),
-    NavItem("📂 Datos", "Datos", "database", "data"),
-    NavItem("🔎 Exploración", "Exploración", "search-check", "exploration"),
-    NavItem("🧹 Preparación", "Preparación", "sliders-horizontal", "preparation"),
+    NavItem("📂 Datos", "Importación de datos", "database", "data"),
+    NavItem("🔎 Exploración", "Exploración EDA", "search-check", "exploration"),
+    NavItem("🧹 Preparación", "Limpieza y transformación", "sliders-horizontal", "preparation"),
     NavItem("🧩 Clustering", "Clustering", "network", "clustering"),
     NavItem("🎯 Clasificación", "Clasificación", "tags", "classification"),
     NavItem("📈 Regresión", "Regresión", "chart-no-axes-combined", "regression"),
-    NavItem("⚖️ Experimentos", "Experimentos", "flask-conical", "experiments"),
+    NavItem("⚖️ Experimentos", "Comparador de modelos", "flask-conical", "experiments"),
     NavItem("📤 Reportes", "Reportes", "file-chart-column", "reports"),
 )
 
@@ -111,13 +111,13 @@ def render_sidebar() -> tuple[str, DeltaGenerator]:
         current = NAV_ITEMS[0].route
     st.session_state.navigation = current
     compact = st.session_state.get("sidebar_compact", False)
-    st.markdown(f"<style>{sidebar_css(compact)}</style>", unsafe_allow_html=True)
+    st.html(f"<style>{sidebar_css(compact)}</style>")
     with st.sidebar, st.container(key="atlas_sidebar"):
         with st.container(key="atlas_sidebar_header"):
             st.markdown(
                 '<div class="atlas-brand"><div class="atlas-brand-mark" aria-hidden="true">'
-                + icon_svg("network")
-                + '</div><div class="atlas-wordmark"><span class="atlas-product-name">Atlas</span>'
+                + (ASSET_ROOT.parent / "atlas-mark.svg").read_text(encoding="utf-8")
+                + '</div><div class="atlas-wordmark"><span class="atlas-product-name">ATLAS</span>'
                 '<span class="atlas-product-subtitle">DATA LAB · EDA + ML</span></div></div>',
                 unsafe_allow_html=True,
             )

@@ -10,6 +10,7 @@ import joblib
 import pandas as pd
 
 from .exceptions import FrameworkError
+from .provenance import fingerprint, runtime_versions
 
 
 @dataclass
@@ -26,6 +27,20 @@ class Experiment:
     cohort: str
     details: dict[str, Any] = field(default_factory=dict)
     id: str = field(default_factory=lambda: uuid4().hex[:10])
+    dataset_id: str = ""
+    model_version: int = 1
+    library_versions: dict[str, str] = field(default_factory=runtime_versions)
+
+    def record_provenance(self, df: pd.DataFrame, number: int) -> None:
+        """Registrar dataset, versión e índices de partición sin serializar filas privadas."""
+        self.dataset_id = fingerprint(df)
+        self.model_version = number
+        self.config["dataset_id"] = self.dataset_id
+        self.config["model_version"] = self.model_version
+        self.config["library_versions"] = self.library_versions
+        for name in ["x_train", "x_test"]:
+            if name in self.details:
+                self.config[f"{name}_index"] = [str(i) for i in self.details[name].index]
 
     def model_bytes(self) -> bytes:
         """Serializar solo para exportación; nunca se cargan modelos externos."""

@@ -4,6 +4,8 @@ __pycache__/
 .pytest_cache/
 .ruff_cache/
 *.egg-info/
+build/
+dist/
 *.joblib
 eda_ml_framework/artifacts/
 atlas-data-lab.zip

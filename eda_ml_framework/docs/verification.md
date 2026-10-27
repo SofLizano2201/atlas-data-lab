@@ -1,5 +1,14 @@
 # Verificación ejecutada
 
+La versión actual supera **155 pruebas**, Ruff y la comprobación de dependencias.
+La comprobación final del paquete y la aplicación consta en
+[verificación de publicación](release_verification_1_1.md).
+El [estándar de visualización](visualization_standard.md) y la
+[adaptación de los mockups](mockups_2026_10_27.md) documentan las últimas mejoras.
+La ampliación inicial con agentes y PDF del 27 de octubre se documenta en
+`verification_2026_10_27.md` (135 pruebas en esa etapa). Este archivo conserva la
+evidencia histórica de la primera entrega y del rediseño inicial del sidebar.
+
 Fecha local: 12 de octubre de 2026 (America/Costa_Rica).
 Entorno: Windows, Python 3.11, entorno virtual aislado en la carpeta superior.
 Dependencias exactas: `requirements-lock.txt` (sin rutas locales ni instalación editable).

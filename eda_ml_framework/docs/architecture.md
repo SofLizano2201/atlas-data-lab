@@ -1,5 +1,38 @@
 # Arquitectura y contratos
 
+## Ampliación 1.1
+
+`contracts/` aporta modelos Pydantic compartidos. `agents/` añade contexto privado,
+proveedores configurables, registro cerrado de herramientas, orquestación y cinco
+especialidades. Ninguna clase académica importa agentes ni depende de una API LLM.
+EDA utiliza DatasetVersion para exponer procedencia; Experiment guarda versión del
+modelo, huella de datos, índices de partición y versiones de bibliotecas.
+
+La interfaz de agentes se concentra en `frontend/components/agent_panel.py` y utiliza
+los mismos objetos/historiales que el flujo manual. `frontend/pages/reports.py`
+utiliza `framework/reporting.py` para generar HTML/PDF y conservar documentos en sesión.
+Los tokens de `frontend/styles/tokens.css` sustituyen colores de presentación sin
+alterar el router ni los controles de modelado existentes.
+
+Flujo del agente:
+
+```text
+Interfaz → AgentRequest → especialidad / BaseAgent
+                        ├── LLMProvider (solo con configuración y consentimiento)
+                        └── registro de herramientas y validación
+                                  ↓
+                        confirmación si hay efectos/coste
+                                  ↓
+                        métodos del framework existente
+                                  ↓
+                        ToolResult → AgentResponse → interfaz
+```
+
+Los contratos no contienen modelos ejecutables ni DataFrames: tablas JSON acotadas
+y referencias a artefactos locales. El executor no evalúa código del LLM. Los tickets
+son de un uso, con caducidad y ligados a la versión activa. Contextos se reinician
+al activar un dataset diferente para impedir cruces accidentales de datos.
+
 ```text
 AnalisisDatosExploratorio
 ├── NoSupervisado

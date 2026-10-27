@@ -24,6 +24,11 @@ def activate(df: pd.DataFrame, name: str) -> None:
     eda = AnalisisDatosExploratorio(df)
     for key in ["new_predictions", "representation"]:
         st.session_state.pop(key, None)
+    for key in list(st.session_state):
+        if key == "agent_context" or key.startswith(
+            ("agent_last_", "args_", "history_", "consent_")
+        ):
+            st.session_state.pop(key, None)
     st.session_state.update(
         original=df.copy(deep=True),
         eda=eda,

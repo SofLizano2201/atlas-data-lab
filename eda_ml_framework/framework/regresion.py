@@ -99,13 +99,31 @@ class Regresion(Supervisado):
         data = resultado.predictions.assign(residuo=resultado.details["residuos"])
         if tipo == "actual_predicted":
             fig = px.scatter(data, x="real", y="prediccion", color_discrete_sequence=PALETTE)
-            low, high = data.real.min(), data.real.max()
-            fig.add_scatter(x=[low, high], y=[low, high], mode="lines", name="Referencia")
-            return style(fig)
-        if tipo == "residuals":
-            return style(
-                px.scatter(data, x="prediccion", y="residuo", color_discrete_sequence=PALETTE)
+            fig.update_traces(name="Observaciones", showlegend=True)
+            low, high = (
+                min(data.real.min(), data.prediccion.min()),
+                max(data.real.max(), data.prediccion.max()),
             )
+            fig.add_scatter(
+                x=[low, high],
+                y=[low, high],
+                mode="lines",
+                name="Predicción perfecta · y = x",
+                line={"color": PALETTE[1], "dash": "dash"},
+            )
+            style(fig, "Valores reales frente a predichos")
+            fig.update_xaxes(title="Valor real", range=[low, high])
+            fig.update_yaxes(title="Valor predicho", range=[low, high])
+            return fig
+        if tipo == "residuals":
+            fig = style(
+                px.scatter(data, x="prediccion", y="residuo", color_discrete_sequence=PALETTE),
+                "Residuos frente a la predicción",
+            )
+            fig.add_hline(y=0, line_dash="dash", line_color=PALETTE[1])
+            fig.update_xaxes(title="Valor predicho")
+            fig.update_yaxes(title="Residuo · real − predicho")
+            return fig
         return plot(data, "qq" if tipo == "qq" else "histogram", x="residuo")
 
     def comparar_lasso(self) -> pd.DataFrame:

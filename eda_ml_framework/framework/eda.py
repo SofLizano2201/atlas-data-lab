@@ -23,8 +23,11 @@ from sklearn.preprocessing import (
     PowerTransformer,
 )
 
+from contracts import DatasetVersion
+
 from .exceptions import FrameworkError
 from .preprocessing import SCALERS
+from .provenance import fingerprint
 from .results import export_frame, html_report
 
 
@@ -34,6 +37,9 @@ class AnalisisDatosExploratorio:
     def __init__(self, df: pd.DataFrame, random_state: int = 42) -> None:
         self._validate(df)
         self._df = df.copy(deep=True)
+        self._original = df.copy(deep=True)
+        self._dataset_id = fingerprint(self._original)
+        self._content_hash = self._dataset_id
         self.random_state = random_state
         self._versions = [self._df.copy(deep=True)]
         self._history: list[dict[str, Any]] = []
@@ -46,6 +52,26 @@ class AnalisisDatosExploratorio:
             raise FrameworkError("Las columnas deben tener nombres únicos de texto.")
         if len(df) > 100_000 or len(df.columns) > 500:
             raise FrameworkError("Límite interactivo: 100 000 filas y 500 columnas.")
+        if df.memory_usage(deep=True).sum() > 100 * 1024**2:
+            raise FrameworkError("El DataFrame supera 100 MB en memoria.")
+
+    @property
+    def original(self) -> pd.DataFrame:
+        """Original encapsulado: cada acceso entrega una copia defensiva."""
+        return self._original.copy(deep=True)
+
+    @property
+    def dataset_version(self) -> DatasetVersion:
+        """Identidad del original y huella de la versión actual."""
+        applied = [h for h in self._history if h.get("estado") == "aplicada"]
+        return DatasetVersion(
+            dataset_id=self._dataset_id,
+            version=len(self._versions) - 1,
+            content_hash=self._content_hash,
+            rows=len(self._df),
+            columns=self.columnas(),
+            operation=str(applied[-1]["operacion"]) if applied else "carga",
+        )
 
     @property
     def df(self) -> pd.DataFrame:
@@ -193,8 +219,17 @@ class AnalisisDatosExploratorio:
         """Guardar una versión; devolver su índice."""
         if len(self._versions) >= 20:
             raise FrameworkError("Máximo de 20 versiones; exporte y cree una nueva sesión.")
+        self._validate_version_memory(self._df)
         self._versions.append(self.df)
         return len(self._versions) - 1
+
+    def _validate_version_memory(self, frame: pd.DataFrame) -> None:
+        """Limitar las copias antes de modificar datos para conservar atomicidad."""
+        used = sum(v.memory_usage(deep=True).sum() for v in self._versions)
+        if used + frame.memory_usage(deep=True).sum() > 256 * 1024**2:
+            raise FrameworkError(
+                "Historial de versiones limitado a 256 MB; exporte antes de continuar."
+            )
 
     def aplicar(self, nuevo: pd.DataFrame, operacion: str, confirmar: bool = False) -> None:
         """Modificar datos exclusivamente con confirmación explícita."""
@@ -203,7 +238,10 @@ class AnalisisDatosExploratorio:
         self._validate(nuevo)
         if len(self._versions) >= 20:
             raise FrameworkError("Límite de versiones alcanzado.")
+        self._validate_version_memory(nuevo)
+        new_hash = fingerprint(nuevo)
         self._df = nuevo.copy(deep=True)
+        self._content_hash = new_hash
         version = self.copia_seguridad()
         self._history.append({"operacion": operacion, "estado": "aplicada", "version": version})
 
@@ -334,6 +372,8 @@ class AnalisisDatosExploratorio:
     def contingencia(self, a: str, b: str) -> pd.DataFrame:
         """Tabla de contingencia de dos categorías."""
         self._columns([a, b])
+        if (self._df[a].nunique(dropna=False) * self._df[b].nunique(dropna=False)) > 10000:
+            raise FrameworkError("Contingencia limitada a 10000 celdas; agrupe categorías primero.")
         return pd.crosstab(self._df[a].fillna("(faltante)"), self._df[b].fillna("(faltante)"))
 
     def resumen(self) -> pd.DataFrame:
@@ -445,12 +485,20 @@ class AnalisisDatosExploratorio:
                     raise FrameworkError(f"{c}: no hay valores para imputar.")
                 out[c] = out[c].fillna(value)
         elif operacion == "knn":
+            if len(x) > 5000:
+                raise FrameworkError("Imputación KNN interactiva limitada a 5000 filas.")
             out[columns] = KNNImputer(
                 n_neighbors=int(params.get("n_neighbors", 5)), keep_empty_features=True
             ).fit_transform(x)
         elif operacion in SCALERS:
             out[columns] = SCALERS[operacion]().fit_transform(x)
         elif operacion in {"onehot", "ordinal"}:
+            if operacion == "onehot" and (
+                sum(x[c].nunique(dropna=False) for c in columns) * len(x) > 10_000_000
+            ):
+                raise FrameworkError(
+                    "One-hot excedería 10 millones de celdas; excluya identificadores."
+                )
             encoder = (
                 OneHotEncoder(sparse_output=False, handle_unknown="ignore")
                 if (operacion == "onehot")
@@ -638,7 +686,9 @@ class AnalisisDatosExploratorio:
         """Devolver figura sin ninguna dependencia de Streamlit."""
         from .visualization import plot
 
-        self._columns([c for c in [x, y, color] if c is not None]) if x else None
+        selected = list(dict.fromkeys(c for c in [x, y, color] if c is not None))
+        if selected:
+            self._columns(selected)
         return plot(self.df, tipo, x, y, color, **params)
 
     def reporte(self) -> str:

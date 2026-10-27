@@ -23,7 +23,7 @@ from .exceptions import FrameworkError, OptionalDependencyError
 from .metrics import classification_metrics
 from .results import Experiment
 from .supervisado import Supervisado
-from .visualization import PALETTE, style
+from .visualization import PALETTE, SEQUENTIAL, categorical_colors, style
 
 CLASSIFIERS = {
     "logistic": linear_model.LogisticRegression,
@@ -105,6 +105,12 @@ class Clasificacion(Supervisado):
             if (hasattr(model, "decision_function"))
             else None
         )
+        if (
+            len(classes) > 2
+            and probabilities is None
+            and getattr(model.named_steps["model"], "decision_function_shape", None) == "ovo"
+        ):
+            scores = None  # Scores por pares no son probabilidades/puntuaciones OvR por clase.
         if probabilities is not None:
             values["Log_loss"] = metrics.log_loss(y, probabilities, labels=classes)
         if scores is not None and len(classes) == 2:
@@ -141,34 +147,68 @@ class Clasificacion(Supervisado):
         d = resultado.details
         if tipo in {"confusion", "confusion_normalized"}:
             labels = [str(c) for c in d["classes"]]
-            return style(
+            fig = style(
                 px.imshow(
                     d[tipo],
                     x=labels,
                     y=labels,
-                    text_auto=True,
-                    labels={"x": "Predicción", "y": "Real"},
-                    color_continuous_scale=PALETTE[:3],
-                )
+                    text_auto=".1%" if tipo == "confusion_normalized" else "d",
+                    labels={
+                        "x": "Clase predicha",
+                        "y": "Clase real",
+                        "color": "Proporción" if tipo == "confusion_normalized" else "Registros",
+                    },
+                    zmin=0,
+                    zmax=1 if tipo == "confusion_normalized" else max(1, np.max(d[tipo])),
+                    color_continuous_scale=SEQUENTIAL,
+                ),
+                "Matriz de confusión"
+                + (
+                    " · proporción por clase real"
+                    if tipo == "confusion_normalized"
+                    else " · registros"
+                ),
             )
+            if tipo == "confusion_normalized":
+                fig.update_coloraxes(colorbar_tickformat=".0%")
+            return fig
         if tipo in {"roc", "pr"}:
             curves = d.get(f"{tipo}_multiclase", {str(d["classes"][-1]): d.get(tipo)})
             if not any(v is not None for v in curves.values()):
                 raise FrameworkError("El estimador no ofrece probabilidades ni puntuaciones.")
             fig = go.Figure()
+            colors = categorical_colors(curves)
             for name, points in curves.items():
+                if points is None:
+                    continue
                 a, b, _ = points
                 fig.add_scatter(
                     x=a if tipo == "roc" else b,
                     y=b if tipo == "roc" else a,
                     name=name,
                     mode="lines",
+                    line={"color": colors[str(name)]},
                 )
             fig.update_layout(
-                xaxis_title="FPR" if tipo == "roc" else "Recall",
-                yaxis_title="TPR" if tipo == "roc" else "Precision",
+                xaxis_title="Tasa de falsos positivos"
+                if tipo == "roc"
+                else "Recall · sensibilidad",
+                yaxis_title="Sensibilidad · verdaderos positivos" if tipo == "roc" else "Precisión",
             )
-            return style(fig)
+            if tipo == "roc":
+                fig.add_scatter(
+                    x=[0, 1],
+                    y=[0, 1],
+                    mode="lines",
+                    name="Referencia aleatoria",
+                    line={"color": "#827887", "dash": "dash", "width": 1},
+                )
+            style(
+                fig, "Curva ROC · por clase" if tipo == "roc" else "Precisión y recall · por clase"
+            )
+            fig.update_xaxes(range=[0, 1], tickformat=".0%")
+            fig.update_yaxes(range=[0, 1.02], tickformat=".0%")
+            return fig
         if tipo == "tree":
             estimator = resultado.model.named_steps["model"]
             if not isinstance(estimator, tree.DecisionTreeClassifier):
@@ -179,8 +219,24 @@ class Clasificacion(Supervisado):
                 max_depth=3,
                 feature_names=resultado.model.named_steps["preprocess"].get_feature_names_out(),
                 class_names=list(map(str, d["classes"])),
+                rounded=True,
+                precision=2,
+                fontsize=9,
                 ax=ax,
             )
+            ax.set_title("Árbol de decisión · vista hasta profundidad 3", pad=18)
+            fig.tight_layout()
             return fig
-        table = resultado.predictions.assign(correcta=lambda v: v.real == v.prediccion)
-        return style(px.histogram(table, x="correcta", color_discrete_sequence=PALETTE))
+        table = resultado.predictions.assign(
+            resultado=lambda v: np.where(v.real == v.prediccion, "Correcta", "Incorrecta")
+        )
+        return style(
+            px.histogram(
+                table,
+                x="resultado",
+                color="resultado",
+                color_discrete_map={"Correcta": PALETTE[0], "Incorrecta": PALETTE[1]},
+                labels={"resultado": "Predicción"},
+            ),
+            "Predicciones correctas e incorrectas",
+        )

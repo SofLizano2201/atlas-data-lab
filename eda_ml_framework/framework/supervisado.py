@@ -25,6 +25,7 @@ from sklearn.utils.multiclass import type_of_target
 
 from .eda import AnalisisDatosExploratorio
 from .exceptions import FrameworkError
+from .limits import validate_parameter_budget
 from .preprocessing import make_preprocessor, validate_features
 from .results import Experiment, compare
 
@@ -121,12 +122,7 @@ class Supervisado(AnalisisDatosExploratorio):
         if algoritmo.startswith(("svm_", "svr_")) and len(x_train) > 10000:
             raise FrameworkError("SVM interactiva limitada a 10000 filas de entrenamiento.")
         for key, value in estimator.get_params().items():
-            if value is None:
-                continue
-            if key.split("__")[-1] == "n_estimators" and value > 1000:
-                raise FrameworkError("Máximo 1000 estimadores por experimento.")
-            if key.split("__")[-1] == "max_iter" and value > 10000:
-                raise FrameworkError("Máximo 10000 iteraciones por experimento.")
+            validate_parameter_budget(key, value)
         pipe = Pipeline(
             [
                 ("preprocess", make_preprocessor(x, scaler, encoding, imputation)),
@@ -151,6 +147,11 @@ class Supervisado(AnalisisDatosExploratorio):
                 else "model__"
             )
             grid = {k if "__" in k else f"{prefix}{k}": v for k, v in busqueda.items()}
+            for key, candidates in grid.items():
+                for value in candidates:
+                    validate_parameter_budget(key, value)
+                if any(callable(v) for v in candidates):
+                    raise FrameworkError("No se aceptan funciones como candidatos de búsqueda.")
             combinations = int(np.prod([len(v) for v in grid.values()]))
             if combinations < 1 or combinations > 100 or not 1 <= n_iter <= 100:
                 raise FrameworkError("Búsqueda limitada a 100 combinaciones; listas no vacías.")
@@ -234,6 +235,7 @@ class Supervisado(AnalisisDatosExploratorio):
             details,
         )
         self.experimentos.append(result)
+        result.record_provenance(self._df, len(self.experimentos))
         return result
 
     def crear_estimador(self, algoritmo: str, parametros: dict[str, Any]) -> Any:

@@ -27,7 +27,10 @@ ejecutable de Windows. Streamlit muestra la dirección local al iniciar.
 - [Catálogo de métodos](eda_ml_framework/docs/methods.md).
 - [Guía del usuario](eda_ml_framework/docs/user_guide.md).
 - [Verificación ejecutada](eda_ml_framework/docs/verification.md).
+- [Verificación de publicación 1.1](eda_ml_framework/docs/release_verification_1_1.md).
 - [Sidebar y navegación](eda_ml_framework/docs/sidebar.md).
+- [Adaptación de los mockups](eda_ml_framework/docs/mockups_2026_10_27.md).
+- [Estándar de gráficos](eda_ml_framework/docs/visualization_standard.md).
 
 ## Pruebas
 
@@ -38,7 +41,11 @@ Desde `eda_ml_framework`, con el entorno instalado:
 .\.venv\Scripts\python.exe -m ruff check .
 ```
 
-La entrega verificada registra 99 pruebas aprobadas. UMAP, K-Medoids y XGBoost son
+La versión actual registra **155 pruebas aprobadas**; incluye cinco agentes especializados,
+contratos tipados y reportes HTML/PDF. [Configuración de agentes](eda_ml_framework/docs/agents.md).
+La conversación requiere un proveedor y modelo configurados; las herramientas deterministas
+siguen disponibles sin API. [Verificación de la integración](eda_ml_framework/docs/verification_2026_10_27.md).
+UMAP, K-Medoids y XGBoost son
 integraciones opcionales; consulta las instrucciones y limitaciones en la guía completa.
 
 Los datos de ejemplo son públicos de scikit-learn. El entorno virtual, credenciales,

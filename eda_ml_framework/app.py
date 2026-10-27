@@ -1,20 +1,29 @@
 """Punto de entrada: streamlit run app.py."""
 
+from base64 import b64encode
 from pathlib import Path
 
 import streamlit as st
 
 from frontend.components.sidebar import render_sidebar, render_sidebar_status
 from frontend.pages.modeling import clustering_page, comparison_page, supervised_page
-from frontend.pages.workspace import cleaning_page, data_page, downloads, eda_page, overview
+from frontend.pages.reports import reports_page
+from frontend.pages.workspace import cleaning_page, data_page, eda_page, overview
 from frontend.utils.state import initialize
 
 
 def main() -> None:
     """Enrutar páginas y manejar errores comprensibles sin ocultar fallos de desarrollo."""
-    st.set_page_config(page_title="Atlas · Data Lab", page_icon="🔬", layout="wide")
+    st.set_page_config(page_title="Atlas · Data Lab", layout="wide")
     css = Path(__file__).parent / "frontend" / "styles" / "theme.css"
-    st.markdown(f"<style>{css.read_text(encoding='utf-8')}</style>", unsafe_allow_html=True)
+    tokens = css.with_name("tokens.css")
+    composition = css.with_name("mockups.css").read_text(encoding="utf-8")
+    landscape = css.parent.parent / "assets" / "atlas-landscape.svg"
+    landscape_uri = "data:image/svg+xml;base64," + b64encode(landscape.read_bytes()).decode("ascii")
+    composition = composition.replace("__ATLAS_LANDSCAPE__", landscape_uri)
+    st.html(
+        f"<style>{css.read_text(encoding='utf-8')}\n{tokens.read_text(encoding='utf-8')}\n{composition}</style>",
+    )
     initialize()
     page, sidebar_status = render_sidebar()
     if page not in {"🏠 Inicio", "📂 Datos"} and "eda" not in st.session_state:
@@ -40,8 +49,7 @@ def main() -> None:
         elif page == "⚖️ Experimentos":
             comparison_page()
         else:
-            st.title("Reportes / Compartir resultados")
-            downloads(st.session_state.eda)
+            reports_page()
     except (ValueError, TypeError, KeyError, ImportError, OSError, RuntimeError) as exc:
         st.error(f"No se pudo completar la operación: {exc}")
         st.caption("Revisa las variables seleccionadas, el tipo de datos y los parámetros.")

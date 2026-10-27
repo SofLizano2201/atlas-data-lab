@@ -1,4 +1,5 @@
 """Empaquetar fuentes y documentación sin entornos, cachés ni modelos privados."""
+
 from pathlib import Path
 from zipfile import ZIP_DEFLATED, ZipFile
 
@@ -11,9 +12,15 @@ def main() -> None:
     with ZipFile(output, "w", compression=ZIP_DEFLATED) as archive:
         for source in sorted(project.rglob("*")):
             relative = source.relative_to(project)
-            if not source.is_file() or any(p in excluded or p.endswith(".egg-info") for p in relative.parts):
+            if not source.is_file() or any(
+                p in excluded or p.endswith(".egg-info") for p in relative.parts
+            ):
                 continue
             if source.suffix in {".pyc", ".joblib"}:
+                continue
+            if (
+                source.name.startswith(".env") and source.name != ".env.example"
+            ) or source.name == "secrets.toml":
                 continue
             archive.write(source, Path(project.name) / relative)
     print(f"Paquete creado: {output.name}")

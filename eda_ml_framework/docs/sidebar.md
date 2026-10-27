@@ -1,5 +1,9 @@
 # Sidebar Atlas
 
+La composición y paleta actuales se describen en
+[adaptación de los mockups](mockups_2026_10_27.md). Los colores e isotipo indicados
+más abajo documentan el diseño inicial, posteriormente actualizado.
+
 El menú usa botones nativos de Streamlit. Las nueve rutas existentes y la clave
 `st.session_state.navigation` se conservan; las etiquetas visibles ya no contienen
 emojis ni indicadores radio. Los accesos rápidos de Inicio siguen usando el mismo estado.

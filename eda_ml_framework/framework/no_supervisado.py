@@ -12,7 +12,7 @@ from sklearn.manifold import TSNE
 from .eda import AnalisisDatosExploratorio
 from .exceptions import FrameworkError, OptionalDependencyError
 from .preprocessing import make_preprocessor, validate_features
-from .visualization import PALETTE, style
+from .visualization import NOISE_COLOR, PALETTE, SYMBOLS, categorical_colors, note, style
 
 
 class NoSupervisado(AnalisisDatosExploratorio):
@@ -32,7 +32,10 @@ class NoSupervisado(AnalisisDatosExploratorio):
             )
         x = validate_features(self._df[columnas])
         categories = x.select_dtypes(exclude=np.number)
-        if sum(categories[c].nunique() for c in categories) + len(columnas) > 1000:
+        if (
+            config.get("encoding", "onehot") == "onehot"
+            and sum(categories[c].nunique() for c in categories) + len(columnas) > 1000
+        ):
             raise FrameworkError("Exceso de categorías: excluya identificadores o use ordinal.")
         self.preprocessor = make_preprocessor(x, **config)
         return self.preprocessor.fit_transform(x)
@@ -78,6 +81,10 @@ class NoSupervisado(AnalisisDatosExploratorio):
             "varianza": getattr(model, "explained_variance_ratio_", None),
             "advertencia": "t-SNE y UMAP no preservan toda la geometría original.",
         }
+        result["datos"].attrs["atlas_method"] = metodo
+        result["datos"].attrs["atlas_variance"] = (
+            result["varianza"].tolist() if result["varianza"] is not None else None
+        )
         self.representations[metodo] = result
         return result
 
@@ -93,20 +100,55 @@ class NoSupervisado(AnalisisDatosExploratorio):
     def visualizar_representacion(self, datos: pd.DataFrame, etiquetas: Any = None) -> Any:
         """Figura 2D o 3D con colores categóricos."""
         cols = list(datos.columns)
-        color = None if etiquetas is None else np.asarray(etiquetas).astype(str)
-        if len(cols) == 3:
-            return style(
-                px.scatter_3d(
-                    datos,
-                    x=cols[0],
-                    y=cols[1],
-                    z=cols[2],
-                    color=color,
-                    color_discrete_sequence=PALETTE,
-                )
+        if len(cols) not in {2, 3}:
+            raise FrameworkError("La representación visual requiere dos o tres componentes.")
+        data = datos.copy()
+        method = datos.attrs.get("atlas_method", "")
+        variance = datos.attrs.get("atlas_variance")
+        axis_labels = {
+            column: (
+                f"PCA {i + 1} · {variance[i]:.1%} de varianza"
+                if method == "pca" and variance is not None
+                else f"{method.upper()} {i + 1}"
+                if method
+                else str(column)
             )
-        return style(
-            px.scatter(datos, x=cols[0], y=cols[1], color=color, color_discrete_sequence=PALETTE)
+            for i, column in enumerate(cols)
+        }
+        kwargs = {"color_discrete_sequence": PALETTE, "labels": axis_labels}
+        if etiquetas is not None:
+            if len(etiquetas) != len(data):
+                raise FrameworkError("Las etiquetas no coinciden con las filas representadas.")
+            group = "_grupo_visual"
+            while group in data:
+                group += "_"
+            data[group] = ["Ruido" if str(v) == "-1" else f"Grupo {v}" for v in etiquetas]
+            colors = categorical_colors(data[group])
+            if "Ruido" in colors:
+                colors["Ruido"] = NOISE_COLOR
+            symbols = (
+                ["circle", "diamond", "square", "cross", "x", "circle-open"]
+                if len(cols) == 3
+                else SYMBOLS
+            )
+            symbol_map = {name: symbols[i % len(symbols)] for i, name in enumerate(sorted(colors))}
+            symbol_map["Ruido"] = "x"
+            kwargs = {
+                "color_discrete_sequence": PALETTE,
+                "color": group,
+                "symbol": group,
+                "color_discrete_map": colors,
+                "symbol_map": symbol_map,
+                "labels": {**axis_labels, group: "Grupo"},
+            }
+        fig = (
+            px.scatter_3d(data, x=cols[0], y=cols[1], z=cols[2], **kwargs)
+            if len(cols) == 3
+            else px.scatter(data, x=cols[0], y=cols[1], **kwargs)
+        )
+        style(fig, f"Representación {method.upper()} · {len(cols)} dimensiones")
+        return note(
+            fig, "La proyección simplifica la geometría original. Ruido: símbolo ×, cuando existe."
         )
 
     def comparar_representaciones(self) -> pd.DataFrame:

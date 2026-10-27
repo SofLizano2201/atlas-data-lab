@@ -9,3 +9,6 @@ font = "sans serif"
 maxUploadSize = 25
 headless = true
 
+[client]
+toolbarMode = "minimal"
+

@@ -5,6 +5,29 @@ español. La jerarquía del profesor tiene herencia real y responsabilidades fun
 EDA → NoSupervisado → Clustering; EDA → Supervisado → Clasificacion / Regresion.
 Las clases funcionan desde Python sin importar Streamlit.
 
+## Integración 1.1: agentes, contratos y reportes
+
+Se conservan las seis clases académicas. `agents/` incorpora EDAAgent,
+ClusteringAgent, ClassificationAgent, RegressionAgent y ModelComparisonAgent.
+`contracts/` define solicitudes, respuestas, llamadas/resultados de herramientas,
+análisis, experimentos, modelos, decisiones y versiones de dataset con Pydantic.
+
+Cada pantalla especializada incluye el botón de su agente. Sin proveedor/modelo
+configurados, la conversación se muestra no disponible y las acciones deterministas
+siguen funcionando. Un plan sensible necesita confirmación local; el LLM no puede
+autorizarse a sí mismo ni ejecutar Python. La pregunta y el contexto reducido solo
+se envían con consentimiento. No se envían filas completas ni tablas al proveedor.
+
+Reportes ofrece HTML y PDF con selección de secciones e historial por sesión.
+Los experimentos registran dataset, versiones, bibliotecas, variables y partición.
+Consulta [agentes y configuración LLM](docs/agents.md), [reportes](docs/reports.md)
+y [diagnóstico inicial](docs/diagnosis_2026_10_27.md).
+
+La nueva paleta se centraliza en `frontend/styles/tokens.css`, sobre la composición
+existente. No se recibieron mockups con esta solicitud: no se afirma fidelidad a
+imágenes no disponibles. Las fuentes Manrope/Inter usan alternativas del sistema
+si no están instaladas; no se descargan automáticamente.
+
 ## Requisitos e instalación
 
 Python 3.11–3.13. Recomendado 3.11; conexión para instalar paquetes. Ejemplos y ejecución
@@ -171,3 +194,12 @@ Agrega estimadores al registro de la clase especializada; conserva el pipeline c
 Agrega transformaciones validadas en EDA o funciones locales confiables mediante composición.
 No introduzcas Streamlit en `framework`. Añade tests de casos normales, límites y
 aislamiento antes de ampliar la UI. Los contratos completos están en arquitectura.md.
+
+## Referencias visuales de ATLAS
+
+La adaptación de los ocho mockups, los componentes modificados y las diferencias
+restantes se describen en [la guía visual](docs/mockups_2026_10_27.md).
+
+
+El [estándar de visualización](docs/visualization_standard.md) explica colores,
+escalas, referencias estadísticas, límites y cómo verificar las figuras.
