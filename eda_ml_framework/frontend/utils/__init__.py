@@ -1,1 +1,3 @@
-"""Gestión de estado y datasets públicos."""
+"""Compatibility re-export of the MVC view."""
+
+from atlas.views.utils import *

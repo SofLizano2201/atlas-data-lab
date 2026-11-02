@@ -27,7 +27,7 @@ def main() -> None:
     if not 1 <= args.port <= 65535:
         raise ValueError("Puerto local inválido.")
     root = Path(__file__).resolve().parents[1]
-    output = root / "artifacts" / ("atlas-mockups" if args.all_pages else "sidebar")
+    output = root / "artifacts" / ("atlas-2.0" if args.all_pages else "sidebar")
     output.mkdir(parents=True, exist_ok=True)
     browser = (
         Path(os.environ.get("PROGRAMFILES(X86)", "")) / "Microsoft/Edge/Application/msedge.exe"
@@ -174,17 +174,18 @@ def main() -> None:
                 evaluate("document.querySelector('[data-testid=stMain]').scrollTo(0,0)")
                 if args.all_pages:
                     routes = [
-                        ("home", "Framework de análisis de datos", None),
+                        ("home", "ATLAS Dashboard", None),
                         ("data", "Importación de datos", None),
-                        ("exploration", "Exploración de datos", "EDAAgent"),
+                        ("exploration", "Exploración EDA", "EDAAgent"),
                         ("preparation", "Limpieza y transformación", "EDAAgent"),
                         ("clustering", "Clustering y agrupamiento", "ClusteringAgent"),
                         (
                             "classification",
-                            "ANÁLISIS DE CLASIFICACIÓN",
+                            "Clasificación",
                             "ClassificationAgent",
                         ),
-                        ("regression", "ANÁLISIS DE REGRESIÓN", "RegressionAgent"),
+                        ("regression", "Regresión", "RegressionAgent"),
+                        ("history", "Experimentos", "ModelComparisonAgent"),
                         (
                             "experiments",
                             "Comparador de modelos",
@@ -196,7 +197,9 @@ def main() -> None:
                         evaluate(
                             f"document.querySelector('.st-key-atlas_nav_{slug} button').click()"
                         )
-                        wait_for(f"document.body.innerText.includes({json.dumps(heading)})")
+                        wait_for(
+                            f"document.querySelector('.atlas-page-title')?.textContent==={json.dumps(heading)}"
+                        )
                         time.sleep(0.6)
                         assert not evaluate(
                             "Boolean(document.querySelector('[data-testid=stException]'))"
@@ -222,7 +225,24 @@ def main() -> None:
                                 )
                             else:
                                 screenshot(f"agent-{slug}")
-                    print("Nueve pantallas capturadas sin errores de ejecución.", flush=True)
+                    print(
+                        f"{len(routes)} pantallas capturadas sin errores de ejecución.", flush=True
+                    )
+                if args.all_pages:
+                    evaluate(
+                        "document.querySelector('.st-key-atlas_nav_exploration button').click()"
+                    )
+                    wait_for(
+                        "document.querySelector('.atlas-page-title')?.textContent==='Exploración EDA'"
+                    )
+                    evaluate(
+                        "[...document.querySelectorAll('[role=tab]')].find(tab=>tab.innerText==='Distribuciones y relaciones').click()"
+                    )
+                    time.sleep(0.4)
+                    evaluate(
+                        "[...document.querySelectorAll('[data-testid=stPlotlyChart]')].find(chart=>chart.offsetParent!==null)?.scrollIntoView({block:'center'})"
+                    )
+                    screenshot("chart-exploration")
                 evaluate("document.querySelector('.st-key-atlas_sidebar_toggle button').click()")
                 wait_for(
                     "document.querySelector('[data-testid=stSidebar]').getBoundingClientRect().width===72"

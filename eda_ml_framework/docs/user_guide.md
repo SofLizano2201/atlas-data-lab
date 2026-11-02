@@ -47,3 +47,16 @@ cuando corresponda y considera recall/F1, además de accuracy.
 
 No subas archivos joblib/pickle: la aplicación solo permite exportar modelos. Para cargar
 tu propio modelo exportado en Python, hazlo exclusivamente si confías en su origen.
+
+## ATLAS 1.2: asistencia opcional
+
+Abre el botón del agente en la pantalla que estás usando. Las acciones rápidas
+ejecutan herramientas locales; la conversación requiere proveedor configurado y
+consentimiento. Las propuestas de configuración y los entrenamientos se muestran
+antes de ejecutarse y requieren confirmación. Aplicar una configuración actualiza
+los controles reales del formulario; luego puedes entrenar manualmente. Cerrar el
+panel cancela sus confirmaciones pendientes. Al cambiar de dataset se reinician los
+resultados dependientes. Los datos permanecen en memoria durante esta sesión.
+
+La distribución técnica actual está en `src/atlas/`; consulta [MVC](mvc.md) y
+[agentes](agents.md). Las importaciones antiguas siguen disponibles.

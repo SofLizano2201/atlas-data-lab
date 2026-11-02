@@ -1,0 +1,37 @@
+/* Fuente de tokens visuales Atlas. Se carga después del CSS de composición existente. */
+:root {
+    --atlas-plum:#331832; --atlas-purple:#694D75; --atlas-blue:#1B5299;
+    --atlas-sky:#9FC2CC; --atlas-cream:#F1ECCE;
+    --atlas-surface:color-mix(in srgb,var(--atlas-cream) 92%,var(--atlas-sky));
+    --atlas-border:color-mix(in srgb,var(--atlas-purple) 24%,transparent);
+    --atlas-sidebar-muted:color-mix(in srgb,var(--atlas-cream) 80%,var(--atlas-purple));
+    --atlas-radius:12px; --atlas-space:8px;
+    --atlas-body:Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif;
+    --atlas-heading:Manrope,Inter,ui-sans-serif,system-ui,sans-serif;
+}
+html,body,[data-testid="stAppViewContainer"] {font-family:var(--atlas-body);}
+h1,h2,h3 {font-family:var(--atlas-heading);color:var(--atlas-plum);}
+h1 {font-weight:700;letter-spacing:-.035em;line-height:1.15;}
+[data-testid="stSidebar"] {background:var(--atlas-plum);color:var(--atlas-cream);border-color:var(--atlas-purple);font-family:var(--atlas-body);}
+[data-testid="stSidebarHeader"] button,[data-testid="stSidebarHeader"] button * {color:var(--atlas-cream)!important;}
+.st-key-atlas_sidebar_header {border-color:var(--atlas-purple);}
+.atlas-brand-mark {background:var(--atlas-purple);color:var(--atlas-cream);border-color:var(--atlas-purple);}
+.atlas-product-name {font-family:var(--atlas-heading);color:var(--atlas-cream);}
+.atlas-product-subtitle,.atlas-section-label,.atlas-dataset-label,.atlas-session-note {color:var(--atlas-sidebar-muted);}
+.st-key-atlas_sidebar_nav button {color:var(--atlas-cream);}
+.st-key-atlas_sidebar_nav button:hover {background:color-mix(in srgb,var(--atlas-purple) 50%,var(--atlas-plum));color:var(--atlas-cream);border-color:var(--atlas-purple);}
+.st-key-atlas_sidebar_nav button[kind="primary"] {background:var(--atlas-purple);color:var(--atlas-cream);border-color:var(--atlas-purple);box-shadow:inset 2px 0 var(--atlas-sky);}
+.st-key-atlas_sidebar_nav button[kind="primary"]::before {background:var(--atlas-cream);}
+.st-key-atlas_sidebar_toggle button {color:var(--atlas-sidebar-muted);}
+.st-key-atlas_sidebar_toggle button:hover {background:var(--atlas-purple);color:var(--atlas-cream);}
+.atlas-dataset-card {background:color-mix(in srgb,var(--atlas-purple) 28%,var(--atlas-plum));border-color:var(--atlas-purple);}
+.atlas-dataset-icon {color:var(--atlas-sky);}
+.atlas-dataset-name {color:var(--atlas-cream);}
+.st-key-atlas_sidebar_nav button:focus-visible,.st-key-atlas_sidebar_toggle button:focus-visible,
+.atlas-dataset-card:focus-visible,.atlas-session-note:focus-visible {outline-color:var(--atlas-sky);}
+[data-testid="stMetric"] {background:var(--atlas-surface);border-color:var(--atlas-border);border-radius:var(--atlas-radius);box-shadow:0 2px 8px color-mix(in srgb,var(--atlas-plum) 5%,transparent);}
+.atlas-hero {background:var(--atlas-surface);border-color:var(--atlas-blue);}
+.atlas-eyebrow {color:var(--atlas-purple);}
+button[kind="primary"] {background:var(--atlas-blue);color:var(--atlas-cream);border-radius:8px;}
+[class*="st-key-panel_"] {background:var(--atlas-surface);border-radius:var(--atlas-radius);padding:16px;margin-bottom:16px;}
+@media(max-width:768px) {h1 {font-size:2rem;}}

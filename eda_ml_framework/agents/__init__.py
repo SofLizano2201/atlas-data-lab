@@ -1,19 +1,3 @@
-"""Orquestación opcional; las clases académicas no dependen de los agentes."""
+"""Compatibility re-exports; implementations live only in atlas.agents.agent."""
 
-from .context import AgentContext
-from .specialists import (
-    ClassificationAgent,
-    ClusteringAgent,
-    EDAAgent,
-    ModelComparisonAgent,
-    RegressionAgent,
-)
-
-__all__ = [
-    "AgentContext",
-    "ClassificationAgent",
-    "ClusteringAgent",
-    "EDAAgent",
-    "ModelComparisonAgent",
-    "RegressionAgent",
-]
+from atlas.agents import *

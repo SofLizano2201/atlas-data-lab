@@ -59,10 +59,10 @@ def test_clean_confirmation():
     app = active_app()
     navigate(app, "🧹 Preparación")
     next(b for b in app.button if b.label == "Previsualizar transformación").click().run()
-    assert app.session_state["eda"].versiones == 1
+    assert app.session_state["eda"].version_count == 1
     next(b for b in app.button if b.label == "Confirmar estos cambios").click().run()
     assert not app.exception
-    assert app.session_state["eda"].versiones == 2
+    assert app.session_state["eda"].version_count == 2
 
 
 def test_cluster_from_frontend():

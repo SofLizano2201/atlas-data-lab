@@ -1,11 +1,64 @@
-# Atlas · Data Lab
+# Atlas 2.0 · Data Lab
 
 Framework académico modular de EDA y Machine Learning, con aplicación Streamlit en
 español. La jerarquía del profesor tiene herencia real y responsabilidades funcionales:
 EDA → NoSupervisado → Clustering; EDA → Supervisado → Clasificacion / Regresion.
 Las clases funcionan desde Python sin importar Streamlit.
 
-## Integración 1.1: agentes, contratos y reportes
+## Espacio de trabajo y agentes offline
+
+La asistencia predeterminada funciona sin claves API ni servicios de pago: selecciona
+un objetivo guiado y el agente evalúa requisitos, llama una herramienta real y presenta
+evidencia. Los entrenamientos y cambios sensibles requieren confirmación. Este motor
+local usa políticas explícitas; la conversación generativa es opcional mediante un
+modelo compatible, incluido Ollama instalado localmente.
+
+La navegación agrupa Espacio de trabajo, Machine Learning y Resultados. Experimentos
+y Comparador son pantallas diferentes. La barra de contexto y el progreso utilizan
+datos reales; la preparación incluye impacto previo y deshacer confirmado. Los gráficos
+ofrecen ajustes interactivos, selección, ampliación y exportación. No se reentrenan
+modelos al cambiar una preferencia de visualización.
+
+- [Guía 2.0, instalación, ejecución y limitaciones](docs/atlas_2_0.md).
+- [Auditoría funcional y reparaciones](docs/audit_2_0.md).
+- [Inventario de controles](docs/ui_controls_2_0.json).
+- [Resultados de validación 2.0](docs/verification_2_0.md).
+- `python tools/demo_offline.py`: demostración de los cinco agentes con datos públicos.
+
+## Arquitectura MVC y agentes polimórficos
+
+La implementación canónica está en `src/atlas/`: modelos científicos en `models/`,
+coordinación en `controllers/`, interfaz española en `views/`, contratos y contexto
+en `core/`, y ciclo de datasets, experimentos y reportes en `services/`.
+**Todos los agentes y proveedores están definidos en un único `agents/agent.py`.**
+`framework/`, `frontend/`, `agents/` y `contracts/` en la raíz conservan importaciones
+antiguas mediante adaptadores; no son implementaciones científicas paralelas.
+
+Consulta [MVC y extensión](docs/mvc.md), [arquitectura](docs/architecture.md),
+[configuración de agentes](docs/agents.md) e [inventario verificable](docs/capabilities_mvc.json).
+El backend nuevo usa nombres ingleses; la API académica española sigue disponible.
+Se conservan etiquetas históricas de métricas/tablas para mantener compatibilidad.
+
+```python
+from sklearn.datasets import load_iris
+from atlas.models import ExploratoryDataAnalysis, Classification
+
+data = load_iris(as_frame=True).frame
+analysis = ExploratoryDataAnalysis(data)
+print(analysis.profile())
+assert issubclass(Classification, ExploratoryDataAnalysis)
+```
+
+Demostración reproducible de los cinco agentes, con cálculos reales sobre datasets
+públicos y sin simular inferencia de un LLM:
+
+```powershell
+python tools/demo_agents.py --confirm-training
+python tools/audit_capabilities.py
+python -m pytest -q
+```
+
+## Agentes, contratos y reportes
 
 Se conservan las seis clases académicas. `agents/` incorpora EDAAgent,
 ClusteringAgent, ClassificationAgent, RegressionAgent y ModelComparisonAgent.
@@ -23,9 +76,9 @@ Los experimentos registran dataset, versiones, bibliotecas, variables y partici�
 Consulta [agentes y configuración LLM](docs/agents.md), [reportes](docs/reports.md)
 y [diagnóstico inicial](docs/diagnosis_2026_10_27.md).
 
-La nueva paleta se centraliza en `frontend/styles/tokens.css`, sobre la composición
-existente. No se recibieron mockups con esta solicitud: no se afirma fidelidad a
-imágenes no disponibles. Las fuentes Manrope/Inter usan alternativas del sistema
+La paleta se centraliza en `src/atlas/views/styles/tokens.css`, sobre la composición
+de los ocho mockups proporcionados. Las adaptaciones se documentan en
+`docs/mockups_2026_10_27.md`. Las fuentes Manrope/Inter usan alternativas del sistema
 si no están instaladas; no se descargan automáticamente.
 
 ## Requisitos e instalación
@@ -64,11 +117,13 @@ gráficos interactivos y cambios confirmados con versiones.
 
 ```text
 app.py                    Entrada Streamlit
-framework/                EDA, clases académicas, métricas y auxiliares
-frontend/pages/           Carga, EDA, preparación, modelos y comparación
-frontend/components/      Figuras y descargas compartidas
-frontend/utils/           Estado y ejemplos públicos cacheados
-frontend/styles/          Tema CSS de la paleta solicitada
+src/atlas/models/         EDA, herencia académica, métricas y auxiliares
+src/atlas/controllers/    Coordinación, validación y gateway de capacidades
+src/atlas/views/          Páginas, componentes, estado visual y recursos
+src/atlas/core/           Contratos tipados, contexto y dependencias
+src/atlas/services/       Ciclo de datasets, experimentos y reportes
+src/atlas/agents/agent.py BaseAgent, cinco especialistas, factory y proveedores
+framework/, frontend/    Adaptadores de compatibilidad (también agents/, contracts/)
 .streamlit/config.toml    Tema y límites del servidor
 datasets/examples/        Generador reproducible de ejemplos
 tests/                    Unitarias e integración Streamlit AppTest

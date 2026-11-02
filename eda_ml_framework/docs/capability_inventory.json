@@ -1,0 +1,938 @@
+[
+  {
+    "file": "framework\\clasificacion.py",
+    "class": "Clasificacion",
+    "method": "__init__",
+    "parameters": "self, df: pd.DataFrame, random_state: int=42",
+    "returns": "None",
+    "documentation": null,
+    "exposure": "explicit allowlist only; destructive and expensive operations require confirmation"
+  },
+  {
+    "file": "framework\\clasificacion.py",
+    "class": "Clasificacion",
+    "method": "algoritmos",
+    "parameters": "",
+    "returns": "list[str]",
+    "documentation": "Modelos disponibles y opcional XGBoost.",
+    "exposure": "explicit allowlist only; destructive and expensive operations require confirmation"
+  },
+  {
+    "file": "framework\\clasificacion.py",
+    "class": "Clasificacion",
+    "method": "crear_estimador",
+    "parameters": "self, algoritmo: str, parametros: dict[str, Any]",
+    "returns": "Any",
+    "documentation": "Construir estimador; parámetros desconocidos producen error explícito.",
+    "exposure": "explicit allowlist only; destructive and expensive operations require confirmation"
+  },
+  {
+    "file": "framework\\clasificacion.py",
+    "class": "Clasificacion",
+    "method": "evaluar",
+    "parameters": "self, model: Any, x: pd.DataFrame, y: pd.Series, pred: np.ndarray",
+    "returns": "tuple[dict[str, float], dict[str, Any]]",
+    "documentation": "ROC usa decision_function cuando no existe predict_proba.",
+    "exposure": "explicit allowlist only; destructive and expensive operations require confirmation"
+  },
+  {
+    "file": "framework\\clasificacion.py",
+    "class": "Clasificacion",
+    "method": "grafico_resultado",
+    "parameters": "self, resultado: Experiment, tipo: str='confusion'",
+    "returns": "Any",
+    "documentation": "Matrices, curvas por clase, árbol o aciertos/errores.",
+    "exposure": "explicit allowlist only; destructive and expensive operations require confirmation"
+  },
+  {
+    "file": "framework\\clustering.py",
+    "class": "Clustering",
+    "method": "__init__",
+    "parameters": "self, df: pd.DataFrame, random_state: int=42",
+    "returns": "None",
+    "documentation": null,
+    "exposure": "explicit allowlist only; destructive and expensive operations require confirmation"
+  },
+  {
+    "file": "framework\\clustering.py",
+    "class": "Clustering",
+    "method": "algoritmos",
+    "parameters": "",
+    "returns": "list[str]",
+    "documentation": "Catálogo incluyendo integraciones opcionales.",
+    "exposure": "explicit allowlist only; destructive and expensive operations require confirmation"
+  },
+  {
+    "file": "framework\\clustering.py",
+    "class": "Clustering",
+    "method": "entrenar",
+    "parameters": "self, algoritmo: str, columnas: list[str], scaler: str='standard', encoding: str='onehot', **params: Any",
+    "returns": "Experiment",
+    "documentation": "Entrenar una vez; conservar la matriz utilizada y etiquetas, incluido ruido.",
+    "exposure": "explicit allowlist only; destructive and expensive operations require confirmation"
+  },
+  {
+    "file": "framework\\clustering.py",
+    "class": "Clustering",
+    "method": "codo",
+    "parameters": "self, columnas: list[str], max_k: int=10",
+    "returns": "pd.DataFrame",
+    "documentation": "Inercia de KMeans usando una única preparación.",
+    "exposure": "explicit allowlist only; destructive and expensive operations require confirmation"
+  },
+  {
+    "file": "framework\\clustering.py",
+    "class": "Clustering",
+    "method": "silhouette_plot",
+    "parameters": "self, resultado: Experiment",
+    "returns": "Any",
+    "documentation": "Silhouette individual excluyendo ruido; máximo 2000 filas.",
+    "exposure": "explicit allowlist only; destructive and expensive operations require confirmation"
+  },
+  {
+    "file": "framework\\clustering.py",
+    "class": "Clustering",
+    "method": "dendrograma",
+    "parameters": "self, columnas: list[str], metodo: str='ward'",
+    "returns": "Any",
+    "documentation": "Dendrograma limitado y truncado para legibilidad.",
+    "exposure": "explicit allowlist only; destructive and expensive operations require confirmation"
+  },
+  {
+    "file": "framework\\clustering.py",
+    "class": "Clustering",
+    "method": "caracterizar",
+    "parameters": "self, resultado: Experiment",
+    "returns": "pd.DataFrame",
+    "documentation": "Estadísticas por cluster, incluyendo grupo -1 de ruido.",
+    "exposure": "explicit allowlist only; destructive and expensive operations require confirmation"
+  },
+  {
+    "file": "framework\\clustering.py",
+    "class": "Clustering",
+    "method": "representantes",
+    "parameters": "self, resultado: Experiment",
+    "returns": "pd.DataFrame",
+    "documentation": "Media en espacio transformado de cada grupo, excluyendo ruido.",
+    "exposure": "explicit allowlist only; destructive and expensive operations require confirmation"
+  },
+  {
+    "file": "framework\\clustering.py",
+    "class": "Clustering",
+    "method": "comparar",
+    "parameters": "self",
+    "returns": "pd.DataFrame",
+    "documentation": "Comparar resultados compatibles almacenados.",
+    "exposure": "explicit allowlist only; destructive and expensive operations require confirmation"
+  },
+  {
+    "file": "framework\\eda.py",
+    "class": "AnalisisDatosExploratorio",
+    "method": "__init__",
+    "parameters": "self, df: pd.DataFrame, random_state: int=42",
+    "returns": "None",
+    "documentation": null,
+    "exposure": "explicit allowlist only; destructive and expensive operations require confirmation"
+  },
+  {
+    "file": "framework\\eda.py",
+    "class": "AnalisisDatosExploratorio",
+    "method": "_validate",
+    "parameters": "df: pd.DataFrame",
+    "returns": "None",
+    "documentation": null,
+    "exposure": "explicit allowlist only; destructive and expensive operations require confirmation"
+  },
+  {
+    "file": "framework\\eda.py",
+    "class": "AnalisisDatosExploratorio",
+    "method": "original",
+    "parameters": "self",
+    "returns": "pd.DataFrame",
+    "documentation": "Original encapsulado: cada acceso entrega una copia defensiva.",
+    "exposure": "explicit allowlist only; destructive and expensive operations require confirmation"
+  },
+  {
+    "file": "framework\\eda.py",
+    "class": "AnalisisDatosExploratorio",
+    "method": "dataset_version",
+    "parameters": "self",
+    "returns": "DatasetVersion",
+    "documentation": "Identidad del original y huella de la versión actual.",
+    "exposure": "explicit allowlist only; destructive and expensive operations require confirmation"
+  },
+  {
+    "file": "framework\\eda.py",
+    "class": "AnalisisDatosExploratorio",
+    "method": "df",
+    "parameters": "self",
+    "returns": "pd.DataFrame",
+    "documentation": "Copia defensiva del dataset de trabajo.",
+    "exposure": "explicit allowlist only; destructive and expensive operations require confirmation"
+  },
+  {
+    "file": "framework\\eda.py",
+    "class": "AnalisisDatosExploratorio",
+    "method": "historial",
+    "parameters": "self",
+    "returns": "pd.DataFrame",
+    "documentation": "Operaciones propuestas, aplicadas y restauradas.",
+    "exposure": "explicit allowlist only; destructive and expensive operations require confirmation"
+  },
+  {
+    "file": "framework\\eda.py",
+    "class": "AnalisisDatosExploratorio",
+    "method": "versiones",
+    "parameters": "self",
+    "returns": "int",
+    "documentation": "Cantidad de instantáneas disponibles.",
+    "exposure": "explicit allowlist only; destructive and expensive operations require confirmation"
+  },
+  {
+    "file": "framework\\eda.py",
+    "class": "AnalisisDatosExploratorio",
+    "method": "cargar",
+    "parameters": "cls, source: Any, formato: str | None=None, separador: str=',', codificacion: str='utf-8', hoja: str | int=0",
+    "returns": "AnalisisDatosExploratorio",
+    "documentation": "Leer formatos tabulares sin ejecutar código; limitar bytes y tamaño descomprimido.",
+    "exposure": "explicit allowlist only; destructive and expensive operations require confirmation"
+  },
+  {
+    "file": "framework\\eda.py",
+    "class": "AnalisisDatosExploratorio",
+    "method": "cargar_csv",
+    "parameters": "cls, source: Any, **config: Any",
+    "returns": "AnalisisDatosExploratorio",
+    "documentation": "Cargar CSV con separador y codificación configurables.",
+    "exposure": "explicit allowlist only; destructive and expensive operations require confirmation"
+  },
+  {
+    "file": "framework\\eda.py",
+    "class": "AnalisisDatosExploratorio",
+    "method": "cargar_excel",
+    "parameters": "cls, source: Any, hoja: str | int=0",
+    "returns": "AnalisisDatosExploratorio",
+    "documentation": "Cargar una hoja XLSX.",
+    "exposure": "explicit allowlist only; destructive and expensive operations require confirmation"
+  },
+  {
+    "file": "framework\\eda.py",
+    "class": "AnalisisDatosExploratorio",
+    "method": "cargar_json",
+    "parameters": "cls, source: Any",
+    "returns": "AnalisisDatosExploratorio",
+    "documentation": "Cargar JSON tabular.",
+    "exposure": "explicit allowlist only; destructive and expensive operations require confirmation"
+  },
+  {
+    "file": "framework\\eda.py",
+    "class": "AnalisisDatosExploratorio",
+    "method": "cargar_parquet",
+    "parameters": "cls, source: Any",
+    "returns": "AnalisisDatosExploratorio",
+    "documentation": "Cargar Parquet con validación de metadatos.",
+    "exposure": "explicit allowlist only; destructive and expensive operations require confirmation"
+  },
+  {
+    "file": "framework\\eda.py",
+    "class": "AnalisisDatosExploratorio",
+    "method": "vista_previa",
+    "parameters": "self, n: int=10",
+    "returns": "pd.DataFrame",
+    "documentation": "Primeras filas.",
+    "exposure": "explicit allowlist only; destructive and expensive operations require confirmation"
+  },
+  {
+    "file": "framework\\eda.py",
+    "class": "AnalisisDatosExploratorio",
+    "method": "dimensiones",
+    "parameters": "self",
+    "returns": "tuple[int, int]",
+    "documentation": "Número de filas y columnas.",
+    "exposure": "explicit allowlist only; destructive and expensive operations require confirmation"
+  },
+  {
+    "file": "framework\\eda.py",
+    "class": "AnalisisDatosExploratorio",
+    "method": "columnas",
+    "parameters": "self",
+    "returns": "list[str]",
+    "documentation": "Nombres de columnas.",
+    "exposure": "explicit allowlist only; destructive and expensive operations require confirmation"
+  },
+  {
+    "file": "framework\\eda.py",
+    "class": "AnalisisDatosExploratorio",
+    "method": "tipos_datos",
+    "parameters": "self",
+    "returns": "pd.Series",
+    "documentation": "Tipos pandas por columna.",
+    "exposure": "explicit allowlist only; destructive and expensive operations require confirmation"
+  },
+  {
+    "file": "framework\\eda.py",
+    "class": "AnalisisDatosExploratorio",
+    "method": "memoria",
+    "parameters": "self",
+    "returns": "pd.Series",
+    "documentation": "Consumo profundo en bytes.",
+    "exposure": "explicit allowlist only; destructive and expensive operations require confirmation"
+  },
+  {
+    "file": "framework\\eda.py",
+    "class": "AnalisisDatosExploratorio",
+    "method": "informacion",
+    "parameters": "self",
+    "returns": "pd.DataFrame",
+    "documentation": "Diagnóstico general por variable.",
+    "exposure": "explicit allowlist only; destructive and expensive operations require confirmation"
+  },
+  {
+    "file": "framework\\eda.py",
+    "class": "AnalisisDatosExploratorio",
+    "method": "valores_unicos",
+    "parameters": "self, columna: str",
+    "returns": "np.ndarray",
+    "documentation": "Valores distintos, incluyendo faltantes.",
+    "exposure": "explicit allowlist only; destructive and expensive operations require confirmation"
+  },
+  {
+    "file": "framework\\eda.py",
+    "class": "AnalisisDatosExploratorio",
+    "method": "constantes",
+    "parameters": "self",
+    "returns": "list[str]",
+    "documentation": "Columnas con un único valor, incluyendo NaN.",
+    "exposure": "explicit allowlist only; destructive and expensive operations require confirmation"
+  },
+  {
+    "file": "framework\\eda.py",
+    "class": "AnalisisDatosExploratorio",
+    "method": "duplicados",
+    "parameters": "self",
+    "returns": "pd.DataFrame",
+    "documentation": "Todas las filas que participan en duplicación.",
+    "exposure": "explicit allowlist only; destructive and expensive operations require confirmation"
+  },
+  {
+    "file": "framework\\eda.py",
+    "class": "AnalisisDatosExploratorio",
+    "method": "copia_seguridad",
+    "parameters": "self",
+    "returns": "int",
+    "documentation": "Guardar una versión; devolver su índice.",
+    "exposure": "explicit allowlist only; destructive and expensive operations require confirmation"
+  },
+  {
+    "file": "framework\\eda.py",
+    "class": "AnalisisDatosExploratorio",
+    "method": "_validate_version_memory",
+    "parameters": "self, frame: pd.DataFrame",
+    "returns": "None",
+    "documentation": "Limitar las copias antes de modificar datos para conservar atomicidad.",
+    "exposure": "explicit allowlist only; destructive and expensive operations require confirmation"
+  },
+  {
+    "file": "framework\\eda.py",
+    "class": "AnalisisDatosExploratorio",
+    "method": "aplicar",
+    "parameters": "self, nuevo: pd.DataFrame, operacion: str, confirmar: bool=False",
+    "returns": "None",
+    "documentation": "Modificar datos exclusivamente con confirmación explícita.",
+    "exposure": "explicit allowlist only; destructive and expensive operations require confirmation"
+  },
+  {
+    "file": "framework\\eda.py",
+    "class": "AnalisisDatosExploratorio",
+    "method": "restaurar",
+    "parameters": "self, version: int, confirmar: bool=False",
+    "returns": "None",
+    "documentation": "Restaurar conservando versiones anteriores.",
+    "exposure": "explicit allowlist only; destructive and expensive operations require confirmation"
+  },
+  {
+    "file": "framework\\eda.py",
+    "class": "AnalisisDatosExploratorio",
+    "method": "exportar",
+    "parameters": "self, formato: str='csv'",
+    "returns": "bytes",
+    "documentation": "Exportar el estado actual.",
+    "exposure": "explicit allowlist only; destructive and expensive operations require confirmation"
+  },
+  {
+    "file": "framework\\eda.py",
+    "class": "AnalisisDatosExploratorio",
+    "method": "_columns",
+    "parameters": "self, columnas: list[str], numericas: bool=False",
+    "returns": "None",
+    "documentation": null,
+    "exposure": "explicit allowlist only; destructive and expensive operations require confirmation"
+  },
+  {
+    "file": "framework\\eda.py",
+    "class": "AnalisisDatosExploratorio",
+    "method": "estadisticas",
+    "parameters": "self, columnas: list[str] | None=None",
+    "returns": "pd.DataFrame",
+    "documentation": "Media, dispersión, forma y cuartiles; faltantes excluidos.",
+    "exposure": "explicit allowlist only; destructive and expensive operations require confirmation"
+  },
+  {
+    "file": "framework\\eda.py",
+    "class": "AnalisisDatosExploratorio",
+    "method": "estadistica",
+    "parameters": "self, nombre: str, columna: str",
+    "returns": "float",
+    "documentation": "Consultar una estadística individual del catálogo numérico.",
+    "exposure": "explicit allowlist only; destructive and expensive operations require confirmation"
+  },
+  {
+    "file": "framework\\eda.py",
+    "class": "AnalisisDatosExploratorio",
+    "method": "media",
+    "parameters": "self, columna: str",
+    "returns": "float",
+    "documentation": "Media aritmética excluyendo nulos.",
+    "exposure": "explicit allowlist only; destructive and expensive operations require confirmation"
+  },
+  {
+    "file": "framework\\eda.py",
+    "class": "AnalisisDatosExploratorio",
+    "method": "mediana",
+    "parameters": "self, columna: str",
+    "returns": "float",
+    "documentation": "Mediana excluyendo nulos.",
+    "exposure": "explicit allowlist only; destructive and expensive operations require confirmation"
+  },
+  {
+    "file": "framework\\eda.py",
+    "class": "AnalisisDatosExploratorio",
+    "method": "moda",
+    "parameters": "self, columna: str",
+    "returns": "pd.Series",
+    "documentation": "Todas las modas, también para variables categóricas.",
+    "exposure": "explicit allowlist only; destructive and expensive operations require confirmation"
+  },
+  {
+    "file": "framework\\eda.py",
+    "class": "AnalisisDatosExploratorio",
+    "method": "minimo",
+    "parameters": "self, columna: str",
+    "returns": "float",
+    "documentation": "Mínimo numérico.",
+    "exposure": "explicit allowlist only; destructive and expensive operations require confirmation"
+  },
+  {
+    "file": "framework\\eda.py",
+    "class": "AnalisisDatosExploratorio",
+    "method": "maximo",
+    "parameters": "self, columna: str",
+    "returns": "float",
+    "documentation": "Máximo numérico.",
+    "exposure": "explicit allowlist only; destructive and expensive operations require confirmation"
+  },
+  {
+    "file": "framework\\eda.py",
+    "class": "AnalisisDatosExploratorio",
+    "method": "rango",
+    "parameters": "self, columna: str",
+    "returns": "float",
+    "documentation": "Máximo menos mínimo.",
+    "exposure": "explicit allowlist only; destructive and expensive operations require confirmation"
+  },
+  {
+    "file": "framework\\eda.py",
+    "class": "AnalisisDatosExploratorio",
+    "method": "varianza",
+    "parameters": "self, columna: str",
+    "returns": "float",
+    "documentation": "Varianza muestral, ddof=1.",
+    "exposure": "explicit allowlist only; destructive and expensive operations require confirmation"
+  },
+  {
+    "file": "framework\\eda.py",
+    "class": "AnalisisDatosExploratorio",
+    "method": "desviacion_estandar",
+    "parameters": "self, columna: str",
+    "returns": "float",
+    "documentation": "Desviación estándar muestral.",
+    "exposure": "explicit allowlist only; destructive and expensive operations require confirmation"
+  },
+  {
+    "file": "framework\\eda.py",
+    "class": "AnalisisDatosExploratorio",
+    "method": "cuartiles",
+    "parameters": "self, columna: str",
+    "returns": "pd.Series",
+    "documentation": "Cuartiles primero, segundo y tercero.",
+    "exposure": "explicit allowlist only; destructive and expensive operations require confirmation"
+  },
+  {
+    "file": "framework\\eda.py",
+    "class": "AnalisisDatosExploratorio",
+    "method": "rango_intercuartilico",
+    "parameters": "self, columna: str",
+    "returns": "float",
+    "documentation": "Tercer cuartil menos primer cuartil.",
+    "exposure": "explicit allowlist only; destructive and expensive operations require confirmation"
+  },
+  {
+    "file": "framework\\eda.py",
+    "class": "AnalisisDatosExploratorio",
+    "method": "coeficiente_variacion",
+    "parameters": "self, columna: str",
+    "returns": "float",
+    "documentation": "Desviación / valor absoluto de la media; indefinido con media cero.",
+    "exposure": "explicit allowlist only; destructive and expensive operations require confirmation"
+  },
+  {
+    "file": "framework\\eda.py",
+    "class": "AnalisisDatosExploratorio",
+    "method": "asimetria",
+    "parameters": "self, columna: str",
+    "returns": "float",
+    "documentation": "Asimetría muestral ajustada.",
+    "exposure": "explicit allowlist only; destructive and expensive operations require confirmation"
+  },
+  {
+    "file": "framework\\eda.py",
+    "class": "AnalisisDatosExploratorio",
+    "method": "curtosis",
+    "parameters": "self, columna: str",
+    "returns": "float",
+    "documentation": "Exceso de curtosis muestral.",
+    "exposure": "explicit allowlist only; destructive and expensive operations require confirmation"
+  },
+  {
+    "file": "framework\\eda.py",
+    "class": "AnalisisDatosExploratorio",
+    "method": "percentiles",
+    "parameters": "self, columna: str, valores: list[float]",
+    "returns": "pd.Series",
+    "documentation": "Percentiles expresados entre 0 y 100.",
+    "exposure": "explicit allowlist only; destructive and expensive operations require confirmation"
+  },
+  {
+    "file": "framework\\eda.py",
+    "class": "AnalisisDatosExploratorio",
+    "method": "frecuencias",
+    "parameters": "self, columna: str",
+    "returns": "pd.DataFrame",
+    "documentation": "Frecuencias absolutas y relativas incluyendo faltantes.",
+    "exposure": "explicit allowlist only; destructive and expensive operations require confirmation"
+  },
+  {
+    "file": "framework\\eda.py",
+    "class": "AnalisisDatosExploratorio",
+    "method": "contingencia",
+    "parameters": "self, a: str, b: str",
+    "returns": "pd.DataFrame",
+    "documentation": "Tabla de contingencia de dos categorías.",
+    "exposure": "explicit allowlist only; destructive and expensive operations require confirmation"
+  },
+  {
+    "file": "framework\\eda.py",
+    "class": "AnalisisDatosExploratorio",
+    "method": "resumen",
+    "parameters": "self",
+    "returns": "pd.DataFrame",
+    "documentation": "Resumen de todas las variables.",
+    "exposure": "explicit allowlist only; destructive and expensive operations require confirmation"
+  },
+  {
+    "file": "framework\\eda.py",
+    "class": "AnalisisDatosExploratorio",
+    "method": "estadisticas_agrupadas",
+    "parameters": "self, categoria: str, columna: str",
+    "returns": "pd.DataFrame",
+    "documentation": "Resumen numérico por categoría.",
+    "exposure": "explicit allowlist only; destructive and expensive operations require confirmation"
+  },
+  {
+    "file": "framework\\eda.py",
+    "class": "AnalisisDatosExploratorio",
+    "method": "nulos",
+    "parameters": "self",
+    "returns": "pd.DataFrame",
+    "documentation": "Número y porcentaje de faltantes.",
+    "exposure": "explicit allowlist only; destructive and expensive operations require confirmation"
+  },
+  {
+    "file": "framework\\eda.py",
+    "class": "AnalisisDatosExploratorio",
+    "method": "outliers",
+    "parameters": "self, columnas: list[str], metodo: str='iqr', umbral: float=1.5",
+    "returns": "pd.DataFrame",
+    "documentation": "Máscara por celda; Isolation Forest produce una máscara por fila.",
+    "exposure": "explicit allowlist only; destructive and expensive operations require confirmation"
+  },
+  {
+    "file": "framework\\eda.py",
+    "class": "AnalisisDatosExploratorio",
+    "method": "inconsistencias",
+    "parameters": "self",
+    "returns": "pd.DataFrame",
+    "documentation": "Diagnosticar textos convertibles a número y mezclas de tipos.",
+    "exposure": "explicit allowlist only; destructive and expensive operations require confirmation"
+  },
+  {
+    "file": "framework\\eda.py",
+    "class": "AnalisisDatosExploratorio",
+    "method": "categorias_raras",
+    "parameters": "self, columna: str, umbral: float=0.01",
+    "returns": "pd.DataFrame",
+    "documentation": "Categorías con frecuencia relativa menor al umbral.",
+    "exposure": "explicit allowlist only; destructive and expensive operations require confirmation"
+  },
+  {
+    "file": "framework\\eda.py",
+    "class": "AnalisisDatosExploratorio",
+    "method": "transformar",
+    "parameters": "self, operacion: str, columnas: list[str] | None=None, **params: Any",
+    "returns": "pd.DataFrame",
+    "documentation": "Proponer un nuevo DataFrame y registrar parámetros, sin modificar el original.",
+    "exposure": "explicit allowlist only; destructive and expensive operations require confirmation"
+  },
+  {
+    "file": "framework\\eda.py",
+    "class": "AnalisisDatosExploratorio",
+    "method": "transformar_personalizado",
+    "parameters": "self, funcion: Callable[[pd.DataFrame], pd.DataFrame]",
+    "returns": "pd.DataFrame",
+    "documentation": "API Python para funciones de confianza; el frontend no acepta código.",
+    "exposure": "explicit allowlist only; destructive and expensive operations require confirmation"
+  },
+  {
+    "file": "framework\\eda.py",
+    "class": "AnalisisDatosExploratorio",
+    "method": "correlacion",
+    "parameters": "self, metodo: str='pearson'",
+    "returns": "pd.DataFrame",
+    "documentation": "Correlación por pares con valores faltantes excluidos.",
+    "exposure": "explicit allowlist only; destructive and expensive operations require confirmation"
+  },
+  {
+    "file": "framework\\eda.py",
+    "class": "AnalisisDatosExploratorio",
+    "method": "vif",
+    "parameters": "self, columnas: list[str]",
+    "returns": "pd.Series",
+    "documentation": "VIF por regresión auxiliar con intercepto; colinealidad perfecta da infinito.",
+    "exposure": "explicit allowlist only; destructive and expensive operations require confirmation"
+  },
+  {
+    "file": "framework\\eda.py",
+    "class": "AnalisisDatosExploratorio",
+    "method": "prueba",
+    "parameters": "self, nombre: str, columnas: list[str], alpha: float=0.05",
+    "returns": "dict[str, Any]",
+    "documentation": "Pruebas exploratorias; observaciones independientes deben justificarse externamente.",
+    "exposure": "explicit allowlist only; destructive and expensive operations require confirmation"
+  },
+  {
+    "file": "framework\\eda.py",
+    "class": "AnalisisDatosExploratorio",
+    "method": "grafico",
+    "parameters": "self, tipo: str, x: str | None=None, y: str | None=None, color: str | None=None, **params: Any",
+    "returns": "Any",
+    "documentation": "Devolver figura sin ninguna dependencia de Streamlit.",
+    "exposure": "explicit allowlist only; destructive and expensive operations require confirmation"
+  },
+  {
+    "file": "framework\\eda.py",
+    "class": "AnalisisDatosExploratorio",
+    "method": "reporte",
+    "parameters": "self",
+    "returns": "str",
+    "documentation": "Reporte HTML de exploración.",
+    "exposure": "explicit allowlist only; destructive and expensive operations require confirmation"
+  },
+  {
+    "file": "framework\\estimators.py",
+    "class": "EncodedClassifier",
+    "method": "__init__",
+    "parameters": "self, estimator: Any",
+    "returns": "None",
+    "documentation": null,
+    "exposure": "explicit allowlist only; destructive and expensive operations require confirmation"
+  },
+  {
+    "file": "framework\\estimators.py",
+    "class": "EncodedClassifier",
+    "method": "fit",
+    "parameters": "self, x: Any, y: Any",
+    "returns": "'EncodedClassifier'",
+    "documentation": "Ajustar codificador y clasificador exclusivamente con la muestra recibida.",
+    "exposure": "explicit allowlist only; destructive and expensive operations require confirmation"
+  },
+  {
+    "file": "framework\\estimators.py",
+    "class": "EncodedClassifier",
+    "method": "predict",
+    "parameters": "self, x: Any",
+    "returns": "np.ndarray",
+    "documentation": "Devolver categorías originales.",
+    "exposure": "explicit allowlist only; destructive and expensive operations require confirmation"
+  },
+  {
+    "file": "framework\\estimators.py",
+    "class": "EncodedClassifier",
+    "method": "predict_proba",
+    "parameters": "self, x: Any",
+    "returns": "np.ndarray",
+    "documentation": "Probabilidades en el mismo orden que classes_.",
+    "exposure": "explicit allowlist only; destructive and expensive operations require confirmation"
+  },
+  {
+    "file": "framework\\no_supervisado.py",
+    "class": "NoSupervisado",
+    "method": "__init__",
+    "parameters": "self, df: pd.DataFrame, random_state: int=42",
+    "returns": "None",
+    "documentation": null,
+    "exposure": "explicit allowlist only; destructive and expensive operations require confirmation"
+  },
+  {
+    "file": "framework\\no_supervisado.py",
+    "class": "NoSupervisado",
+    "method": "preparar",
+    "parameters": "self, columnas: list[str], **config: Any",
+    "returns": "np.ndarray",
+    "documentation": "Ajustar preprocesamiento exploratorio sobre variables seleccionadas.",
+    "exposure": "explicit allowlist only; destructive and expensive operations require confirmation"
+  },
+  {
+    "file": "framework\\no_supervisado.py",
+    "class": "NoSupervisado",
+    "method": "reducir",
+    "parameters": "self, columnas: list[str], metodo: str='pca', dimensiones: int=2, scaler: str='standard', encoding: str='onehot', **params: Any",
+    "returns": "dict[str, Any]",
+    "documentation": "PCA, t-SNE o UMAP; las dos últimas son representaciones exploratorias.",
+    "exposure": "explicit allowlist only; destructive and expensive operations require confirmation"
+  },
+  {
+    "file": "framework\\no_supervisado.py",
+    "class": "NoSupervisado",
+    "method": "distancias",
+    "parameters": "self, columnas: list[str], metrica: str='euclidean'",
+    "returns": "pd.DataFrame",
+    "documentation": "Matriz de distancias limitada a 1000 observaciones.",
+    "exposure": "explicit allowlist only; destructive and expensive operations require confirmation"
+  },
+  {
+    "file": "framework\\no_supervisado.py",
+    "class": "NoSupervisado",
+    "method": "visualizar_representacion",
+    "parameters": "self, datos: pd.DataFrame, etiquetas: Any=None",
+    "returns": "Any",
+    "documentation": "Figura 2D o 3D con colores categóricos.",
+    "exposure": "explicit allowlist only; destructive and expensive operations require confirmation"
+  },
+  {
+    "file": "framework\\no_supervisado.py",
+    "class": "NoSupervisado",
+    "method": "comparar_representaciones",
+    "parameters": "self",
+    "returns": "pd.DataFrame",
+    "documentation": "Resumen de las representaciones ya calculadas, sin repetir ajustes.",
+    "exposure": "explicit allowlist only; destructive and expensive operations require confirmation"
+  },
+  {
+    "file": "framework\\regresion.py",
+    "class": "Regresion",
+    "method": "__init__",
+    "parameters": "self, df: pd.DataFrame, random_state: int=42",
+    "returns": "None",
+    "documentation": null,
+    "exposure": "explicit allowlist only; destructive and expensive operations require confirmation"
+  },
+  {
+    "file": "framework\\regresion.py",
+    "class": "Regresion",
+    "method": "algoritmos",
+    "parameters": "",
+    "returns": "list[str]",
+    "documentation": "Catálogo de regresores, incluyendo integración opcional.",
+    "exposure": "explicit allowlist only; destructive and expensive operations require confirmation"
+  },
+  {
+    "file": "framework\\regresion.py",
+    "class": "Regresion",
+    "method": "entrenar",
+    "parameters": "self, algoritmo: str, objetivo: str, predictores: list[str], **config: Any",
+    "returns": "Experiment",
+    "documentation": "Regresión simple exige exactamente una variable numérica.",
+    "exposure": "explicit allowlist only; destructive and expensive operations require confirmation"
+  },
+  {
+    "file": "framework\\regresion.py",
+    "class": "Regresion",
+    "method": "crear_estimador",
+    "parameters": "self, algoritmo: str, parametros: dict[str, Any]",
+    "returns": "Any",
+    "documentation": "Instanciar sin entrenar; Gradient Boosting y XGBoost son diferentes.",
+    "exposure": "explicit allowlist only; destructive and expensive operations require confirmation"
+  },
+  {
+    "file": "framework\\regresion.py",
+    "class": "Regresion",
+    "method": "evaluar",
+    "parameters": "self, model: Any, x: pd.DataFrame, y: pd.Series, pred: np.ndarray",
+    "returns": "tuple[dict[str, float], dict[str, Any]]",
+    "documentation": "R² ajustado solo como diagnóstico para regresión lineal con n > p+1.",
+    "exposure": "explicit allowlist only; destructive and expensive operations require confirmation"
+  },
+  {
+    "file": "framework\\regresion.py",
+    "class": "Regresion",
+    "method": "grafico_resultado",
+    "parameters": "self, resultado: Experiment, tipo: str='actual_predicted'",
+    "returns": "Any",
+    "documentation": "Valores reales, residuos, distribución y Q-Q.",
+    "exposure": "explicit allowlist only; destructive and expensive operations require confirmation"
+  },
+  {
+    "file": "framework\\regresion.py",
+    "class": "Regresion",
+    "method": "comparar_lasso",
+    "parameters": "self",
+    "returns": "pd.DataFrame",
+    "documentation": "Comparar Lasso y Lasso CV ya entrenados.",
+    "exposure": "explicit allowlist only; destructive and expensive operations require confirmation"
+  },
+  {
+    "file": "framework\\regresion.py",
+    "class": "Regresion",
+    "method": "comparar_ridge",
+    "parameters": "self",
+    "returns": "pd.DataFrame",
+    "documentation": "Comparar Ridge y Ridge CV sin reentrenamiento.",
+    "exposure": "explicit allowlist only; destructive and expensive operations require confirmation"
+  },
+  {
+    "file": "framework\\regresion.py",
+    "class": "Regresion",
+    "method": "comparar_svm",
+    "parameters": "self",
+    "returns": "pd.DataFrame",
+    "documentation": "Comparar kernels SVR almacenados.",
+    "exposure": "explicit allowlist only; destructive and expensive operations require confirmation"
+  },
+  {
+    "file": "framework\\results.py",
+    "class": "Experiment",
+    "method": "record_provenance",
+    "parameters": "self, df: pd.DataFrame, number: int",
+    "returns": "None",
+    "documentation": "Registrar dataset, versión e índices de partición sin serializar filas privadas.",
+    "exposure": "explicit allowlist only; destructive and expensive operations require confirmation"
+  },
+  {
+    "file": "framework\\results.py",
+    "class": "Experiment",
+    "method": "model_bytes",
+    "parameters": "self",
+    "returns": "bytes",
+    "documentation": "Serializar solo para exportación; nunca se cargan modelos externos.",
+    "exposure": "explicit allowlist only; destructive and expensive operations require confirmation"
+  },
+  {
+    "file": "framework\\supervisado.py",
+    "class": "Supervisado",
+    "method": "__init__",
+    "parameters": "self, df: pd.DataFrame, random_state: int=42",
+    "returns": "None",
+    "documentation": null,
+    "exposure": "explicit allowlist only; destructive and expensive operations require confirmation"
+  },
+  {
+    "file": "framework\\supervisado.py",
+    "class": "Supervisado",
+    "method": "identificar_problema",
+    "parameters": "self, objetivo: str",
+    "returns": "str",
+    "documentation": "Sugerir tipo sin impedir la selección explícita del usuario.",
+    "exposure": "explicit allowlist only; destructive and expensive operations require confirmation"
+  },
+  {
+    "file": "framework\\supervisado.py",
+    "class": "Supervisado",
+    "method": "_cv",
+    "parameters": "self, y: pd.Series, folds: int",
+    "returns": "Any",
+    "documentation": null,
+    "exposure": "explicit allowlist only; destructive and expensive operations require confirmation"
+  },
+  {
+    "file": "framework\\supervisado.py",
+    "class": "Supervisado",
+    "method": "entrenar",
+    "parameters": "self, algoritmo: str, objetivo: str, predictores: list[str], test_size: float=0.2, cv: int=5, scaler: str='standard', encoding: str='onehot', imputation: str='median', parametros: dict[str, Any] | None=None, busqueda: dict[str, list[Any]] | None=None, tipo_busqueda: str='grid', n_iter: int=10",
+    "returns": "Experiment",
+    "documentation": "Separar antes de ajustar; CV y búsqueda incluyen todo el preprocesamiento.",
+    "exposure": "explicit allowlist only; destructive and expensive operations require confirmation"
+  },
+  {
+    "file": "framework\\supervisado.py",
+    "class": "Supervisado",
+    "method": "crear_estimador",
+    "parameters": "self, algoritmo: str, parametros: dict[str, Any]",
+    "returns": "Any",
+    "documentation": "Contrato implementado por las clases especializadas.",
+    "exposure": "explicit allowlist only; destructive and expensive operations require confirmation"
+  },
+  {
+    "file": "framework\\supervisado.py",
+    "class": "Supervisado",
+    "method": "evaluar",
+    "parameters": "self, model: Any, x: pd.DataFrame, y: pd.Series, pred: np.ndarray",
+    "returns": "tuple[dict[str, float], dict[str, Any]]",
+    "documentation": "Contrato implementado por clasificación y regresión.",
+    "exposure": "explicit allowlist only; destructive and expensive operations require confirmation"
+  },
+  {
+    "file": "framework\\supervisado.py",
+    "class": "Supervisado",
+    "method": "predecir",
+    "parameters": "self, resultado: Experiment, df: pd.DataFrame",
+    "returns": "pd.DataFrame",
+    "documentation": "Predicción de nuevos datos usando transformadores ya ajustados.",
+    "exposure": "explicit allowlist only; destructive and expensive operations require confirmation"
+  },
+  {
+    "file": "framework\\supervisado.py",
+    "class": "Supervisado",
+    "method": "importancia",
+    "parameters": "self, resultado: Experiment",
+    "returns": "pd.DataFrame",
+    "documentation": "Importancia por permutación en prueba; interpretación, no selección de variables.",
+    "exposure": "explicit allowlist only; destructive and expensive operations require confirmation"
+  },
+  {
+    "file": "framework\\supervisado.py",
+    "class": "Supervisado",
+    "method": "coeficientes",
+    "parameters": "self, resultado: Experiment",
+    "returns": "pd.DataFrame",
+    "documentation": "Coeficientes en el espacio codificado y escalado.",
+    "exposure": "explicit allowlist only; destructive and expensive operations require confirmation"
+  },
+  {
+    "file": "framework\\supervisado.py",
+    "class": "Supervisado",
+    "method": "curva_aprendizaje",
+    "parameters": "self, resultado: Experiment",
+    "returns": "pd.DataFrame",
+    "documentation": "Aprendizaje usando exclusivamente la partición de entrenamiento.",
+    "exposure": "explicit allowlist only; destructive and expensive operations require confirmation"
+  },
+  {
+    "file": "framework\\supervisado.py",
+    "class": "Supervisado",
+    "method": "comparar",
+    "parameters": "self",
+    "returns": "pd.DataFrame",
+    "documentation": "Comparar ejecuciones almacenadas sin volver a entrenarlas.",
+    "exposure": "explicit allowlist only; destructive and expensive operations require confirmation"
+  }
+]

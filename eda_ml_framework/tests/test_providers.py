@@ -15,6 +15,12 @@ def endpoint():
     requests = []
 
     class Handler(BaseHTTPRequestHandler):
+        def do_GET(self):
+            self.send_response(200)
+            self.send_header("Content-Type", "application/json")
+            self.end_headers()
+            self.wfile.write(json.dumps({"data": [{"id": "test-only-model"}]}).encode())
+
         def do_POST(self):
             body = json.loads(self.rfile.read(int(self.headers["Content-Length"])))
             requests.append((self.path, body))
@@ -35,6 +41,16 @@ def endpoint():
                 if (self.path == "/responses")
                 else {"choices": [{"message": {"content": text}}]}
             )
+            if body.get("tools"):
+                payload = {
+                    "output": [
+                        {
+                            "type": "function_call",
+                            "name": body["tools"][0]["name"],
+                            "arguments": json.dumps({"parameters_json": "{}", "reason": "TEST"}),
+                        }
+                    ]
+                }
             self.send_response(200)
             self.send_header("Content-Type", "application/json")
             self.end_headers()
@@ -52,19 +68,44 @@ def endpoint():
     server.server_close()
 
 
-@pytest.mark.parametrize("mode", ["responses", "chat_completions"])
+def test_local_model_catalog_probe(endpoint):
+    base, _ = endpoint
+    provider = JSONLLMProvider(
+        model="test-only-model", base_url=base, api_key=SecretStr(""), mode="chat_completions"
+    )
+    assert provider.probe()["available"]
+    provider.model = "not-installed"
+    assert not provider.probe()["available"]
+
+
+@pytest.mark.parametrize("mode", ["responses", "responses_tools", "chat_completions"])
 def test_http_adapter(endpoint, mode):
     base, requests = endpoint
     provider = JSONLLMProvider(
         model="test-only-model", base_url=base, api_key=SecretStr("test-only-key"), mode=mode
     )
-    result = provider.plan("instructions", "question", {"rows": 10}, [])
+    tools = (
+        [
+            {
+                "name": "eda.profile",
+                "description": "Actual profile",
+                "parameters": {"type": "object", "properties": {}},
+            }
+        ]
+        if mode == "responses_tools"
+        else []
+    )
+    result = provider.plan("instructions", "question", {"rows": 10}, tools)
     assert result.calls[0].tool == "eda.profile"
     assert provider.explain("instructions", {"metric": 1}) == "Explicación del servidor de prueba"
     assert len(requests) == 2
     assert "test-only-key" not in repr(provider)
-    if mode == "responses":
+    if mode in {"responses", "responses_tools"}:
         assert requests[0][1]["store"] is False
+    if mode == "responses_tools":
+        assert requests[0][1]["tools"][0]["name"] == "eda__profile"
+        assert requests[0][1]["tools"][0]["strict"] is True
+        assert requests[0][1]["parallel_tool_calls"] is False
     assert "rows" in json.dumps(requests[0][1])
 
 

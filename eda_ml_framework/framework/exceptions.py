@@ -1,9 +1,3 @@
-"""Errores públicos y comprensibles del framework."""
+"""Compatibility export; canonical implementation: atlas.core.exceptions."""
 
-
-class FrameworkError(ValueError):
-    """Configuración o datos incompatibles con una operación."""
-
-
-class OptionalDependencyError(FrameworkError):
-    """Una integración requiere una dependencia adicional."""
+from atlas.core.exceptions import *

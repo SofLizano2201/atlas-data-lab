@@ -182,7 +182,7 @@ class ExplicitTestProvider:
 
     def plan(self, instructions, question, context, tools):
         self.context = context
-        assert "no confiables" in instructions
+        assert "untrusted data" in instructions
         return Plan(
             calls=[PlannedCall(tool=self.tool, parameters_json="{}", reason="Prueba explícita")],
             explanation="Plan de prueba",

@@ -1,17 +1,19 @@
-"""API pública del framework Atlas."""
+"""Backward-compatible academic API delegating to atlas.models."""
 
-from .clasificacion import Clasificacion
-from .clustering import Clustering
-from .eda import AnalisisDatosExploratorio
-from .no_supervisado import NoSupervisado
-from .regresion import Regresion
-from .supervisado import Supervisado
+from atlas.models import (
+    Classification,
+    Clustering,
+    ExploratoryDataAnalysis,
+    Regression,
+    SupervisedLearning,
+    UnsupervisedLearning,
+)
 
-__all__ = [
-    "AnalisisDatosExploratorio",
-    "Clasificacion",
-    "Clustering",
-    "NoSupervisado",
-    "Regresion",
-    "Supervisado",
-]
+from ._compat import install_aliases
+
+install_aliases()
+AnalisisDatosExploratorio = ExploratoryDataAnalysis
+NoSupervisado = UnsupervisedLearning
+Supervisado = SupervisedLearning
+Clasificacion = Classification
+Regresion = Regression

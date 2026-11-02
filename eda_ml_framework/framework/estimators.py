@@ -1,30 +1,3 @@
-"""Adaptadores sklearn reutilizables para integraciones opcionales."""
+"""Compatibility export; canonical implementation: atlas.models.estimators."""
 
-from typing import Any
-
-import numpy as np
-from sklearn.base import BaseEstimator, ClassifierMixin, clone
-from sklearn.preprocessing import LabelEncoder
-
-
-class EncodedClassifier(ClassifierMixin, BaseEstimator):
-    """Codificar etiquetas en fit y devolver etiquetas originales al predecir."""
-
-    def __init__(self, estimator: Any) -> None:
-        self.estimator = estimator
-
-    def fit(self, x: Any, y: Any) -> "EncodedClassifier":
-        """Ajustar codificador y clasificador exclusivamente con la muestra recibida."""
-        self.encoder_ = LabelEncoder().fit(y)
-        self.classes_ = self.encoder_.classes_
-        self.estimator_ = clone(self.estimator).fit(x, self.encoder_.transform(y))
-        self.n_features_in_ = x.shape[1]
-        return self
-
-    def predict(self, x: Any) -> np.ndarray:
-        """Devolver categorías originales."""
-        return self.encoder_.inverse_transform(self.estimator_.predict(x).astype(int))
-
-    def predict_proba(self, x: Any) -> np.ndarray:
-        """Probabilidades en el mismo orden que classes_."""
-        return self.estimator_.predict_proba(x)
+from atlas.models.estimators import *

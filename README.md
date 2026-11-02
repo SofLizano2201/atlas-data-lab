@@ -1,4 +1,4 @@
-# Atlas · Data Lab / EDA + ML
+# Atlas 2.0 · Data Lab / EDA + ML
 
 Framework académico de análisis exploratorio de datos y Machine Learning con una
 aplicación web Streamlit en español. Incluye limpieza con versiones, visualizaciones,
@@ -41,7 +41,14 @@ Desde `eda_ml_framework`, con el entorno instalado:
 .\.venv\Scripts\python.exe -m ruff check .
 ```
 
-La versión actual registra **155 pruebas aprobadas**; incluye cinco agentes especializados,
+La versión 2.0 incorpora agentes offline con objetivos guiados, navegación agrupada,
+contexto real e interacción gráfica. Consulta la [guía 2.0](eda_ml_framework/docs/atlas_2_0.md)
+y la [auditoría funcional](eda_ml_framework/docs/audit_2_0.md).
+Conserva arquitectura MVC en `eda_ml_framework/src/atlas/`, un único
+`agents/agent.py`, cinco especialistas polimórficos y compatibilidad con la API académica.
+Consulta la [arquitectura MVC](eda_ml_framework/docs/mvc.md) y los
+[resultados de verificación](eda_ml_framework/docs/verification_mvc_1_2.md).
+Incluye cinco agentes especializados,
 contratos tipados y reportes HTML/PDF. [Configuración de agentes](eda_ml_framework/docs/agents.md).
 La conversación requiere un proveedor y modelo configurados; las herramientas deterministas
 siguen disponibles sin API. [Verificación de la integración](eda_ml_framework/docs/verification_2026_10_27.md).

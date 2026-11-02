@@ -1,0 +1,4825 @@
+{
+  "methods": [
+    {
+      "class": "ExploratoryDataAnalysis",
+      "method": "source_columns",
+      "parameters": "(self) -> 'list[str]'",
+      "expected_behavior": "Return source schema names without copying or exposing original rows.",
+      "implemented_in": "atlas.models.eda",
+      "agent_tools": [],
+      "test_reference_exists": true,
+      "verification_note": "A test reference is not a guarantee of coverage for every input. Optional dependencies and abstract hooks are documented separately."
+    },
+    {
+      "class": "ExploratoryDataAnalysis",
+      "method": "outlier_diagnostic",
+      "parameters": "(self, columns: 'list[str]', method: 'str' = 'iqr', threshold: 'float' = 1.5) -> 'dict[str, Any]'",
+      "expected_behavior": "Summarize the existing outlier detector once, with a bounded row preview.",
+      "implemented_in": "atlas.models.eda",
+      "agent_tools": [
+        "eda.outliers"
+      ],
+      "test_reference_exists": false,
+      "verification_note": "A test reference is not a guarantee of coverage for every input. Optional dependencies and abstract hooks are documented separately."
+    },
+    {
+      "class": "ExploratoryDataAnalysis",
+      "method": "profile",
+      "parameters": "(self) -> 'dict[str, Any]'",
+      "expected_behavior": "Compose existing data-quality outputs for controllers and agent context.",
+      "implemented_in": "atlas.models.eda",
+      "agent_tools": [
+        "eda.profile"
+      ],
+      "test_reference_exists": true,
+      "verification_note": "A test reference is not a guarantee of coverage for every input. Optional dependencies and abstract hooks are documented separately."
+    },
+    {
+      "class": "ExploratoryDataAnalysis",
+      "method": "original",
+      "parameters": "(self) -> 'pd.DataFrame'",
+      "expected_behavior": "Return a defensive copy of the immutable original.",
+      "implemented_in": "atlas.models.eda",
+      "agent_tools": [],
+      "test_reference_exists": true,
+      "verification_note": "A test reference is not a guarantee of coverage for every input. Optional dependencies and abstract hooks are documented separately."
+    },
+    {
+      "class": "ExploratoryDataAnalysis",
+      "method": "dataset_version",
+      "parameters": "(self) -> 'DatasetVersion'",
+      "expected_behavior": "Describe the original identity and current content fingerprint.",
+      "implemented_in": "atlas.models.eda",
+      "agent_tools": [],
+      "test_reference_exists": true,
+      "verification_note": "A test reference is not a guarantee of coverage for every input. Optional dependencies and abstract hooks are documented separately."
+    },
+    {
+      "class": "ExploratoryDataAnalysis",
+      "method": "df",
+      "parameters": "(self) -> 'pd.DataFrame'",
+      "expected_behavior": "Return a defensive copy of the active dataset.",
+      "implemented_in": "atlas.models.eda",
+      "agent_tools": [],
+      "test_reference_exists": true,
+      "verification_note": "A test reference is not a guarantee of coverage for every input. Optional dependencies and abstract hooks are documented separately."
+    },
+    {
+      "class": "ExploratoryDataAnalysis",
+      "method": "history",
+      "parameters": "(self) -> 'pd.DataFrame'",
+      "expected_behavior": "Return a copy of the transformation audit trail.",
+      "implemented_in": "atlas.models.eda",
+      "agent_tools": [],
+      "test_reference_exists": true,
+      "verification_note": "A test reference is not a guarantee of coverage for every input. Optional dependencies and abstract hooks are documented separately."
+    },
+    {
+      "class": "ExploratoryDataAnalysis",
+      "method": "version_count",
+      "parameters": "(self) -> 'int'",
+      "expected_behavior": "Provide version count using validated inputs.",
+      "implemented_in": "atlas.models.eda",
+      "agent_tools": [],
+      "test_reference_exists": true,
+      "verification_note": "A test reference is not a guarantee of coverage for every input. Optional dependencies and abstract hooks are documented separately."
+    },
+    {
+      "class": "ExploratoryDataAnalysis",
+      "method": "load",
+      "parameters": "(cls, source: 'Any', file_format: 'str | None' = None, separator: 'str' = ',', text_encoding: 'str' = 'utf-8', sheet: 'str | int' = 0) -> 'ExploratoryDataAnalysis'",
+      "expected_behavior": "Read a validated tabular source with size, format and encoding checks.",
+      "implemented_in": "atlas.models.eda",
+      "agent_tools": [],
+      "test_reference_exists": true,
+      "verification_note": "A test reference is not a guarantee of coverage for every input. Optional dependencies and abstract hooks are documented separately."
+    },
+    {
+      "class": "ExploratoryDataAnalysis",
+      "method": "load_csv",
+      "parameters": "(cls, source: 'Any', **config: 'Any') -> 'ExploratoryDataAnalysis'",
+      "expected_behavior": "Provide load csv using validated inputs.",
+      "implemented_in": "atlas.models.eda",
+      "agent_tools": [],
+      "test_reference_exists": false,
+      "verification_note": "A test reference is not a guarantee of coverage for every input. Optional dependencies and abstract hooks are documented separately."
+    },
+    {
+      "class": "ExploratoryDataAnalysis",
+      "method": "load_excel",
+      "parameters": "(cls, source: 'Any', sheet: 'str | int' = 0) -> 'ExploratoryDataAnalysis'",
+      "expected_behavior": "Provide load excel using validated inputs.",
+      "implemented_in": "atlas.models.eda",
+      "agent_tools": [],
+      "test_reference_exists": false,
+      "verification_note": "A test reference is not a guarantee of coverage for every input. Optional dependencies and abstract hooks are documented separately."
+    },
+    {
+      "class": "ExploratoryDataAnalysis",
+      "method": "load_json",
+      "parameters": "(cls, source: 'Any') -> 'ExploratoryDataAnalysis'",
+      "expected_behavior": "Provide load json using validated inputs.",
+      "implemented_in": "atlas.models.eda",
+      "agent_tools": [],
+      "test_reference_exists": false,
+      "verification_note": "A test reference is not a guarantee of coverage for every input. Optional dependencies and abstract hooks are documented separately."
+    },
+    {
+      "class": "ExploratoryDataAnalysis",
+      "method": "load_parquet",
+      "parameters": "(cls, source: 'Any') -> 'ExploratoryDataAnalysis'",
+      "expected_behavior": "Provide load parquet using validated inputs.",
+      "implemented_in": "atlas.models.eda",
+      "agent_tools": [],
+      "test_reference_exists": false,
+      "verification_note": "A test reference is not a guarantee of coverage for every input. Optional dependencies and abstract hooks are documented separately."
+    },
+    {
+      "class": "ExploratoryDataAnalysis",
+      "method": "preview",
+      "parameters": "(self, n: 'int' = 10) -> 'pd.DataFrame'",
+      "expected_behavior": "Provide preview using validated inputs.",
+      "implemented_in": "atlas.models.eda",
+      "agent_tools": [],
+      "test_reference_exists": false,
+      "verification_note": "A test reference is not a guarantee of coverage for every input. Optional dependencies and abstract hooks are documented separately."
+    },
+    {
+      "class": "ExploratoryDataAnalysis",
+      "method": "dimensions",
+      "parameters": "(self) -> 'tuple[int, int]'",
+      "expected_behavior": "Provide dimensions using validated inputs.",
+      "implemented_in": "atlas.models.eda",
+      "agent_tools": [],
+      "test_reference_exists": true,
+      "verification_note": "A test reference is not a guarantee of coverage for every input. Optional dependencies and abstract hooks are documented separately."
+    },
+    {
+      "class": "ExploratoryDataAnalysis",
+      "method": "columns",
+      "parameters": "(self) -> 'list[str]'",
+      "expected_behavior": "Provide columns using validated inputs.",
+      "implemented_in": "atlas.models.eda",
+      "agent_tools": [],
+      "test_reference_exists": true,
+      "verification_note": "A test reference is not a guarantee of coverage for every input. Optional dependencies and abstract hooks are documented separately."
+    },
+    {
+      "class": "ExploratoryDataAnalysis",
+      "method": "data_types",
+      "parameters": "(self) -> 'pd.Series'",
+      "expected_behavior": "Provide data types using validated inputs.",
+      "implemented_in": "atlas.models.eda",
+      "agent_tools": [],
+      "test_reference_exists": false,
+      "verification_note": "A test reference is not a guarantee of coverage for every input. Optional dependencies and abstract hooks are documented separately."
+    },
+    {
+      "class": "ExploratoryDataAnalysis",
+      "method": "memory_usage",
+      "parameters": "(self) -> 'pd.Series'",
+      "expected_behavior": "Provide memory usage using validated inputs.",
+      "implemented_in": "atlas.models.eda",
+      "agent_tools": [],
+      "test_reference_exists": false,
+      "verification_note": "A test reference is not a guarantee of coverage for every input. Optional dependencies and abstract hooks are documented separately."
+    },
+    {
+      "class": "ExploratoryDataAnalysis",
+      "method": "information",
+      "parameters": "(self) -> 'pd.DataFrame'",
+      "expected_behavior": "Provide information using validated inputs.",
+      "implemented_in": "atlas.models.eda",
+      "agent_tools": [],
+      "test_reference_exists": false,
+      "verification_note": "A test reference is not a guarantee of coverage for every input. Optional dependencies and abstract hooks are documented separately."
+    },
+    {
+      "class": "ExploratoryDataAnalysis",
+      "method": "unique_values",
+      "parameters": "(self, column: 'str') -> 'np.ndarray'",
+      "expected_behavior": "Provide unique values using validated inputs.",
+      "implemented_in": "atlas.models.eda",
+      "agent_tools": [],
+      "test_reference_exists": false,
+      "verification_note": "A test reference is not a guarantee of coverage for every input. Optional dependencies and abstract hooks are documented separately."
+    },
+    {
+      "class": "ExploratoryDataAnalysis",
+      "method": "constant_columns",
+      "parameters": "(self) -> 'list[str]'",
+      "expected_behavior": "Provide constant columns using validated inputs.",
+      "implemented_in": "atlas.models.eda",
+      "agent_tools": [],
+      "test_reference_exists": true,
+      "verification_note": "A test reference is not a guarantee of coverage for every input. Optional dependencies and abstract hooks are documented separately."
+    },
+    {
+      "class": "ExploratoryDataAnalysis",
+      "method": "duplicates",
+      "parameters": "(self) -> 'pd.DataFrame'",
+      "expected_behavior": "Provide duplicates using validated inputs.",
+      "implemented_in": "atlas.models.eda",
+      "agent_tools": [],
+      "test_reference_exists": false,
+      "verification_note": "A test reference is not a guarantee of coverage for every input. Optional dependencies and abstract hooks are documented separately."
+    },
+    {
+      "class": "ExploratoryDataAnalysis",
+      "method": "backup",
+      "parameters": "(self) -> 'int'",
+      "expected_behavior": "Provide backup using validated inputs.",
+      "implemented_in": "atlas.models.eda",
+      "agent_tools": [],
+      "test_reference_exists": false,
+      "verification_note": "A test reference is not a guarantee of coverage for every input. Optional dependencies and abstract hooks are documented separately."
+    },
+    {
+      "class": "ExploratoryDataAnalysis",
+      "method": "transformation_impact",
+      "parameters": "(self, candidate: 'pd.DataFrame') -> 'dict[str, Any]'",
+      "expected_behavior": "Describe a preview without changing either frame or fitting a model.",
+      "implemented_in": "atlas.models.eda",
+      "agent_tools": [],
+      "test_reference_exists": true,
+      "verification_note": "A test reference is not a guarantee of coverage for every input. Optional dependencies and abstract hooks are documented separately."
+    },
+    {
+      "class": "ExploratoryDataAnalysis",
+      "method": "apply",
+      "parameters": "(self, new_frame: 'pd.DataFrame', operation: 'str', confirm: 'bool' = False) -> 'None'",
+      "expected_behavior": "Apply a validated proposal only after explicit confirmation and record its version.",
+      "implemented_in": "atlas.models.eda",
+      "agent_tools": [
+        "eda.apply"
+      ],
+      "test_reference_exists": true,
+      "verification_note": "A test reference is not a guarantee of coverage for every input. Optional dependencies and abstract hooks are documented separately."
+    },
+    {
+      "class": "ExploratoryDataAnalysis",
+      "method": "restore",
+      "parameters": "(self, version: 'int', confirm: 'bool' = False) -> 'None'",
+      "expected_behavior": "Restore a prior dataset version only after explicit confirmation.",
+      "implemented_in": "atlas.models.eda",
+      "agent_tools": [],
+      "test_reference_exists": true,
+      "verification_note": "A test reference is not a guarantee of coverage for every input. Optional dependencies and abstract hooks are documented separately."
+    },
+    {
+      "class": "ExploratoryDataAnalysis",
+      "method": "export",
+      "parameters": "(self, file_format: 'str' = 'csv') -> 'bytes'",
+      "expected_behavior": "Provide export using validated inputs.",
+      "implemented_in": "atlas.models.eda",
+      "agent_tools": [],
+      "test_reference_exists": true,
+      "verification_note": "A test reference is not a guarantee of coverage for every input. Optional dependencies and abstract hooks are documented separately."
+    },
+    {
+      "class": "ExploratoryDataAnalysis",
+      "method": "statistics",
+      "parameters": "(self, columns: 'list[str] | None' = None) -> 'pd.DataFrame'",
+      "expected_behavior": "Calculate numeric descriptive statistics while handling missing values.",
+      "implemented_in": "atlas.models.eda",
+      "agent_tools": [
+        "eda.statistics"
+      ],
+      "test_reference_exists": true,
+      "verification_note": "A test reference is not a guarantee of coverage for every input. Optional dependencies and abstract hooks are documented separately."
+    },
+    {
+      "class": "ExploratoryDataAnalysis",
+      "method": "statistic",
+      "parameters": "(self, name: 'str', column: 'str') -> 'float'",
+      "expected_behavior": "Provide statistic using validated inputs.",
+      "implemented_in": "atlas.models.eda",
+      "agent_tools": [],
+      "test_reference_exists": false,
+      "verification_note": "A test reference is not a guarantee of coverage for every input. Optional dependencies and abstract hooks are documented separately."
+    },
+    {
+      "class": "ExploratoryDataAnalysis",
+      "method": "mean",
+      "parameters": "(self, column: 'str') -> 'float'",
+      "expected_behavior": "Provide mean using validated inputs.",
+      "implemented_in": "atlas.models.eda",
+      "agent_tools": [],
+      "test_reference_exists": true,
+      "verification_note": "A test reference is not a guarantee of coverage for every input. Optional dependencies and abstract hooks are documented separately."
+    },
+    {
+      "class": "ExploratoryDataAnalysis",
+      "method": "median",
+      "parameters": "(self, column: 'str') -> 'float'",
+      "expected_behavior": "Provide median using validated inputs.",
+      "implemented_in": "atlas.models.eda",
+      "agent_tools": [],
+      "test_reference_exists": false,
+      "verification_note": "A test reference is not a guarantee of coverage for every input. Optional dependencies and abstract hooks are documented separately."
+    },
+    {
+      "class": "ExploratoryDataAnalysis",
+      "method": "mode",
+      "parameters": "(self, column: 'str') -> 'pd.Series'",
+      "expected_behavior": "Provide mode using validated inputs.",
+      "implemented_in": "atlas.models.eda",
+      "agent_tools": [],
+      "test_reference_exists": true,
+      "verification_note": "A test reference is not a guarantee of coverage for every input. Optional dependencies and abstract hooks are documented separately."
+    },
+    {
+      "class": "ExploratoryDataAnalysis",
+      "method": "minimum",
+      "parameters": "(self, column: 'str') -> 'float'",
+      "expected_behavior": "Provide minimum using validated inputs.",
+      "implemented_in": "atlas.models.eda",
+      "agent_tools": [],
+      "test_reference_exists": false,
+      "verification_note": "A test reference is not a guarantee of coverage for every input. Optional dependencies and abstract hooks are documented separately."
+    },
+    {
+      "class": "ExploratoryDataAnalysis",
+      "method": "maximum",
+      "parameters": "(self, column: 'str') -> 'float'",
+      "expected_behavior": "Provide maximum using validated inputs.",
+      "implemented_in": "atlas.models.eda",
+      "agent_tools": [],
+      "test_reference_exists": false,
+      "verification_note": "A test reference is not a guarantee of coverage for every input. Optional dependencies and abstract hooks are documented separately."
+    },
+    {
+      "class": "ExploratoryDataAnalysis",
+      "method": "value_range",
+      "parameters": "(self, column: 'str') -> 'float'",
+      "expected_behavior": "Provide value range using validated inputs.",
+      "implemented_in": "atlas.models.eda",
+      "agent_tools": [],
+      "test_reference_exists": false,
+      "verification_note": "A test reference is not a guarantee of coverage for every input. Optional dependencies and abstract hooks are documented separately."
+    },
+    {
+      "class": "ExploratoryDataAnalysis",
+      "method": "variance",
+      "parameters": "(self, column: 'str') -> 'float'",
+      "expected_behavior": "Provide variance using validated inputs.",
+      "implemented_in": "atlas.models.eda",
+      "agent_tools": [],
+      "test_reference_exists": false,
+      "verification_note": "A test reference is not a guarantee of coverage for every input. Optional dependencies and abstract hooks are documented separately."
+    },
+    {
+      "class": "ExploratoryDataAnalysis",
+      "method": "standard_deviation",
+      "parameters": "(self, column: 'str') -> 'float'",
+      "expected_behavior": "Provide standard deviation using validated inputs.",
+      "implemented_in": "atlas.models.eda",
+      "agent_tools": [],
+      "test_reference_exists": false,
+      "verification_note": "A test reference is not a guarantee of coverage for every input. Optional dependencies and abstract hooks are documented separately."
+    },
+    {
+      "class": "ExploratoryDataAnalysis",
+      "method": "quartiles",
+      "parameters": "(self, column: 'str') -> 'pd.Series'",
+      "expected_behavior": "Provide quartiles using validated inputs.",
+      "implemented_in": "atlas.models.eda",
+      "agent_tools": [],
+      "test_reference_exists": true,
+      "verification_note": "A test reference is not a guarantee of coverage for every input. Optional dependencies and abstract hooks are documented separately."
+    },
+    {
+      "class": "ExploratoryDataAnalysis",
+      "method": "interquartile_range",
+      "parameters": "(self, column: 'str') -> 'float'",
+      "expected_behavior": "Provide interquartile range using validated inputs.",
+      "implemented_in": "atlas.models.eda",
+      "agent_tools": [],
+      "test_reference_exists": false,
+      "verification_note": "A test reference is not a guarantee of coverage for every input. Optional dependencies and abstract hooks are documented separately."
+    },
+    {
+      "class": "ExploratoryDataAnalysis",
+      "method": "coefficient_of_variation",
+      "parameters": "(self, column: 'str') -> 'float'",
+      "expected_behavior": "Provide coefficient of variation using validated inputs.",
+      "implemented_in": "atlas.models.eda",
+      "agent_tools": [],
+      "test_reference_exists": false,
+      "verification_note": "A test reference is not a guarantee of coverage for every input. Optional dependencies and abstract hooks are documented separately."
+    },
+    {
+      "class": "ExploratoryDataAnalysis",
+      "method": "skewness",
+      "parameters": "(self, column: 'str') -> 'float'",
+      "expected_behavior": "Provide skewness using validated inputs.",
+      "implemented_in": "atlas.models.eda",
+      "agent_tools": [],
+      "test_reference_exists": false,
+      "verification_note": "A test reference is not a guarantee of coverage for every input. Optional dependencies and abstract hooks are documented separately."
+    },
+    {
+      "class": "ExploratoryDataAnalysis",
+      "method": "kurtosis",
+      "parameters": "(self, column: 'str') -> 'float'",
+      "expected_behavior": "Provide kurtosis using validated inputs.",
+      "implemented_in": "atlas.models.eda",
+      "agent_tools": [],
+      "test_reference_exists": false,
+      "verification_note": "A test reference is not a guarantee of coverage for every input. Optional dependencies and abstract hooks are documented separately."
+    },
+    {
+      "class": "ExploratoryDataAnalysis",
+      "method": "percentiles",
+      "parameters": "(self, column: 'str', values: 'list[float]') -> 'pd.Series'",
+      "expected_behavior": "Provide percentiles using validated inputs.",
+      "implemented_in": "atlas.models.eda",
+      "agent_tools": [],
+      "test_reference_exists": true,
+      "verification_note": "A test reference is not a guarantee of coverage for every input. Optional dependencies and abstract hooks are documented separately."
+    },
+    {
+      "class": "ExploratoryDataAnalysis",
+      "method": "frequencies",
+      "parameters": "(self, column: 'str') -> 'pd.DataFrame'",
+      "expected_behavior": "Provide frequencies using validated inputs.",
+      "implemented_in": "atlas.models.eda",
+      "agent_tools": [
+        "eda.frequencies",
+        "classification.class_distribution"
+      ],
+      "test_reference_exists": true,
+      "verification_note": "A test reference is not a guarantee of coverage for every input. Optional dependencies and abstract hooks are documented separately."
+    },
+    {
+      "class": "ExploratoryDataAnalysis",
+      "method": "contingency",
+      "parameters": "(self, a: 'str', b: 'str') -> 'pd.DataFrame'",
+      "expected_behavior": "Provide contingency using validated inputs.",
+      "implemented_in": "atlas.models.eda",
+      "agent_tools": [],
+      "test_reference_exists": false,
+      "verification_note": "A test reference is not a guarantee of coverage for every input. Optional dependencies and abstract hooks are documented separately."
+    },
+    {
+      "class": "ExploratoryDataAnalysis",
+      "method": "summary",
+      "parameters": "(self) -> 'pd.DataFrame'",
+      "expected_behavior": "Provide summary using validated inputs.",
+      "implemented_in": "atlas.models.eda",
+      "agent_tools": [],
+      "test_reference_exists": false,
+      "verification_note": "A test reference is not a guarantee of coverage for every input. Optional dependencies and abstract hooks are documented separately."
+    },
+    {
+      "class": "ExploratoryDataAnalysis",
+      "method": "grouped_statistics",
+      "parameters": "(self, category: 'str', column: 'str') -> 'pd.DataFrame'",
+      "expected_behavior": "Provide grouped statistics using validated inputs.",
+      "implemented_in": "atlas.models.eda",
+      "agent_tools": [],
+      "test_reference_exists": true,
+      "verification_note": "A test reference is not a guarantee of coverage for every input. Optional dependencies and abstract hooks are documented separately."
+    },
+    {
+      "class": "ExploratoryDataAnalysis",
+      "method": "missing_values",
+      "parameters": "(self) -> 'pd.DataFrame'",
+      "expected_behavior": "Provide missing values using validated inputs.",
+      "implemented_in": "atlas.models.eda",
+      "agent_tools": [],
+      "test_reference_exists": true,
+      "verification_note": "A test reference is not a guarantee of coverage for every input. Optional dependencies and abstract hooks are documented separately."
+    },
+    {
+      "class": "ExploratoryDataAnalysis",
+      "method": "outliers",
+      "parameters": "(self, columns: 'list[str]', method: 'str' = 'iqr', threshold: 'float' = 1.5) -> 'pd.DataFrame'",
+      "expected_behavior": "Provide outliers using validated inputs.",
+      "implemented_in": "atlas.models.eda",
+      "agent_tools": [],
+      "test_reference_exists": true,
+      "verification_note": "A test reference is not a guarantee of coverage for every input. Optional dependencies and abstract hooks are documented separately."
+    },
+    {
+      "class": "ExploratoryDataAnalysis",
+      "method": "type_inconsistencies",
+      "parameters": "(self) -> 'pd.DataFrame'",
+      "expected_behavior": "Provide type inconsistencies using validated inputs.",
+      "implemented_in": "atlas.models.eda",
+      "agent_tools": [],
+      "test_reference_exists": false,
+      "verification_note": "A test reference is not a guarantee of coverage for every input. Optional dependencies and abstract hooks are documented separately."
+    },
+    {
+      "class": "ExploratoryDataAnalysis",
+      "method": "rare_categories",
+      "parameters": "(self, column: 'str', threshold: 'float' = 0.01) -> 'pd.DataFrame'",
+      "expected_behavior": "Provide rare categories using validated inputs.",
+      "implemented_in": "atlas.models.eda",
+      "agent_tools": [],
+      "test_reference_exists": true,
+      "verification_note": "A test reference is not a guarantee of coverage for every input. Optional dependencies and abstract hooks are documented separately."
+    },
+    {
+      "class": "ExploratoryDataAnalysis",
+      "method": "transform",
+      "parameters": "(self, operation: 'str', columns: 'list[str] | None' = None, **params: 'Any') -> 'pd.DataFrame'",
+      "expected_behavior": "Return a transformation proposal without mutating the active dataset.",
+      "implemented_in": "atlas.models.eda",
+      "agent_tools": [
+        "eda.preview"
+      ],
+      "test_reference_exists": true,
+      "verification_note": "A test reference is not a guarantee of coverage for every input. Optional dependencies and abstract hooks are documented separately."
+    },
+    {
+      "class": "ExploratoryDataAnalysis",
+      "method": "custom_transform",
+      "parameters": "(self, function: 'Callable[[pd.DataFrame], pd.DataFrame]') -> 'pd.DataFrame'",
+      "expected_behavior": "Provide custom transform using validated inputs.",
+      "implemented_in": "atlas.models.eda",
+      "agent_tools": [],
+      "test_reference_exists": true,
+      "verification_note": "A test reference is not a guarantee of coverage for every input. Optional dependencies and abstract hooks are documented separately."
+    },
+    {
+      "class": "ExploratoryDataAnalysis",
+      "method": "correlation",
+      "parameters": "(self, method: 'str' = 'pearson') -> 'pd.DataFrame'",
+      "expected_behavior": "Provide correlation using validated inputs.",
+      "implemented_in": "atlas.models.eda",
+      "agent_tools": [
+        "eda.correlation"
+      ],
+      "test_reference_exists": true,
+      "verification_note": "A test reference is not a guarantee of coverage for every input. Optional dependencies and abstract hooks are documented separately."
+    },
+    {
+      "class": "ExploratoryDataAnalysis",
+      "method": "vif",
+      "parameters": "(self, columns: 'list[str]') -> 'pd.Series'",
+      "expected_behavior": "Provide vif using validated inputs.",
+      "implemented_in": "atlas.models.eda",
+      "agent_tools": [],
+      "test_reference_exists": true,
+      "verification_note": "A test reference is not a guarantee of coverage for every input. Optional dependencies and abstract hooks are documented separately."
+    },
+    {
+      "class": "ExploratoryDataAnalysis",
+      "method": "statistical_test",
+      "parameters": "(self, name: 'str', columns: 'list[str]', alpha: 'float' = 0.05) -> 'dict[str, Any]'",
+      "expected_behavior": "Execute a compatible statistical test and report assumption limitations.",
+      "implemented_in": "atlas.models.eda",
+      "agent_tools": [
+        "eda.test"
+      ],
+      "test_reference_exists": true,
+      "verification_note": "A test reference is not a guarantee of coverage for every input. Optional dependencies and abstract hooks are documented separately."
+    },
+    {
+      "class": "ExploratoryDataAnalysis",
+      "method": "chart",
+      "parameters": "(self, kind: 'str', x: 'str | None' = None, y: 'str | None' = None, color: 'str | None' = None, **params: 'Any') -> 'Any'",
+      "expected_behavior": "Return a validated figure without importing a frontend framework.",
+      "implemented_in": "atlas.models.eda",
+      "agent_tools": [
+        "eda.plot"
+      ],
+      "test_reference_exists": true,
+      "verification_note": "A test reference is not a guarantee of coverage for every input. Optional dependencies and abstract hooks are documented separately."
+    },
+    {
+      "class": "ExploratoryDataAnalysis",
+      "method": "report",
+      "parameters": "(self) -> 'str'",
+      "expected_behavior": "Provide report using validated inputs.",
+      "implemented_in": "atlas.models.eda",
+      "agent_tools": [],
+      "test_reference_exists": true,
+      "verification_note": "A test reference is not a guarantee of coverage for every input. Optional dependencies and abstract hooks are documented separately."
+    },
+    {
+      "class": "UnsupervisedLearning",
+      "method": "prepare",
+      "parameters": "(self, columns: list[str], **config: Any) -> numpy.ndarray",
+      "expected_behavior": "Provide prepare using validated inputs.",
+      "implemented_in": "atlas.models.unsupervised",
+      "agent_tools": [],
+      "test_reference_exists": true,
+      "verification_note": "A test reference is not a guarantee of coverage for every input. Optional dependencies and abstract hooks are documented separately."
+    },
+    {
+      "class": "UnsupervisedLearning",
+      "method": "reduce_dimensions",
+      "parameters": "(self, columns: list[str], method: str = 'pca', dimensions: int = 2, scaler: str = 'standard', encoding: str = 'onehot', **params: Any) -> dict[str, typing.Any]",
+      "expected_behavior": "Fit PCA, t-SNE or optional UMAP for exploratory representation.",
+      "implemented_in": "atlas.models.unsupervised",
+      "agent_tools": [
+        "cluster.reduce"
+      ],
+      "test_reference_exists": true,
+      "verification_note": "A test reference is not a guarantee of coverage for every input. Optional dependencies and abstract hooks are documented separately."
+    },
+    {
+      "class": "UnsupervisedLearning",
+      "method": "distances",
+      "parameters": "(self, columns: list[str], metric: str = 'euclidean') -> pandas.core.frame.DataFrame",
+      "expected_behavior": "Provide distances using validated inputs.",
+      "implemented_in": "atlas.models.unsupervised",
+      "agent_tools": [
+        "cluster.distances"
+      ],
+      "test_reference_exists": true,
+      "verification_note": "A test reference is not a guarantee of coverage for every input. Optional dependencies and abstract hooks are documented separately."
+    },
+    {
+      "class": "UnsupervisedLearning",
+      "method": "plot_representation",
+      "parameters": "(self, data: pandas.core.frame.DataFrame, labels: Any = None) -> Any",
+      "expected_behavior": "Provide plot representation using validated inputs.",
+      "implemented_in": "atlas.models.unsupervised",
+      "agent_tools": [],
+      "test_reference_exists": true,
+      "verification_note": "A test reference is not a guarantee of coverage for every input. Optional dependencies and abstract hooks are documented separately."
+    },
+    {
+      "class": "UnsupervisedLearning",
+      "method": "compare_representations",
+      "parameters": "(self) -> pandas.core.frame.DataFrame",
+      "expected_behavior": "Provide compare representations using validated inputs.",
+      "implemented_in": "atlas.models.unsupervised",
+      "agent_tools": [],
+      "test_reference_exists": true,
+      "verification_note": "A test reference is not a guarantee of coverage for every input. Optional dependencies and abstract hooks are documented separately."
+    },
+    {
+      "class": "SupervisedLearning",
+      "method": "identify_problem",
+      "parameters": "(self, target: 'str') -> 'str'",
+      "expected_behavior": "Provide identify problem using validated inputs.",
+      "implemented_in": "atlas.models.supervised",
+      "agent_tools": [],
+      "test_reference_exists": false,
+      "verification_note": "A test reference is not a guarantee of coverage for every input. Optional dependencies and abstract hooks are documented separately."
+    },
+    {
+      "class": "SupervisedLearning",
+      "method": "train",
+      "parameters": "(self, algorithm: 'str', target: 'str', predictors: 'list[str]', test_size: 'float' = 0.2, cv: 'int' = 5, scaler: 'str' = 'standard', encoding: 'str' = 'onehot', imputation: 'str' = 'median', parameters: 'dict[str, Any] | None' = None, search: 'dict[str, list[Any]] | None' = None, search_type: 'str' = 'grid', n_iter: 'int' = 10) -> 'Experiment'",
+      "expected_behavior": "Fit the existing estimator workflow and record reproducible experiment results.",
+      "implemented_in": "atlas.models.supervised",
+      "agent_tools": [
+        "classification.train"
+      ],
+      "test_reference_exists": true,
+      "verification_note": "A test reference is not a guarantee of coverage for every input. Optional dependencies and abstract hooks are documented separately."
+    },
+    {
+      "class": "SupervisedLearning",
+      "method": "create_estimator",
+      "parameters": "(self, algorithm: 'str', parameters: 'dict[str, Any]') -> 'Any'",
+      "expected_behavior": "Build a registered estimator with validated resource bounds.",
+      "implemented_in": "atlas.models.supervised",
+      "agent_tools": [],
+      "test_reference_exists": true,
+      "verification_note": "A test reference is not a guarantee of coverage for every input. Optional dependencies and abstract hooks are documented separately."
+    },
+    {
+      "class": "SupervisedLearning",
+      "method": "evaluate",
+      "parameters": "(self, model: 'Any', x: 'pd.DataFrame', y: 'pd.Series', pred: 'np.ndarray') -> 'tuple[dict[str, float], dict[str, Any]]'",
+      "expected_behavior": "Calculate existing task metrics from the stored evaluation partition.",
+      "implemented_in": "atlas.models.supervised",
+      "agent_tools": [],
+      "test_reference_exists": false,
+      "verification_note": "A test reference is not a guarantee of coverage for every input. Optional dependencies and abstract hooks are documented separately."
+    },
+    {
+      "class": "SupervisedLearning",
+      "method": "predict",
+      "parameters": "(self, result: 'Experiment', df: 'pd.DataFrame') -> 'pd.DataFrame'",
+      "expected_behavior": "Provide predict using validated inputs.",
+      "implemented_in": "atlas.models.supervised",
+      "agent_tools": [],
+      "test_reference_exists": true,
+      "verification_note": "A test reference is not a guarantee of coverage for every input. Optional dependencies and abstract hooks are documented separately."
+    },
+    {
+      "class": "SupervisedLearning",
+      "method": "feature_importance",
+      "parameters": "(self, result: 'Experiment') -> 'pd.DataFrame'",
+      "expected_behavior": "Calculate held-out permutation importance for interpretation, not feature selection.",
+      "implemented_in": "atlas.models.supervised",
+      "agent_tools": [
+        "model.importance"
+      ],
+      "test_reference_exists": true,
+      "verification_note": "A test reference is not a guarantee of coverage for every input. Optional dependencies and abstract hooks are documented separately."
+    },
+    {
+      "class": "SupervisedLearning",
+      "method": "coefficients",
+      "parameters": "(self, result: 'Experiment') -> 'pd.DataFrame'",
+      "expected_behavior": "Provide coefficients using validated inputs.",
+      "implemented_in": "atlas.models.supervised",
+      "agent_tools": [],
+      "test_reference_exists": true,
+      "verification_note": "A test reference is not a guarantee of coverage for every input. Optional dependencies and abstract hooks are documented separately."
+    },
+    {
+      "class": "SupervisedLearning",
+      "method": "learning_curve",
+      "parameters": "(self, result: 'Experiment') -> 'pd.DataFrame'",
+      "expected_behavior": "Provide learning curve using validated inputs.",
+      "implemented_in": "atlas.models.supervised",
+      "agent_tools": [],
+      "test_reference_exists": true,
+      "verification_note": "A test reference is not a guarantee of coverage for every input. Optional dependencies and abstract hooks are documented separately."
+    },
+    {
+      "class": "SupervisedLearning",
+      "method": "compare",
+      "parameters": "(self) -> 'pd.DataFrame'",
+      "expected_behavior": "Compare recorded experiments only when their problem and cohort agree.",
+      "implemented_in": "atlas.models.supervised",
+      "agent_tools": [],
+      "test_reference_exists": true,
+      "verification_note": "A test reference is not a guarantee of coverage for every input. Optional dependencies and abstract hooks are documented separately."
+    },
+    {
+      "class": "Clustering",
+      "method": "algorithms",
+      "parameters": "() -> list[str]",
+      "expected_behavior": "Provide algorithms using validated inputs.",
+      "implemented_in": "atlas.models.clustering",
+      "agent_tools": [],
+      "test_reference_exists": true,
+      "verification_note": "A test reference is not a guarantee of coverage for every input. Optional dependencies and abstract hooks are documented separately."
+    },
+    {
+      "class": "Clustering",
+      "method": "train",
+      "parameters": "(self, algorithm: str, columns: list[str], scaler: str = 'standard', encoding: str = 'onehot', **params: Any) -> atlas.models.experiment.Experiment",
+      "expected_behavior": "Fit the existing estimator workflow and record reproducible experiment results.",
+      "implemented_in": "atlas.models.clustering",
+      "agent_tools": [
+        "cluster.train"
+      ],
+      "test_reference_exists": true,
+      "verification_note": "A test reference is not a guarantee of coverage for every input. Optional dependencies and abstract hooks are documented separately."
+    },
+    {
+      "class": "Clustering",
+      "method": "elbow",
+      "parameters": "(self, columns: list[str], max_k: int = 10, **preprocessing: Any) -> pandas.core.frame.DataFrame",
+      "expected_behavior": "Provide elbow using validated inputs.",
+      "implemented_in": "atlas.models.clustering",
+      "agent_tools": [
+        "cluster.elbow"
+      ],
+      "test_reference_exists": true,
+      "verification_note": "A test reference is not a guarantee of coverage for every input. Optional dependencies and abstract hooks are documented separately."
+    },
+    {
+      "class": "Clustering",
+      "method": "silhouette_plot",
+      "parameters": "(self, result: atlas.models.experiment.Experiment) -> Any",
+      "expected_behavior": "Provide silhouette plot using validated inputs.",
+      "implemented_in": "atlas.models.clustering",
+      "agent_tools": [],
+      "test_reference_exists": true,
+      "verification_note": "A test reference is not a guarantee of coverage for every input. Optional dependencies and abstract hooks are documented separately."
+    },
+    {
+      "class": "Clustering",
+      "method": "dendrogram",
+      "parameters": "(self, columns: list[str], method: str = 'ward', **preprocessing: Any) -> Any",
+      "expected_behavior": "Provide dendrogram using validated inputs.",
+      "implemented_in": "atlas.models.clustering",
+      "agent_tools": [],
+      "test_reference_exists": true,
+      "verification_note": "A test reference is not a guarantee of coverage for every input. Optional dependencies and abstract hooks are documented separately."
+    },
+    {
+      "class": "Clustering",
+      "method": "characterize",
+      "parameters": "(self, result: atlas.models.experiment.Experiment) -> pandas.core.frame.DataFrame",
+      "expected_behavior": "Provide characterize using validated inputs.",
+      "implemented_in": "atlas.models.clustering",
+      "agent_tools": [],
+      "test_reference_exists": true,
+      "verification_note": "A test reference is not a guarantee of coverage for every input. Optional dependencies and abstract hooks are documented separately."
+    },
+    {
+      "class": "Clustering",
+      "method": "cluster_sizes",
+      "parameters": "(self, result: atlas.models.experiment.Experiment) -> Any",
+      "expected_behavior": "Inspect actual group sizes, with noise labelled separately.",
+      "implemented_in": "atlas.models.clustering",
+      "agent_tools": [],
+      "test_reference_exists": true,
+      "verification_note": "A test reference is not a guarantee of coverage for every input. Optional dependencies and abstract hooks are documented separately."
+    },
+    {
+      "class": "Clustering",
+      "method": "profile_heatmap",
+      "parameters": "(self, result: atlas.models.experiment.Experiment) -> Any",
+      "expected_behavior": "Visualize existing group means, retaining original feature units.",
+      "implemented_in": "atlas.models.clustering",
+      "agent_tools": [],
+      "test_reference_exists": true,
+      "verification_note": "A test reference is not a guarantee of coverage for every input. Optional dependencies and abstract hooks are documented separately."
+    },
+    {
+      "class": "Clustering",
+      "method": "inspect_cluster",
+      "parameters": "(self, result: atlas.models.experiment.Experiment, label: int) -> pandas.core.frame.DataFrame",
+      "expected_behavior": "Return a bounded copy of the selected original observations.",
+      "implemented_in": "atlas.models.clustering",
+      "agent_tools": [],
+      "test_reference_exists": true,
+      "verification_note": "A test reference is not a guarantee of coverage for every input. Optional dependencies and abstract hooks are documented separately."
+    },
+    {
+      "class": "Clustering",
+      "method": "representatives",
+      "parameters": "(self, result: atlas.models.experiment.Experiment) -> pandas.core.frame.DataFrame",
+      "expected_behavior": "Provide representatives using validated inputs.",
+      "implemented_in": "atlas.models.clustering",
+      "agent_tools": [],
+      "test_reference_exists": false,
+      "verification_note": "A test reference is not a guarantee of coverage for every input. Optional dependencies and abstract hooks are documented separately."
+    },
+    {
+      "class": "Clustering",
+      "method": "compare",
+      "parameters": "(self) -> pandas.core.frame.DataFrame",
+      "expected_behavior": "Compare recorded experiments only when their problem and cohort agree.",
+      "implemented_in": "atlas.models.clustering",
+      "agent_tools": [],
+      "test_reference_exists": true,
+      "verification_note": "A test reference is not a guarantee of coverage for every input. Optional dependencies and abstract hooks are documented separately."
+    },
+    {
+      "class": "Classification",
+      "method": "algorithms",
+      "parameters": "() -> list[str]",
+      "expected_behavior": "Provide algorithms using validated inputs.",
+      "implemented_in": "atlas.models.classification",
+      "agent_tools": [],
+      "test_reference_exists": true,
+      "verification_note": "A test reference is not a guarantee of coverage for every input. Optional dependencies and abstract hooks are documented separately."
+    },
+    {
+      "class": "Classification",
+      "method": "create_estimator",
+      "parameters": "(self, algorithm: str, parameters: dict[str, typing.Any]) -> Any",
+      "expected_behavior": "Build a registered estimator with validated resource bounds.",
+      "implemented_in": "atlas.models.classification",
+      "agent_tools": [],
+      "test_reference_exists": true,
+      "verification_note": "A test reference is not a guarantee of coverage for every input. Optional dependencies and abstract hooks are documented separately."
+    },
+    {
+      "class": "Classification",
+      "method": "evaluate",
+      "parameters": "(self, model: Any, x: pandas.core.frame.DataFrame, y: pandas.core.series.Series, pred: numpy.ndarray) -> tuple[dict[str, float], dict[str, typing.Any]]",
+      "expected_behavior": "Calculate existing task metrics from the stored evaluation partition.",
+      "implemented_in": "atlas.models.classification",
+      "agent_tools": [],
+      "test_reference_exists": false,
+      "verification_note": "A test reference is not a guarantee of coverage for every input. Optional dependencies and abstract hooks are documented separately."
+    },
+    {
+      "class": "Classification",
+      "method": "plot_result",
+      "parameters": "(self, result: atlas.models.experiment.Experiment, kind: str = 'confusion') -> Any",
+      "expected_behavior": "Build an interpretable diagnostic from already calculated experiment results.",
+      "implemented_in": "atlas.models.classification",
+      "agent_tools": [
+        "model.plot"
+      ],
+      "test_reference_exists": true,
+      "verification_note": "A test reference is not a guarantee of coverage for every input. Optional dependencies and abstract hooks are documented separately."
+    },
+    {
+      "class": "Regression",
+      "method": "algorithms",
+      "parameters": "() -> list[str]",
+      "expected_behavior": "Provide algorithms using validated inputs.",
+      "implemented_in": "atlas.models.regression",
+      "agent_tools": [],
+      "test_reference_exists": true,
+      "verification_note": "A test reference is not a guarantee of coverage for every input. Optional dependencies and abstract hooks are documented separately."
+    },
+    {
+      "class": "Regression",
+      "method": "train",
+      "parameters": "(self, algorithm: str, target: str, predictors: list[str], **config: Any) -> atlas.models.experiment.Experiment",
+      "expected_behavior": "Fit the existing estimator workflow and record reproducible experiment results.",
+      "implemented_in": "atlas.models.regression",
+      "agent_tools": [
+        "regression.train"
+      ],
+      "test_reference_exists": true,
+      "verification_note": "A test reference is not a guarantee of coverage for every input. Optional dependencies and abstract hooks are documented separately."
+    },
+    {
+      "class": "Regression",
+      "method": "create_estimator",
+      "parameters": "(self, algorithm: str, parameters: dict[str, typing.Any]) -> Any",
+      "expected_behavior": "Build a registered estimator with validated resource bounds.",
+      "implemented_in": "atlas.models.regression",
+      "agent_tools": [],
+      "test_reference_exists": true,
+      "verification_note": "A test reference is not a guarantee of coverage for every input. Optional dependencies and abstract hooks are documented separately."
+    },
+    {
+      "class": "Regression",
+      "method": "evaluate",
+      "parameters": "(self, model: Any, x: pandas.core.frame.DataFrame, y: pandas.core.series.Series, pred: numpy.ndarray) -> tuple[dict[str, float], dict[str, typing.Any]]",
+      "expected_behavior": "Calculate existing task metrics from the stored evaluation partition.",
+      "implemented_in": "atlas.models.regression",
+      "agent_tools": [],
+      "test_reference_exists": false,
+      "verification_note": "A test reference is not a guarantee of coverage for every input. Optional dependencies and abstract hooks are documented separately."
+    },
+    {
+      "class": "Regression",
+      "method": "plot_result",
+      "parameters": "(self, result: atlas.models.experiment.Experiment, kind: str = 'actual_predicted') -> Any",
+      "expected_behavior": "Build an interpretable diagnostic from already calculated experiment results.",
+      "implemented_in": "atlas.models.regression",
+      "agent_tools": [
+        "model.plot"
+      ],
+      "test_reference_exists": true,
+      "verification_note": "A test reference is not a guarantee of coverage for every input. Optional dependencies and abstract hooks are documented separately."
+    },
+    {
+      "class": "Regression",
+      "method": "compare_lasso",
+      "parameters": "(self) -> pandas.core.frame.DataFrame",
+      "expected_behavior": "Provide compare lasso using validated inputs.",
+      "implemented_in": "atlas.models.regression",
+      "agent_tools": [],
+      "test_reference_exists": false,
+      "verification_note": "A test reference is not a guarantee of coverage for every input. Optional dependencies and abstract hooks are documented separately."
+    },
+    {
+      "class": "Regression",
+      "method": "compare_ridge",
+      "parameters": "(self) -> pandas.core.frame.DataFrame",
+      "expected_behavior": "Provide compare ridge using validated inputs.",
+      "implemented_in": "atlas.models.regression",
+      "agent_tools": [],
+      "test_reference_exists": false,
+      "verification_note": "A test reference is not a guarantee of coverage for every input. Optional dependencies and abstract hooks are documented separately."
+    },
+    {
+      "class": "Regression",
+      "method": "compare_svm",
+      "parameters": "(self) -> pandas.core.frame.DataFrame",
+      "expected_behavior": "Provide compare svm using validated inputs.",
+      "implemented_in": "atlas.models.regression",
+      "agent_tools": [],
+      "test_reference_exists": false,
+      "verification_note": "A test reference is not a guarantee of coverage for every input. Optional dependencies and abstract hooks are documented separately."
+    }
+  ],
+  "tools": [
+    {
+      "name": "eda.profile",
+      "module": "eda",
+      "read_only": true,
+      "requires_confirmation": false,
+      "input_schema": {
+        "additionalProperties": false,
+        "description": "Define the EmptyArgs contract.",
+        "properties": {},
+        "title": "EmptyArgs",
+        "type": "object"
+      },
+      "output_schema": {
+        "$defs": {
+          "DatasetVersion": {
+            "additionalProperties": false,
+            "description": "Define the DatasetVersion contract.",
+            "properties": {
+              "dataset_id": {
+                "title": "Dataset Id",
+                "type": "string"
+              },
+              "version": {
+                "minimum": 0,
+                "title": "Version",
+                "type": "integer"
+              },
+              "content_hash": {
+                "title": "Content Hash",
+                "type": "string"
+              },
+              "rows": {
+                "minimum": 1,
+                "title": "Rows",
+                "type": "integer"
+              },
+              "columns": {
+                "items": {
+                  "type": "string"
+                },
+                "title": "Columns",
+                "type": "array"
+              },
+              "operation": {
+                "title": "Operation",
+                "type": "string"
+              }
+            },
+            "required": [
+              "dataset_id",
+              "version",
+              "content_hash",
+              "rows",
+              "columns",
+              "operation"
+            ],
+            "title": "DatasetVersion",
+            "type": "object"
+          },
+          "JsonValue": {}
+        },
+        "additionalProperties": false,
+        "description": "Define the AnalysisResult contract.",
+        "properties": {
+          "summary": {
+            "title": "Summary",
+            "type": "string"
+          },
+          "dataset": {
+            "$ref": "#/$defs/DatasetVersion"
+          },
+          "metrics": {
+            "additionalProperties": {
+              "anyOf": [
+                {
+                  "type": "number"
+                },
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "title": "Metrics",
+            "type": "object"
+          },
+          "tables": {
+            "additionalProperties": {
+              "items": {
+                "additionalProperties": {
+                  "$ref": "#/$defs/JsonValue"
+                },
+                "type": "object"
+              },
+              "type": "array"
+            },
+            "title": "Tables",
+            "type": "object"
+          },
+          "visualizations": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Visualizations",
+            "type": "array"
+          },
+          "proposal_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Proposal Id"
+          },
+          "source_dataset_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Source Dataset Id"
+          },
+          "source_experiment_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Source Experiment Id"
+          }
+        },
+        "required": [
+          "summary",
+          "dataset"
+        ],
+        "title": "AnalysisResult",
+        "type": "object"
+      }
+    },
+    {
+      "name": "analysis.configure",
+      "module": "analysis",
+      "read_only": false,
+      "requires_confirmation": true,
+      "input_schema": {
+        "additionalProperties": false,
+        "properties": {
+          "problem": {
+            "enum": [
+              "classification",
+              "regression",
+              "clustering"
+            ],
+            "title": "Problem",
+            "type": "string"
+          },
+          "predictors": {
+            "items": {
+              "type": "string"
+            },
+            "maxItems": 30,
+            "minItems": 1,
+            "title": "Predictors",
+            "type": "array"
+          },
+          "target": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Target"
+          },
+          "algorithm": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Algorithm"
+          },
+          "scaler": {
+            "default": "standard",
+            "enum": [
+              "standard",
+              "robust",
+              "minmax",
+              "normalizer",
+              "none"
+            ],
+            "title": "Scaler",
+            "type": "string"
+          },
+          "test_size": {
+            "default": 0.2,
+            "maximum": 0.5,
+            "minimum": 0.05,
+            "title": "Test Size",
+            "type": "number"
+          },
+          "cv": {
+            "default": 3,
+            "maximum": 10,
+            "minimum": 2,
+            "title": "Cv",
+            "type": "integer"
+          },
+          "random_state": {
+            "default": 42,
+            "maximum": 99999,
+            "minimum": 0,
+            "title": "Random State",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "problem",
+          "predictors"
+        ],
+        "title": "ConfigurationArgs",
+        "type": "object"
+      },
+      "output_schema": {
+        "$defs": {
+          "DatasetVersion": {
+            "additionalProperties": false,
+            "description": "Define the DatasetVersion contract.",
+            "properties": {
+              "dataset_id": {
+                "title": "Dataset Id",
+                "type": "string"
+              },
+              "version": {
+                "minimum": 0,
+                "title": "Version",
+                "type": "integer"
+              },
+              "content_hash": {
+                "title": "Content Hash",
+                "type": "string"
+              },
+              "rows": {
+                "minimum": 1,
+                "title": "Rows",
+                "type": "integer"
+              },
+              "columns": {
+                "items": {
+                  "type": "string"
+                },
+                "title": "Columns",
+                "type": "array"
+              },
+              "operation": {
+                "title": "Operation",
+                "type": "string"
+              }
+            },
+            "required": [
+              "dataset_id",
+              "version",
+              "content_hash",
+              "rows",
+              "columns",
+              "operation"
+            ],
+            "title": "DatasetVersion",
+            "type": "object"
+          },
+          "JsonValue": {}
+        },
+        "additionalProperties": false,
+        "description": "Define the AnalysisResult contract.",
+        "properties": {
+          "summary": {
+            "title": "Summary",
+            "type": "string"
+          },
+          "dataset": {
+            "$ref": "#/$defs/DatasetVersion"
+          },
+          "metrics": {
+            "additionalProperties": {
+              "anyOf": [
+                {
+                  "type": "number"
+                },
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "title": "Metrics",
+            "type": "object"
+          },
+          "tables": {
+            "additionalProperties": {
+              "items": {
+                "additionalProperties": {
+                  "$ref": "#/$defs/JsonValue"
+                },
+                "type": "object"
+              },
+              "type": "array"
+            },
+            "title": "Tables",
+            "type": "object"
+          },
+          "visualizations": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Visualizations",
+            "type": "array"
+          },
+          "proposal_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Proposal Id"
+          },
+          "source_dataset_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Source Dataset Id"
+          },
+          "source_experiment_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Source Experiment Id"
+          }
+        },
+        "required": [
+          "summary",
+          "dataset"
+        ],
+        "title": "AnalysisResult",
+        "type": "object"
+      }
+    },
+    {
+      "name": "eda.statistics",
+      "module": "eda",
+      "read_only": true,
+      "requires_confirmation": false,
+      "input_schema": {
+        "additionalProperties": false,
+        "properties": {
+          "columns": {
+            "items": {
+              "type": "string"
+            },
+            "maxItems": 30,
+            "minItems": 1,
+            "title": "Columns",
+            "type": "array"
+          }
+        },
+        "required": [
+          "columns"
+        ],
+        "title": "ColumnsArgs",
+        "type": "object"
+      },
+      "output_schema": {
+        "$defs": {
+          "DatasetVersion": {
+            "additionalProperties": false,
+            "description": "Define the DatasetVersion contract.",
+            "properties": {
+              "dataset_id": {
+                "title": "Dataset Id",
+                "type": "string"
+              },
+              "version": {
+                "minimum": 0,
+                "title": "Version",
+                "type": "integer"
+              },
+              "content_hash": {
+                "title": "Content Hash",
+                "type": "string"
+              },
+              "rows": {
+                "minimum": 1,
+                "title": "Rows",
+                "type": "integer"
+              },
+              "columns": {
+                "items": {
+                  "type": "string"
+                },
+                "title": "Columns",
+                "type": "array"
+              },
+              "operation": {
+                "title": "Operation",
+                "type": "string"
+              }
+            },
+            "required": [
+              "dataset_id",
+              "version",
+              "content_hash",
+              "rows",
+              "columns",
+              "operation"
+            ],
+            "title": "DatasetVersion",
+            "type": "object"
+          },
+          "JsonValue": {}
+        },
+        "additionalProperties": false,
+        "description": "Define the AnalysisResult contract.",
+        "properties": {
+          "summary": {
+            "title": "Summary",
+            "type": "string"
+          },
+          "dataset": {
+            "$ref": "#/$defs/DatasetVersion"
+          },
+          "metrics": {
+            "additionalProperties": {
+              "anyOf": [
+                {
+                  "type": "number"
+                },
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "title": "Metrics",
+            "type": "object"
+          },
+          "tables": {
+            "additionalProperties": {
+              "items": {
+                "additionalProperties": {
+                  "$ref": "#/$defs/JsonValue"
+                },
+                "type": "object"
+              },
+              "type": "array"
+            },
+            "title": "Tables",
+            "type": "object"
+          },
+          "visualizations": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Visualizations",
+            "type": "array"
+          },
+          "proposal_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Proposal Id"
+          },
+          "source_dataset_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Source Dataset Id"
+          },
+          "source_experiment_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Source Experiment Id"
+          }
+        },
+        "required": [
+          "summary",
+          "dataset"
+        ],
+        "title": "AnalysisResult",
+        "type": "object"
+      }
+    },
+    {
+      "name": "eda.frequencies",
+      "module": "eda",
+      "read_only": true,
+      "requires_confirmation": false,
+      "input_schema": {
+        "additionalProperties": false,
+        "properties": {
+          "column": {
+            "title": "Column",
+            "type": "string"
+          }
+        },
+        "required": [
+          "column"
+        ],
+        "title": "ColumnArgs",
+        "type": "object"
+      },
+      "output_schema": {
+        "$defs": {
+          "DatasetVersion": {
+            "additionalProperties": false,
+            "description": "Define the DatasetVersion contract.",
+            "properties": {
+              "dataset_id": {
+                "title": "Dataset Id",
+                "type": "string"
+              },
+              "version": {
+                "minimum": 0,
+                "title": "Version",
+                "type": "integer"
+              },
+              "content_hash": {
+                "title": "Content Hash",
+                "type": "string"
+              },
+              "rows": {
+                "minimum": 1,
+                "title": "Rows",
+                "type": "integer"
+              },
+              "columns": {
+                "items": {
+                  "type": "string"
+                },
+                "title": "Columns",
+                "type": "array"
+              },
+              "operation": {
+                "title": "Operation",
+                "type": "string"
+              }
+            },
+            "required": [
+              "dataset_id",
+              "version",
+              "content_hash",
+              "rows",
+              "columns",
+              "operation"
+            ],
+            "title": "DatasetVersion",
+            "type": "object"
+          },
+          "JsonValue": {}
+        },
+        "additionalProperties": false,
+        "description": "Define the AnalysisResult contract.",
+        "properties": {
+          "summary": {
+            "title": "Summary",
+            "type": "string"
+          },
+          "dataset": {
+            "$ref": "#/$defs/DatasetVersion"
+          },
+          "metrics": {
+            "additionalProperties": {
+              "anyOf": [
+                {
+                  "type": "number"
+                },
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "title": "Metrics",
+            "type": "object"
+          },
+          "tables": {
+            "additionalProperties": {
+              "items": {
+                "additionalProperties": {
+                  "$ref": "#/$defs/JsonValue"
+                },
+                "type": "object"
+              },
+              "type": "array"
+            },
+            "title": "Tables",
+            "type": "object"
+          },
+          "visualizations": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Visualizations",
+            "type": "array"
+          },
+          "proposal_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Proposal Id"
+          },
+          "source_dataset_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Source Dataset Id"
+          },
+          "source_experiment_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Source Experiment Id"
+          }
+        },
+        "required": [
+          "summary",
+          "dataset"
+        ],
+        "title": "AnalysisResult",
+        "type": "object"
+      }
+    },
+    {
+      "name": "eda.outliers",
+      "module": "eda",
+      "read_only": true,
+      "requires_confirmation": true,
+      "input_schema": {
+        "additionalProperties": false,
+        "properties": {
+          "columns": {
+            "items": {
+              "type": "string"
+            },
+            "maxItems": 30,
+            "minItems": 1,
+            "title": "Columns",
+            "type": "array"
+          },
+          "method": {
+            "default": "iqr",
+            "enum": [
+              "iqr",
+              "zscore",
+              "isolation"
+            ],
+            "title": "Method",
+            "type": "string"
+          },
+          "threshold": {
+            "default": 1.5,
+            "exclusiveMinimum": 0,
+            "maximum": 10,
+            "title": "Threshold",
+            "type": "number"
+          }
+        },
+        "required": [
+          "columns"
+        ],
+        "title": "OutlierArgs",
+        "type": "object"
+      },
+      "output_schema": {
+        "$defs": {
+          "DatasetVersion": {
+            "additionalProperties": false,
+            "description": "Define the DatasetVersion contract.",
+            "properties": {
+              "dataset_id": {
+                "title": "Dataset Id",
+                "type": "string"
+              },
+              "version": {
+                "minimum": 0,
+                "title": "Version",
+                "type": "integer"
+              },
+              "content_hash": {
+                "title": "Content Hash",
+                "type": "string"
+              },
+              "rows": {
+                "minimum": 1,
+                "title": "Rows",
+                "type": "integer"
+              },
+              "columns": {
+                "items": {
+                  "type": "string"
+                },
+                "title": "Columns",
+                "type": "array"
+              },
+              "operation": {
+                "title": "Operation",
+                "type": "string"
+              }
+            },
+            "required": [
+              "dataset_id",
+              "version",
+              "content_hash",
+              "rows",
+              "columns",
+              "operation"
+            ],
+            "title": "DatasetVersion",
+            "type": "object"
+          },
+          "JsonValue": {}
+        },
+        "additionalProperties": false,
+        "description": "Define the AnalysisResult contract.",
+        "properties": {
+          "summary": {
+            "title": "Summary",
+            "type": "string"
+          },
+          "dataset": {
+            "$ref": "#/$defs/DatasetVersion"
+          },
+          "metrics": {
+            "additionalProperties": {
+              "anyOf": [
+                {
+                  "type": "number"
+                },
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "title": "Metrics",
+            "type": "object"
+          },
+          "tables": {
+            "additionalProperties": {
+              "items": {
+                "additionalProperties": {
+                  "$ref": "#/$defs/JsonValue"
+                },
+                "type": "object"
+              },
+              "type": "array"
+            },
+            "title": "Tables",
+            "type": "object"
+          },
+          "visualizations": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Visualizations",
+            "type": "array"
+          },
+          "proposal_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Proposal Id"
+          },
+          "source_dataset_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Source Dataset Id"
+          },
+          "source_experiment_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Source Experiment Id"
+          }
+        },
+        "required": [
+          "summary",
+          "dataset"
+        ],
+        "title": "AnalysisResult",
+        "type": "object"
+      }
+    },
+    {
+      "name": "classification.class_distribution",
+      "module": "classification",
+      "read_only": true,
+      "requires_confirmation": false,
+      "input_schema": {
+        "additionalProperties": false,
+        "properties": {
+          "column": {
+            "title": "Column",
+            "type": "string"
+          }
+        },
+        "required": [
+          "column"
+        ],
+        "title": "ColumnArgs",
+        "type": "object"
+      },
+      "output_schema": {
+        "$defs": {
+          "DatasetVersion": {
+            "additionalProperties": false,
+            "description": "Define the DatasetVersion contract.",
+            "properties": {
+              "dataset_id": {
+                "title": "Dataset Id",
+                "type": "string"
+              },
+              "version": {
+                "minimum": 0,
+                "title": "Version",
+                "type": "integer"
+              },
+              "content_hash": {
+                "title": "Content Hash",
+                "type": "string"
+              },
+              "rows": {
+                "minimum": 1,
+                "title": "Rows",
+                "type": "integer"
+              },
+              "columns": {
+                "items": {
+                  "type": "string"
+                },
+                "title": "Columns",
+                "type": "array"
+              },
+              "operation": {
+                "title": "Operation",
+                "type": "string"
+              }
+            },
+            "required": [
+              "dataset_id",
+              "version",
+              "content_hash",
+              "rows",
+              "columns",
+              "operation"
+            ],
+            "title": "DatasetVersion",
+            "type": "object"
+          },
+          "JsonValue": {}
+        },
+        "additionalProperties": false,
+        "description": "Define the AnalysisResult contract.",
+        "properties": {
+          "summary": {
+            "title": "Summary",
+            "type": "string"
+          },
+          "dataset": {
+            "$ref": "#/$defs/DatasetVersion"
+          },
+          "metrics": {
+            "additionalProperties": {
+              "anyOf": [
+                {
+                  "type": "number"
+                },
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "title": "Metrics",
+            "type": "object"
+          },
+          "tables": {
+            "additionalProperties": {
+              "items": {
+                "additionalProperties": {
+                  "$ref": "#/$defs/JsonValue"
+                },
+                "type": "object"
+              },
+              "type": "array"
+            },
+            "title": "Tables",
+            "type": "object"
+          },
+          "visualizations": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Visualizations",
+            "type": "array"
+          },
+          "proposal_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Proposal Id"
+          },
+          "source_dataset_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Source Dataset Id"
+          },
+          "source_experiment_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Source Experiment Id"
+          }
+        },
+        "required": [
+          "summary",
+          "dataset"
+        ],
+        "title": "AnalysisResult",
+        "type": "object"
+      }
+    },
+    {
+      "name": "eda.correlation",
+      "module": "eda",
+      "read_only": true,
+      "requires_confirmation": false,
+      "input_schema": {
+        "additionalProperties": false,
+        "properties": {
+          "method": {
+            "default": "pearson",
+            "enum": [
+              "pearson",
+              "spearman",
+              "kendall"
+            ],
+            "title": "Method",
+            "type": "string"
+          }
+        },
+        "title": "CorrelationArgs",
+        "type": "object"
+      },
+      "output_schema": {
+        "$defs": {
+          "DatasetVersion": {
+            "additionalProperties": false,
+            "description": "Define the DatasetVersion contract.",
+            "properties": {
+              "dataset_id": {
+                "title": "Dataset Id",
+                "type": "string"
+              },
+              "version": {
+                "minimum": 0,
+                "title": "Version",
+                "type": "integer"
+              },
+              "content_hash": {
+                "title": "Content Hash",
+                "type": "string"
+              },
+              "rows": {
+                "minimum": 1,
+                "title": "Rows",
+                "type": "integer"
+              },
+              "columns": {
+                "items": {
+                  "type": "string"
+                },
+                "title": "Columns",
+                "type": "array"
+              },
+              "operation": {
+                "title": "Operation",
+                "type": "string"
+              }
+            },
+            "required": [
+              "dataset_id",
+              "version",
+              "content_hash",
+              "rows",
+              "columns",
+              "operation"
+            ],
+            "title": "DatasetVersion",
+            "type": "object"
+          },
+          "JsonValue": {}
+        },
+        "additionalProperties": false,
+        "description": "Define the AnalysisResult contract.",
+        "properties": {
+          "summary": {
+            "title": "Summary",
+            "type": "string"
+          },
+          "dataset": {
+            "$ref": "#/$defs/DatasetVersion"
+          },
+          "metrics": {
+            "additionalProperties": {
+              "anyOf": [
+                {
+                  "type": "number"
+                },
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "title": "Metrics",
+            "type": "object"
+          },
+          "tables": {
+            "additionalProperties": {
+              "items": {
+                "additionalProperties": {
+                  "$ref": "#/$defs/JsonValue"
+                },
+                "type": "object"
+              },
+              "type": "array"
+            },
+            "title": "Tables",
+            "type": "object"
+          },
+          "visualizations": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Visualizations",
+            "type": "array"
+          },
+          "proposal_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Proposal Id"
+          },
+          "source_dataset_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Source Dataset Id"
+          },
+          "source_experiment_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Source Experiment Id"
+          }
+        },
+        "required": [
+          "summary",
+          "dataset"
+        ],
+        "title": "AnalysisResult",
+        "type": "object"
+      }
+    },
+    {
+      "name": "eda.plot",
+      "module": "eda",
+      "read_only": true,
+      "requires_confirmation": false,
+      "input_schema": {
+        "additionalProperties": false,
+        "properties": {
+          "kind": {
+            "enum": [
+              "histogram",
+              "box",
+              "violin",
+              "scatter",
+              "count",
+              "correlation",
+              "missing",
+              "qq",
+              "kde"
+            ],
+            "title": "Kind",
+            "type": "string"
+          },
+          "x": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "X"
+          },
+          "y": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Y"
+          }
+        },
+        "required": [
+          "kind"
+        ],
+        "title": "PlotArgs",
+        "type": "object"
+      },
+      "output_schema": {
+        "$defs": {
+          "DatasetVersion": {
+            "additionalProperties": false,
+            "description": "Define the DatasetVersion contract.",
+            "properties": {
+              "dataset_id": {
+                "title": "Dataset Id",
+                "type": "string"
+              },
+              "version": {
+                "minimum": 0,
+                "title": "Version",
+                "type": "integer"
+              },
+              "content_hash": {
+                "title": "Content Hash",
+                "type": "string"
+              },
+              "rows": {
+                "minimum": 1,
+                "title": "Rows",
+                "type": "integer"
+              },
+              "columns": {
+                "items": {
+                  "type": "string"
+                },
+                "title": "Columns",
+                "type": "array"
+              },
+              "operation": {
+                "title": "Operation",
+                "type": "string"
+              }
+            },
+            "required": [
+              "dataset_id",
+              "version",
+              "content_hash",
+              "rows",
+              "columns",
+              "operation"
+            ],
+            "title": "DatasetVersion",
+            "type": "object"
+          },
+          "JsonValue": {}
+        },
+        "additionalProperties": false,
+        "description": "Define the AnalysisResult contract.",
+        "properties": {
+          "summary": {
+            "title": "Summary",
+            "type": "string"
+          },
+          "dataset": {
+            "$ref": "#/$defs/DatasetVersion"
+          },
+          "metrics": {
+            "additionalProperties": {
+              "anyOf": [
+                {
+                  "type": "number"
+                },
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "title": "Metrics",
+            "type": "object"
+          },
+          "tables": {
+            "additionalProperties": {
+              "items": {
+                "additionalProperties": {
+                  "$ref": "#/$defs/JsonValue"
+                },
+                "type": "object"
+              },
+              "type": "array"
+            },
+            "title": "Tables",
+            "type": "object"
+          },
+          "visualizations": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Visualizations",
+            "type": "array"
+          },
+          "proposal_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Proposal Id"
+          },
+          "source_dataset_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Source Dataset Id"
+          },
+          "source_experiment_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Source Experiment Id"
+          }
+        },
+        "required": [
+          "summary",
+          "dataset"
+        ],
+        "title": "AnalysisResult",
+        "type": "object"
+      }
+    },
+    {
+      "name": "eda.test",
+      "module": "eda",
+      "read_only": true,
+      "requires_confirmation": false,
+      "input_schema": {
+        "additionalProperties": false,
+        "properties": {
+          "columns": {
+            "items": {
+              "type": "string"
+            },
+            "maxItems": 30,
+            "minItems": 1,
+            "title": "Columns",
+            "type": "array"
+          },
+          "test": {
+            "enum": [
+              "shapiro",
+              "normaltest",
+              "levene",
+              "ttest",
+              "anova",
+              "chi2",
+              "mannwhitney"
+            ],
+            "title": "Test",
+            "type": "string"
+          },
+          "alpha": {
+            "default": 0.05,
+            "exclusiveMaximum": 1,
+            "exclusiveMinimum": 0,
+            "title": "Alpha",
+            "type": "number"
+          }
+        },
+        "required": [
+          "columns",
+          "test"
+        ],
+        "title": "TestArgs",
+        "type": "object"
+      },
+      "output_schema": {
+        "$defs": {
+          "DatasetVersion": {
+            "additionalProperties": false,
+            "description": "Define the DatasetVersion contract.",
+            "properties": {
+              "dataset_id": {
+                "title": "Dataset Id",
+                "type": "string"
+              },
+              "version": {
+                "minimum": 0,
+                "title": "Version",
+                "type": "integer"
+              },
+              "content_hash": {
+                "title": "Content Hash",
+                "type": "string"
+              },
+              "rows": {
+                "minimum": 1,
+                "title": "Rows",
+                "type": "integer"
+              },
+              "columns": {
+                "items": {
+                  "type": "string"
+                },
+                "title": "Columns",
+                "type": "array"
+              },
+              "operation": {
+                "title": "Operation",
+                "type": "string"
+              }
+            },
+            "required": [
+              "dataset_id",
+              "version",
+              "content_hash",
+              "rows",
+              "columns",
+              "operation"
+            ],
+            "title": "DatasetVersion",
+            "type": "object"
+          },
+          "JsonValue": {}
+        },
+        "additionalProperties": false,
+        "description": "Define the AnalysisResult contract.",
+        "properties": {
+          "summary": {
+            "title": "Summary",
+            "type": "string"
+          },
+          "dataset": {
+            "$ref": "#/$defs/DatasetVersion"
+          },
+          "metrics": {
+            "additionalProperties": {
+              "anyOf": [
+                {
+                  "type": "number"
+                },
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "title": "Metrics",
+            "type": "object"
+          },
+          "tables": {
+            "additionalProperties": {
+              "items": {
+                "additionalProperties": {
+                  "$ref": "#/$defs/JsonValue"
+                },
+                "type": "object"
+              },
+              "type": "array"
+            },
+            "title": "Tables",
+            "type": "object"
+          },
+          "visualizations": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Visualizations",
+            "type": "array"
+          },
+          "proposal_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Proposal Id"
+          },
+          "source_dataset_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Source Dataset Id"
+          },
+          "source_experiment_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Source Experiment Id"
+          }
+        },
+        "required": [
+          "summary",
+          "dataset"
+        ],
+        "title": "AnalysisResult",
+        "type": "object"
+      }
+    },
+    {
+      "name": "eda.preview",
+      "module": "eda",
+      "read_only": true,
+      "requires_confirmation": false,
+      "input_schema": {
+        "additionalProperties": false,
+        "properties": {
+          "columns": {
+            "items": {
+              "type": "string"
+            },
+            "maxItems": 30,
+            "minItems": 1,
+            "title": "Columns",
+            "type": "array"
+          },
+          "operation": {
+            "enum": [
+              "mean",
+              "median",
+              "mode",
+              "constant",
+              "knn",
+              "drop_rows",
+              "drop_null_columns",
+              "duplicates",
+              "standard",
+              "minmax",
+              "robust",
+              "normalizer",
+              "onehot",
+              "ordinal",
+              "label",
+              "log",
+              "boxcox",
+              "yeojohnson",
+              "binning",
+              "select",
+              "drop_columns",
+              "convert",
+              "normalize_names",
+              "clip",
+              "winsor",
+              "drop_outliers"
+            ],
+            "title": "Operation",
+            "type": "string"
+          },
+          "parameters": {
+            "additionalProperties": true,
+            "title": "Parameters",
+            "type": "object"
+          }
+        },
+        "required": [
+          "columns",
+          "operation"
+        ],
+        "title": "TransformArgs",
+        "type": "object"
+      },
+      "output_schema": {
+        "$defs": {
+          "DatasetVersion": {
+            "additionalProperties": false,
+            "description": "Define the DatasetVersion contract.",
+            "properties": {
+              "dataset_id": {
+                "title": "Dataset Id",
+                "type": "string"
+              },
+              "version": {
+                "minimum": 0,
+                "title": "Version",
+                "type": "integer"
+              },
+              "content_hash": {
+                "title": "Content Hash",
+                "type": "string"
+              },
+              "rows": {
+                "minimum": 1,
+                "title": "Rows",
+                "type": "integer"
+              },
+              "columns": {
+                "items": {
+                  "type": "string"
+                },
+                "title": "Columns",
+                "type": "array"
+              },
+              "operation": {
+                "title": "Operation",
+                "type": "string"
+              }
+            },
+            "required": [
+              "dataset_id",
+              "version",
+              "content_hash",
+              "rows",
+              "columns",
+              "operation"
+            ],
+            "title": "DatasetVersion",
+            "type": "object"
+          },
+          "JsonValue": {}
+        },
+        "additionalProperties": false,
+        "description": "Define the AnalysisResult contract.",
+        "properties": {
+          "summary": {
+            "title": "Summary",
+            "type": "string"
+          },
+          "dataset": {
+            "$ref": "#/$defs/DatasetVersion"
+          },
+          "metrics": {
+            "additionalProperties": {
+              "anyOf": [
+                {
+                  "type": "number"
+                },
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "title": "Metrics",
+            "type": "object"
+          },
+          "tables": {
+            "additionalProperties": {
+              "items": {
+                "additionalProperties": {
+                  "$ref": "#/$defs/JsonValue"
+                },
+                "type": "object"
+              },
+              "type": "array"
+            },
+            "title": "Tables",
+            "type": "object"
+          },
+          "visualizations": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Visualizations",
+            "type": "array"
+          },
+          "proposal_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Proposal Id"
+          },
+          "source_dataset_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Source Dataset Id"
+          },
+          "source_experiment_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Source Experiment Id"
+          }
+        },
+        "required": [
+          "summary",
+          "dataset"
+        ],
+        "title": "AnalysisResult",
+        "type": "object"
+      }
+    },
+    {
+      "name": "eda.apply",
+      "module": "eda",
+      "read_only": false,
+      "requires_confirmation": true,
+      "input_schema": {
+        "additionalProperties": false,
+        "properties": {
+          "proposal_id": {
+            "title": "Proposal Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "proposal_id"
+        ],
+        "title": "ApplyArgs",
+        "type": "object"
+      },
+      "output_schema": {
+        "$defs": {
+          "DatasetVersion": {
+            "additionalProperties": false,
+            "description": "Define the DatasetVersion contract.",
+            "properties": {
+              "dataset_id": {
+                "title": "Dataset Id",
+                "type": "string"
+              },
+              "version": {
+                "minimum": 0,
+                "title": "Version",
+                "type": "integer"
+              },
+              "content_hash": {
+                "title": "Content Hash",
+                "type": "string"
+              },
+              "rows": {
+                "minimum": 1,
+                "title": "Rows",
+                "type": "integer"
+              },
+              "columns": {
+                "items": {
+                  "type": "string"
+                },
+                "title": "Columns",
+                "type": "array"
+              },
+              "operation": {
+                "title": "Operation",
+                "type": "string"
+              }
+            },
+            "required": [
+              "dataset_id",
+              "version",
+              "content_hash",
+              "rows",
+              "columns",
+              "operation"
+            ],
+            "title": "DatasetVersion",
+            "type": "object"
+          },
+          "JsonValue": {}
+        },
+        "additionalProperties": false,
+        "description": "Define the AnalysisResult contract.",
+        "properties": {
+          "summary": {
+            "title": "Summary",
+            "type": "string"
+          },
+          "dataset": {
+            "$ref": "#/$defs/DatasetVersion"
+          },
+          "metrics": {
+            "additionalProperties": {
+              "anyOf": [
+                {
+                  "type": "number"
+                },
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "title": "Metrics",
+            "type": "object"
+          },
+          "tables": {
+            "additionalProperties": {
+              "items": {
+                "additionalProperties": {
+                  "$ref": "#/$defs/JsonValue"
+                },
+                "type": "object"
+              },
+              "type": "array"
+            },
+            "title": "Tables",
+            "type": "object"
+          },
+          "visualizations": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Visualizations",
+            "type": "array"
+          },
+          "proposal_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Proposal Id"
+          },
+          "source_dataset_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Source Dataset Id"
+          },
+          "source_experiment_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Source Experiment Id"
+          }
+        },
+        "required": [
+          "summary",
+          "dataset"
+        ],
+        "title": "AnalysisResult",
+        "type": "object"
+      }
+    },
+    {
+      "name": "cluster.reduce",
+      "module": "cluster",
+      "read_only": true,
+      "requires_confirmation": true,
+      "input_schema": {
+        "additionalProperties": false,
+        "properties": {
+          "columns": {
+            "items": {
+              "type": "string"
+            },
+            "maxItems": 30,
+            "minItems": 1,
+            "title": "Columns",
+            "type": "array"
+          },
+          "method": {
+            "default": "pca",
+            "enum": [
+              "pca",
+              "tsne",
+              "umap"
+            ],
+            "title": "Method",
+            "type": "string"
+          },
+          "dimensions": {
+            "default": 2,
+            "enum": [
+              2,
+              3
+            ],
+            "title": "Dimensions",
+            "type": "integer"
+          },
+          "scaler": {
+            "default": "standard",
+            "enum": [
+              "standard",
+              "robust",
+              "minmax",
+              "none"
+            ],
+            "title": "Scaler",
+            "type": "string"
+          }
+        },
+        "required": [
+          "columns"
+        ],
+        "title": "ReductionArgs",
+        "type": "object"
+      },
+      "output_schema": {
+        "$defs": {
+          "DatasetVersion": {
+            "additionalProperties": false,
+            "description": "Define the DatasetVersion contract.",
+            "properties": {
+              "dataset_id": {
+                "title": "Dataset Id",
+                "type": "string"
+              },
+              "version": {
+                "minimum": 0,
+                "title": "Version",
+                "type": "integer"
+              },
+              "content_hash": {
+                "title": "Content Hash",
+                "type": "string"
+              },
+              "rows": {
+                "minimum": 1,
+                "title": "Rows",
+                "type": "integer"
+              },
+              "columns": {
+                "items": {
+                  "type": "string"
+                },
+                "title": "Columns",
+                "type": "array"
+              },
+              "operation": {
+                "title": "Operation",
+                "type": "string"
+              }
+            },
+            "required": [
+              "dataset_id",
+              "version",
+              "content_hash",
+              "rows",
+              "columns",
+              "operation"
+            ],
+            "title": "DatasetVersion",
+            "type": "object"
+          },
+          "JsonValue": {}
+        },
+        "additionalProperties": false,
+        "description": "Define the AnalysisResult contract.",
+        "properties": {
+          "summary": {
+            "title": "Summary",
+            "type": "string"
+          },
+          "dataset": {
+            "$ref": "#/$defs/DatasetVersion"
+          },
+          "metrics": {
+            "additionalProperties": {
+              "anyOf": [
+                {
+                  "type": "number"
+                },
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "title": "Metrics",
+            "type": "object"
+          },
+          "tables": {
+            "additionalProperties": {
+              "items": {
+                "additionalProperties": {
+                  "$ref": "#/$defs/JsonValue"
+                },
+                "type": "object"
+              },
+              "type": "array"
+            },
+            "title": "Tables",
+            "type": "object"
+          },
+          "visualizations": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Visualizations",
+            "type": "array"
+          },
+          "proposal_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Proposal Id"
+          },
+          "source_dataset_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Source Dataset Id"
+          },
+          "source_experiment_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Source Experiment Id"
+          }
+        },
+        "required": [
+          "summary",
+          "dataset"
+        ],
+        "title": "AnalysisResult",
+        "type": "object"
+      }
+    },
+    {
+      "name": "cluster.distances",
+      "module": "cluster",
+      "read_only": true,
+      "requires_confirmation": true,
+      "input_schema": {
+        "additionalProperties": false,
+        "properties": {
+          "columns": {
+            "items": {
+              "type": "string"
+            },
+            "maxItems": 30,
+            "minItems": 1,
+            "title": "Columns",
+            "type": "array"
+          },
+          "metric": {
+            "default": "euclidean",
+            "enum": [
+              "euclidean",
+              "cityblock",
+              "cosine"
+            ],
+            "title": "Metric",
+            "type": "string"
+          }
+        },
+        "required": [
+          "columns"
+        ],
+        "title": "DistanceArgs",
+        "type": "object"
+      },
+      "output_schema": {
+        "$defs": {
+          "DatasetVersion": {
+            "additionalProperties": false,
+            "description": "Define the DatasetVersion contract.",
+            "properties": {
+              "dataset_id": {
+                "title": "Dataset Id",
+                "type": "string"
+              },
+              "version": {
+                "minimum": 0,
+                "title": "Version",
+                "type": "integer"
+              },
+              "content_hash": {
+                "title": "Content Hash",
+                "type": "string"
+              },
+              "rows": {
+                "minimum": 1,
+                "title": "Rows",
+                "type": "integer"
+              },
+              "columns": {
+                "items": {
+                  "type": "string"
+                },
+                "title": "Columns",
+                "type": "array"
+              },
+              "operation": {
+                "title": "Operation",
+                "type": "string"
+              }
+            },
+            "required": [
+              "dataset_id",
+              "version",
+              "content_hash",
+              "rows",
+              "columns",
+              "operation"
+            ],
+            "title": "DatasetVersion",
+            "type": "object"
+          },
+          "JsonValue": {}
+        },
+        "additionalProperties": false,
+        "description": "Define the AnalysisResult contract.",
+        "properties": {
+          "summary": {
+            "title": "Summary",
+            "type": "string"
+          },
+          "dataset": {
+            "$ref": "#/$defs/DatasetVersion"
+          },
+          "metrics": {
+            "additionalProperties": {
+              "anyOf": [
+                {
+                  "type": "number"
+                },
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "title": "Metrics",
+            "type": "object"
+          },
+          "tables": {
+            "additionalProperties": {
+              "items": {
+                "additionalProperties": {
+                  "$ref": "#/$defs/JsonValue"
+                },
+                "type": "object"
+              },
+              "type": "array"
+            },
+            "title": "Tables",
+            "type": "object"
+          },
+          "visualizations": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Visualizations",
+            "type": "array"
+          },
+          "proposal_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Proposal Id"
+          },
+          "source_dataset_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Source Dataset Id"
+          },
+          "source_experiment_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Source Experiment Id"
+          }
+        },
+        "required": [
+          "summary",
+          "dataset"
+        ],
+        "title": "AnalysisResult",
+        "type": "object"
+      }
+    },
+    {
+      "name": "cluster.train",
+      "module": "cluster",
+      "read_only": false,
+      "requires_confirmation": true,
+      "input_schema": {
+        "additionalProperties": false,
+        "properties": {
+          "columns": {
+            "items": {
+              "type": "string"
+            },
+            "maxItems": 30,
+            "minItems": 1,
+            "title": "Columns",
+            "type": "array"
+          },
+          "algorithm": {
+            "title": "Algorithm",
+            "type": "string"
+          },
+          "scaler": {
+            "default": "standard",
+            "enum": [
+              "standard",
+              "robust",
+              "minmax",
+              "none"
+            ],
+            "title": "Scaler",
+            "type": "string"
+          },
+          "parameters": {
+            "additionalProperties": true,
+            "title": "Parameters",
+            "type": "object"
+          }
+        },
+        "required": [
+          "columns",
+          "algorithm"
+        ],
+        "title": "ClusterArgs",
+        "type": "object"
+      },
+      "output_schema": {
+        "$defs": {
+          "ModelResult": {
+            "additionalProperties": false,
+            "description": "Define the ModelResult contract.",
+            "properties": {
+              "model_id": {
+                "title": "Model Id",
+                "type": "string"
+              },
+              "algorithm": {
+                "title": "Algorithm",
+                "type": "string"
+              },
+              "problem": {
+                "title": "Problem",
+                "type": "string"
+              },
+              "version": {
+                "minimum": 1,
+                "title": "Version",
+                "type": "integer"
+              },
+              "artifact_id": {
+                "title": "Artifact Id",
+                "type": "string"
+              }
+            },
+            "required": [
+              "model_id",
+              "algorithm",
+              "problem",
+              "version",
+              "artifact_id"
+            ],
+            "title": "ModelResult",
+            "type": "object"
+          }
+        },
+        "additionalProperties": false,
+        "description": "Define the ExperimentResult contract.",
+        "properties": {
+          "experiment_id": {
+            "title": "Experiment Id",
+            "type": "string"
+          },
+          "dataset_id": {
+            "title": "Dataset Id",
+            "type": "string"
+          },
+          "model": {
+            "$ref": "#/$defs/ModelResult"
+          },
+          "metrics": {
+            "additionalProperties": {
+              "anyOf": [
+                {
+                  "type": "number"
+                },
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "title": "Metrics",
+            "type": "object"
+          },
+          "configuration": {
+            "additionalProperties": true,
+            "title": "Configuration",
+            "type": "object"
+          },
+          "seconds": {
+            "title": "Seconds",
+            "type": "number"
+          },
+          "cohort": {
+            "title": "Cohort",
+            "type": "string"
+          },
+          "visualizations": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Visualizations",
+            "type": "array"
+          }
+        },
+        "required": [
+          "experiment_id",
+          "dataset_id",
+          "model",
+          "metrics",
+          "configuration",
+          "seconds",
+          "cohort"
+        ],
+        "title": "ExperimentResult",
+        "type": "object"
+      }
+    },
+    {
+      "name": "cluster.elbow",
+      "module": "cluster",
+      "read_only": true,
+      "requires_confirmation": true,
+      "input_schema": {
+        "additionalProperties": false,
+        "properties": {
+          "columns": {
+            "items": {
+              "type": "string"
+            },
+            "maxItems": 30,
+            "minItems": 1,
+            "title": "Columns",
+            "type": "array"
+          },
+          "max_k": {
+            "default": 8,
+            "maximum": 15,
+            "minimum": 2,
+            "title": "Max K",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "columns"
+        ],
+        "title": "ElbowArgs",
+        "type": "object"
+      },
+      "output_schema": {
+        "$defs": {
+          "DatasetVersion": {
+            "additionalProperties": false,
+            "description": "Define the DatasetVersion contract.",
+            "properties": {
+              "dataset_id": {
+                "title": "Dataset Id",
+                "type": "string"
+              },
+              "version": {
+                "minimum": 0,
+                "title": "Version",
+                "type": "integer"
+              },
+              "content_hash": {
+                "title": "Content Hash",
+                "type": "string"
+              },
+              "rows": {
+                "minimum": 1,
+                "title": "Rows",
+                "type": "integer"
+              },
+              "columns": {
+                "items": {
+                  "type": "string"
+                },
+                "title": "Columns",
+                "type": "array"
+              },
+              "operation": {
+                "title": "Operation",
+                "type": "string"
+              }
+            },
+            "required": [
+              "dataset_id",
+              "version",
+              "content_hash",
+              "rows",
+              "columns",
+              "operation"
+            ],
+            "title": "DatasetVersion",
+            "type": "object"
+          },
+          "JsonValue": {}
+        },
+        "additionalProperties": false,
+        "description": "Define the AnalysisResult contract.",
+        "properties": {
+          "summary": {
+            "title": "Summary",
+            "type": "string"
+          },
+          "dataset": {
+            "$ref": "#/$defs/DatasetVersion"
+          },
+          "metrics": {
+            "additionalProperties": {
+              "anyOf": [
+                {
+                  "type": "number"
+                },
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "title": "Metrics",
+            "type": "object"
+          },
+          "tables": {
+            "additionalProperties": {
+              "items": {
+                "additionalProperties": {
+                  "$ref": "#/$defs/JsonValue"
+                },
+                "type": "object"
+              },
+              "type": "array"
+            },
+            "title": "Tables",
+            "type": "object"
+          },
+          "visualizations": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Visualizations",
+            "type": "array"
+          },
+          "proposal_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Proposal Id"
+          },
+          "source_dataset_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Source Dataset Id"
+          },
+          "source_experiment_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Source Experiment Id"
+          }
+        },
+        "required": [
+          "summary",
+          "dataset"
+        ],
+        "title": "AnalysisResult",
+        "type": "object"
+      }
+    },
+    {
+      "name": "classification.train",
+      "module": "classification",
+      "read_only": false,
+      "requires_confirmation": true,
+      "input_schema": {
+        "additionalProperties": false,
+        "properties": {
+          "algorithm": {
+            "title": "Algorithm",
+            "type": "string"
+          },
+          "target": {
+            "title": "Target",
+            "type": "string"
+          },
+          "predictors": {
+            "items": {
+              "type": "string"
+            },
+            "maxItems": 30,
+            "minItems": 1,
+            "title": "Predictors",
+            "type": "array"
+          },
+          "source": {
+            "default": "original",
+            "enum": [
+              "original",
+              "working"
+            ],
+            "title": "Source",
+            "type": "string"
+          },
+          "test_size": {
+            "default": 0.2,
+            "maximum": 0.5,
+            "minimum": 0.05,
+            "title": "Test Size",
+            "type": "number"
+          },
+          "cv": {
+            "default": 3,
+            "maximum": 10,
+            "minimum": 2,
+            "title": "Cv",
+            "type": "integer"
+          },
+          "random_state": {
+            "default": 42,
+            "maximum": 99999,
+            "minimum": 0,
+            "title": "Random State",
+            "type": "integer"
+          },
+          "scaler": {
+            "default": "standard",
+            "enum": [
+              "standard",
+              "minmax",
+              "robust",
+              "normalizer",
+              "none"
+            ],
+            "title": "Scaler",
+            "type": "string"
+          },
+          "encoding": {
+            "default": "onehot",
+            "enum": [
+              "onehot",
+              "ordinal"
+            ],
+            "title": "Encoding",
+            "type": "string"
+          },
+          "parameters": {
+            "additionalProperties": true,
+            "title": "Parameters",
+            "type": "object"
+          },
+          "search": {
+            "anyOf": [
+              {
+                "additionalProperties": {
+                  "items": {},
+                  "type": "array"
+                },
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Search"
+          },
+          "search_type": {
+            "default": "grid",
+            "enum": [
+              "grid",
+              "random"
+            ],
+            "title": "Search Type",
+            "type": "string"
+          }
+        },
+        "required": [
+          "algorithm",
+          "target",
+          "predictors"
+        ],
+        "title": "TrainingArgs",
+        "type": "object"
+      },
+      "output_schema": {
+        "$defs": {
+          "ModelResult": {
+            "additionalProperties": false,
+            "description": "Define the ModelResult contract.",
+            "properties": {
+              "model_id": {
+                "title": "Model Id",
+                "type": "string"
+              },
+              "algorithm": {
+                "title": "Algorithm",
+                "type": "string"
+              },
+              "problem": {
+                "title": "Problem",
+                "type": "string"
+              },
+              "version": {
+                "minimum": 1,
+                "title": "Version",
+                "type": "integer"
+              },
+              "artifact_id": {
+                "title": "Artifact Id",
+                "type": "string"
+              }
+            },
+            "required": [
+              "model_id",
+              "algorithm",
+              "problem",
+              "version",
+              "artifact_id"
+            ],
+            "title": "ModelResult",
+            "type": "object"
+          }
+        },
+        "additionalProperties": false,
+        "description": "Define the ExperimentResult contract.",
+        "properties": {
+          "experiment_id": {
+            "title": "Experiment Id",
+            "type": "string"
+          },
+          "dataset_id": {
+            "title": "Dataset Id",
+            "type": "string"
+          },
+          "model": {
+            "$ref": "#/$defs/ModelResult"
+          },
+          "metrics": {
+            "additionalProperties": {
+              "anyOf": [
+                {
+                  "type": "number"
+                },
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "title": "Metrics",
+            "type": "object"
+          },
+          "configuration": {
+            "additionalProperties": true,
+            "title": "Configuration",
+            "type": "object"
+          },
+          "seconds": {
+            "title": "Seconds",
+            "type": "number"
+          },
+          "cohort": {
+            "title": "Cohort",
+            "type": "string"
+          },
+          "visualizations": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Visualizations",
+            "type": "array"
+          }
+        },
+        "required": [
+          "experiment_id",
+          "dataset_id",
+          "model",
+          "metrics",
+          "configuration",
+          "seconds",
+          "cohort"
+        ],
+        "title": "ExperimentResult",
+        "type": "object"
+      }
+    },
+    {
+      "name": "regression.train",
+      "module": "regression",
+      "read_only": false,
+      "requires_confirmation": true,
+      "input_schema": {
+        "additionalProperties": false,
+        "properties": {
+          "algorithm": {
+            "title": "Algorithm",
+            "type": "string"
+          },
+          "target": {
+            "title": "Target",
+            "type": "string"
+          },
+          "predictors": {
+            "items": {
+              "type": "string"
+            },
+            "maxItems": 30,
+            "minItems": 1,
+            "title": "Predictors",
+            "type": "array"
+          },
+          "source": {
+            "default": "original",
+            "enum": [
+              "original",
+              "working"
+            ],
+            "title": "Source",
+            "type": "string"
+          },
+          "test_size": {
+            "default": 0.2,
+            "maximum": 0.5,
+            "minimum": 0.05,
+            "title": "Test Size",
+            "type": "number"
+          },
+          "cv": {
+            "default": 3,
+            "maximum": 10,
+            "minimum": 2,
+            "title": "Cv",
+            "type": "integer"
+          },
+          "random_state": {
+            "default": 42,
+            "maximum": 99999,
+            "minimum": 0,
+            "title": "Random State",
+            "type": "integer"
+          },
+          "scaler": {
+            "default": "standard",
+            "enum": [
+              "standard",
+              "minmax",
+              "robust",
+              "normalizer",
+              "none"
+            ],
+            "title": "Scaler",
+            "type": "string"
+          },
+          "encoding": {
+            "default": "onehot",
+            "enum": [
+              "onehot",
+              "ordinal"
+            ],
+            "title": "Encoding",
+            "type": "string"
+          },
+          "parameters": {
+            "additionalProperties": true,
+            "title": "Parameters",
+            "type": "object"
+          },
+          "search": {
+            "anyOf": [
+              {
+                "additionalProperties": {
+                  "items": {},
+                  "type": "array"
+                },
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Search"
+          },
+          "search_type": {
+            "default": "grid",
+            "enum": [
+              "grid",
+              "random"
+            ],
+            "title": "Search Type",
+            "type": "string"
+          }
+        },
+        "required": [
+          "algorithm",
+          "target",
+          "predictors"
+        ],
+        "title": "TrainingArgs",
+        "type": "object"
+      },
+      "output_schema": {
+        "$defs": {
+          "ModelResult": {
+            "additionalProperties": false,
+            "description": "Define the ModelResult contract.",
+            "properties": {
+              "model_id": {
+                "title": "Model Id",
+                "type": "string"
+              },
+              "algorithm": {
+                "title": "Algorithm",
+                "type": "string"
+              },
+              "problem": {
+                "title": "Problem",
+                "type": "string"
+              },
+              "version": {
+                "minimum": 1,
+                "title": "Version",
+                "type": "integer"
+              },
+              "artifact_id": {
+                "title": "Artifact Id",
+                "type": "string"
+              }
+            },
+            "required": [
+              "model_id",
+              "algorithm",
+              "problem",
+              "version",
+              "artifact_id"
+            ],
+            "title": "ModelResult",
+            "type": "object"
+          }
+        },
+        "additionalProperties": false,
+        "description": "Define the ExperimentResult contract.",
+        "properties": {
+          "experiment_id": {
+            "title": "Experiment Id",
+            "type": "string"
+          },
+          "dataset_id": {
+            "title": "Dataset Id",
+            "type": "string"
+          },
+          "model": {
+            "$ref": "#/$defs/ModelResult"
+          },
+          "metrics": {
+            "additionalProperties": {
+              "anyOf": [
+                {
+                  "type": "number"
+                },
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "title": "Metrics",
+            "type": "object"
+          },
+          "configuration": {
+            "additionalProperties": true,
+            "title": "Configuration",
+            "type": "object"
+          },
+          "seconds": {
+            "title": "Seconds",
+            "type": "number"
+          },
+          "cohort": {
+            "title": "Cohort",
+            "type": "string"
+          },
+          "visualizations": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Visualizations",
+            "type": "array"
+          }
+        },
+        "required": [
+          "experiment_id",
+          "dataset_id",
+          "model",
+          "metrics",
+          "configuration",
+          "seconds",
+          "cohort"
+        ],
+        "title": "ExperimentResult",
+        "type": "object"
+      }
+    },
+    {
+      "name": "model.metrics",
+      "module": "model",
+      "read_only": true,
+      "requires_confirmation": false,
+      "input_schema": {
+        "additionalProperties": false,
+        "properties": {
+          "experiment_id": {
+            "title": "Experiment Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "experiment_id"
+        ],
+        "title": "ExperimentArgs",
+        "type": "object"
+      },
+      "output_schema": {
+        "$defs": {
+          "DatasetVersion": {
+            "additionalProperties": false,
+            "description": "Define the DatasetVersion contract.",
+            "properties": {
+              "dataset_id": {
+                "title": "Dataset Id",
+                "type": "string"
+              },
+              "version": {
+                "minimum": 0,
+                "title": "Version",
+                "type": "integer"
+              },
+              "content_hash": {
+                "title": "Content Hash",
+                "type": "string"
+              },
+              "rows": {
+                "minimum": 1,
+                "title": "Rows",
+                "type": "integer"
+              },
+              "columns": {
+                "items": {
+                  "type": "string"
+                },
+                "title": "Columns",
+                "type": "array"
+              },
+              "operation": {
+                "title": "Operation",
+                "type": "string"
+              }
+            },
+            "required": [
+              "dataset_id",
+              "version",
+              "content_hash",
+              "rows",
+              "columns",
+              "operation"
+            ],
+            "title": "DatasetVersion",
+            "type": "object"
+          },
+          "JsonValue": {}
+        },
+        "additionalProperties": false,
+        "description": "Define the AnalysisResult contract.",
+        "properties": {
+          "summary": {
+            "title": "Summary",
+            "type": "string"
+          },
+          "dataset": {
+            "$ref": "#/$defs/DatasetVersion"
+          },
+          "metrics": {
+            "additionalProperties": {
+              "anyOf": [
+                {
+                  "type": "number"
+                },
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "title": "Metrics",
+            "type": "object"
+          },
+          "tables": {
+            "additionalProperties": {
+              "items": {
+                "additionalProperties": {
+                  "$ref": "#/$defs/JsonValue"
+                },
+                "type": "object"
+              },
+              "type": "array"
+            },
+            "title": "Tables",
+            "type": "object"
+          },
+          "visualizations": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Visualizations",
+            "type": "array"
+          },
+          "proposal_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Proposal Id"
+          },
+          "source_dataset_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Source Dataset Id"
+          },
+          "source_experiment_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Source Experiment Id"
+          }
+        },
+        "required": [
+          "summary",
+          "dataset"
+        ],
+        "title": "AnalysisResult",
+        "type": "object"
+      }
+    },
+    {
+      "name": "model.plot",
+      "module": "model",
+      "read_only": true,
+      "requires_confirmation": false,
+      "input_schema": {
+        "additionalProperties": false,
+        "properties": {
+          "experiment_id": {
+            "title": "Experiment Id",
+            "type": "string"
+          },
+          "kind": {
+            "title": "Kind",
+            "type": "string"
+          }
+        },
+        "required": [
+          "experiment_id",
+          "kind"
+        ],
+        "title": "ModelPlotArgs",
+        "type": "object"
+      },
+      "output_schema": {
+        "$defs": {
+          "DatasetVersion": {
+            "additionalProperties": false,
+            "description": "Define the DatasetVersion contract.",
+            "properties": {
+              "dataset_id": {
+                "title": "Dataset Id",
+                "type": "string"
+              },
+              "version": {
+                "minimum": 0,
+                "title": "Version",
+                "type": "integer"
+              },
+              "content_hash": {
+                "title": "Content Hash",
+                "type": "string"
+              },
+              "rows": {
+                "minimum": 1,
+                "title": "Rows",
+                "type": "integer"
+              },
+              "columns": {
+                "items": {
+                  "type": "string"
+                },
+                "title": "Columns",
+                "type": "array"
+              },
+              "operation": {
+                "title": "Operation",
+                "type": "string"
+              }
+            },
+            "required": [
+              "dataset_id",
+              "version",
+              "content_hash",
+              "rows",
+              "columns",
+              "operation"
+            ],
+            "title": "DatasetVersion",
+            "type": "object"
+          },
+          "JsonValue": {}
+        },
+        "additionalProperties": false,
+        "description": "Define the AnalysisResult contract.",
+        "properties": {
+          "summary": {
+            "title": "Summary",
+            "type": "string"
+          },
+          "dataset": {
+            "$ref": "#/$defs/DatasetVersion"
+          },
+          "metrics": {
+            "additionalProperties": {
+              "anyOf": [
+                {
+                  "type": "number"
+                },
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "title": "Metrics",
+            "type": "object"
+          },
+          "tables": {
+            "additionalProperties": {
+              "items": {
+                "additionalProperties": {
+                  "$ref": "#/$defs/JsonValue"
+                },
+                "type": "object"
+              },
+              "type": "array"
+            },
+            "title": "Tables",
+            "type": "object"
+          },
+          "visualizations": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Visualizations",
+            "type": "array"
+          },
+          "proposal_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Proposal Id"
+          },
+          "source_dataset_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Source Dataset Id"
+          },
+          "source_experiment_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Source Experiment Id"
+          }
+        },
+        "required": [
+          "summary",
+          "dataset"
+        ],
+        "title": "AnalysisResult",
+        "type": "object"
+      }
+    },
+    {
+      "name": "model.importance",
+      "module": "model",
+      "read_only": true,
+      "requires_confirmation": true,
+      "input_schema": {
+        "additionalProperties": false,
+        "properties": {
+          "experiment_id": {
+            "title": "Experiment Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "experiment_id"
+        ],
+        "title": "ExperimentArgs",
+        "type": "object"
+      },
+      "output_schema": {
+        "$defs": {
+          "DatasetVersion": {
+            "additionalProperties": false,
+            "description": "Define the DatasetVersion contract.",
+            "properties": {
+              "dataset_id": {
+                "title": "Dataset Id",
+                "type": "string"
+              },
+              "version": {
+                "minimum": 0,
+                "title": "Version",
+                "type": "integer"
+              },
+              "content_hash": {
+                "title": "Content Hash",
+                "type": "string"
+              },
+              "rows": {
+                "minimum": 1,
+                "title": "Rows",
+                "type": "integer"
+              },
+              "columns": {
+                "items": {
+                  "type": "string"
+                },
+                "title": "Columns",
+                "type": "array"
+              },
+              "operation": {
+                "title": "Operation",
+                "type": "string"
+              }
+            },
+            "required": [
+              "dataset_id",
+              "version",
+              "content_hash",
+              "rows",
+              "columns",
+              "operation"
+            ],
+            "title": "DatasetVersion",
+            "type": "object"
+          },
+          "JsonValue": {}
+        },
+        "additionalProperties": false,
+        "description": "Define the AnalysisResult contract.",
+        "properties": {
+          "summary": {
+            "title": "Summary",
+            "type": "string"
+          },
+          "dataset": {
+            "$ref": "#/$defs/DatasetVersion"
+          },
+          "metrics": {
+            "additionalProperties": {
+              "anyOf": [
+                {
+                  "type": "number"
+                },
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "title": "Metrics",
+            "type": "object"
+          },
+          "tables": {
+            "additionalProperties": {
+              "items": {
+                "additionalProperties": {
+                  "$ref": "#/$defs/JsonValue"
+                },
+                "type": "object"
+              },
+              "type": "array"
+            },
+            "title": "Tables",
+            "type": "object"
+          },
+          "visualizations": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Visualizations",
+            "type": "array"
+          },
+          "proposal_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Proposal Id"
+          },
+          "source_dataset_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Source Dataset Id"
+          },
+          "source_experiment_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Source Experiment Id"
+          }
+        },
+        "required": [
+          "summary",
+          "dataset"
+        ],
+        "title": "AnalysisResult",
+        "type": "object"
+      }
+    },
+    {
+      "name": "comparison.compare",
+      "module": "comparison",
+      "read_only": true,
+      "requires_confirmation": false,
+      "input_schema": {
+        "additionalProperties": false,
+        "properties": {
+          "experiment_ids": {
+            "items": {
+              "type": "string"
+            },
+            "maxItems": 20,
+            "minItems": 2,
+            "title": "Experiment Ids",
+            "type": "array"
+          },
+          "metric": {
+            "title": "Metric",
+            "type": "string"
+          },
+          "direction": {
+            "enum": [
+              "min",
+              "max"
+            ],
+            "title": "Direction",
+            "type": "string"
+          }
+        },
+        "required": [
+          "experiment_ids",
+          "metric",
+          "direction"
+        ],
+        "title": "ComparisonArgs",
+        "type": "object"
+      },
+      "output_schema": {
+        "$defs": {
+          "DatasetVersion": {
+            "additionalProperties": false,
+            "description": "Define the DatasetVersion contract.",
+            "properties": {
+              "dataset_id": {
+                "title": "Dataset Id",
+                "type": "string"
+              },
+              "version": {
+                "minimum": 0,
+                "title": "Version",
+                "type": "integer"
+              },
+              "content_hash": {
+                "title": "Content Hash",
+                "type": "string"
+              },
+              "rows": {
+                "minimum": 1,
+                "title": "Rows",
+                "type": "integer"
+              },
+              "columns": {
+                "items": {
+                  "type": "string"
+                },
+                "title": "Columns",
+                "type": "array"
+              },
+              "operation": {
+                "title": "Operation",
+                "type": "string"
+              }
+            },
+            "required": [
+              "dataset_id",
+              "version",
+              "content_hash",
+              "rows",
+              "columns",
+              "operation"
+            ],
+            "title": "DatasetVersion",
+            "type": "object"
+          },
+          "JsonValue": {}
+        },
+        "additionalProperties": false,
+        "description": "Define the AnalysisResult contract.",
+        "properties": {
+          "summary": {
+            "title": "Summary",
+            "type": "string"
+          },
+          "dataset": {
+            "$ref": "#/$defs/DatasetVersion"
+          },
+          "metrics": {
+            "additionalProperties": {
+              "anyOf": [
+                {
+                  "type": "number"
+                },
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "title": "Metrics",
+            "type": "object"
+          },
+          "tables": {
+            "additionalProperties": {
+              "items": {
+                "additionalProperties": {
+                  "$ref": "#/$defs/JsonValue"
+                },
+                "type": "object"
+              },
+              "type": "array"
+            },
+            "title": "Tables",
+            "type": "object"
+          },
+          "visualizations": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Visualizations",
+            "type": "array"
+          },
+          "proposal_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Proposal Id"
+          },
+          "source_dataset_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Source Dataset Id"
+          },
+          "source_experiment_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Source Experiment Id"
+          }
+        },
+        "required": [
+          "summary",
+          "dataset"
+        ],
+        "title": "AnalysisResult",
+        "type": "object"
+      }
+    }
+  ],
+  "catalogs": {
+    "classification": [
+      "logistic",
+      "knn",
+      "tree",
+      "forest",
+      "extra_trees",
+      "naive_bayes",
+      "svm_linear",
+      "svm_rbf",
+      "svm_poly",
+      "adaboost",
+      "gradient_boosting",
+      "hist_gradient_boosting",
+      "mlp",
+      "xgboost"
+    ],
+    "regression": [
+      "linear_simple",
+      "linear_multiple",
+      "ridge",
+      "ridge_cv",
+      "lasso",
+      "lasso_cv",
+      "elasticnet",
+      "elasticnet_cv",
+      "svr_linear",
+      "svr_rbf",
+      "svr_poly",
+      "tree",
+      "forest",
+      "extra_trees",
+      "gradient_boosting",
+      "hist_gradient_boosting",
+      "knn",
+      "mlp",
+      "xgboost"
+    ],
+    "clustering": [
+      "kmeans",
+      "minibatch",
+      "dbscan",
+      "optics",
+      "agglomerative",
+      "gaussian",
+      "spectral",
+      "birch",
+      "hierarchical",
+      "kmedoids"
+    ],
+    "scalers": [
+      "standard",
+      "minmax",
+      "robust",
+      "normalizer",
+      "none"
+    ],
+    "metric_dictionary_labels": [
+      "Accuracy",
+      "Balanced_accuracy",
+      "ER",
+      "F1_macro",
+      "F1_weighted",
+      "MAE",
+      "MAPE",
+      "MSE",
+      "R2",
+      "R2_ajustado",
+      "RMSE",
+      "clusters",
+      "ruido",
+      "sMAPE"
+    ],
+    "metric_note": "Labels discovered from dictionary literals, not an exhaustive metric availability guarantee; algorithm-specific metrics remain conditional.",
+    "optional_dependencies": [
+      "umap-learn",
+      "scikit-learn-extra",
+      "xgboost"
+    ]
+  }
+}

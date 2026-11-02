@@ -1,0 +1,20 @@
+/* Compact Atlas 2.0 workspace. Owned keys and semantic selectors only. */
+.atlas-page-title {font-family:var(--atlas-heading);font-size:32px;line-height:1.2;}
+.st-key-atlas_page_hero {min-height:116px;padding:16px 24px;background-position:right center;}
+.atlas-hero-copy h1 {font-size:24px;letter-spacing:-.6px;}
+.atlas-banner-eyebrow {display:none;}
+.atlas-hero-copy p {font-size:14px;line-height:1.5;max-width:850px;}
+.atlas-context-bar {background:color-mix(in srgb,var(--atlas-sky) 22%,white);border:1px solid var(--atlas-border);border-radius:8px;padding:10px 14px;font-size:13px;color:var(--atlas-plum);overflow-wrap:anywhere;}
+.atlas-context-bar span {padding:0 8px;color:var(--atlas-purple);}
+.atlas-workflow {display:flex;flex-wrap:wrap;gap:8px;margin:2px 0 4px;}
+.atlas-step {font-size:12px;border-radius:6px;border:1px solid var(--atlas-border);padding:5px 9px;background:transparent;color:var(--atlas-purple);}
+.atlas-step.done {background:color-mix(in srgb,var(--atlas-sky) 25%,white);color:var(--atlas-plum);}
+.atlas-step.current {background:var(--atlas-purple);color:var(--atlas-cream);font-weight:600;}
+.atlas-metrics-row {gap:12px;margin-bottom:8px;}
+.atlas-metric-item {padding:12px 16px;}
+.atlas-metric-item .atlas-metric-label {min-height:1.4em;margin-bottom:6px;}
+.atlas-metric-item .atlas-metric-detail {min-height:1.5em;margin-top:6px;}
+.st-key-atlas_sidebar_nav .atlas-section-label {margin:12px 0 4px;font-size:10px;letter-spacing:1.2px;}
+[class*="st-key-panel_"] {background:color-mix(in srgb,var(--atlas-sky) 14%,white);border-radius:10px;}
+[data-testid="stMain"] button {min-height:40px;}
+@media(max-width:768px) {.atlas-page-title {font-size:27px;}.st-key-atlas_page_hero {min-height:110px;padding:16px;}.atlas-hero-copy h1 {font-size:22px;}.atlas-context-bar {font-size:12px;}.atlas-step {font-size:11px;}}
