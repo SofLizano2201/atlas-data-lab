@@ -6,12 +6,11 @@ from typing import Any
 import matplotlib
 
 matplotlib.use("Agg")
-import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 import plotly.express as px
 import plotly.graph_objects as go
-import seaborn as sns
+from plotly.subplots import make_subplots
 from scipy import stats
 
 from atlas.core.exceptions import FrameworkError
@@ -41,6 +40,7 @@ PALETTE = [
 SEQUENTIAL = [[0, "#F1ECCE"], [0.35, "#9FC2CC"], [1, "#1B5299"]]
 DIVERGING = [[0, "#1B5299"], [0.5, "#F1ECCE"], [1, "#694D75"]]
 NOISE_COLOR = "#827887"
+MAX_VISUAL_POINTS = 10000
 SYMBOLS = [
     "circle",
     "diamond",
@@ -85,55 +85,77 @@ def categorical_colors(values: Any, max_categories: int = 12) -> dict[str, str]:
 
 def note(fig: go.Figure, text: str) -> go.Figure:
     """Provide note using validated inputs."""
-    fig.update_layout(margin_t=140)
-    fig.add_annotation(
-        text="<br>".join(wrap(text, 58)),
-        x=0,
-        y=1.02,
-        xref="paper",
-        yref="paper",
-        showarrow=False,
-        xanchor="left",
-        yanchor="bottom",
-        font={"size": 11, "color": "#694D75"},
+    metadata = dict(fig.layout.meta or {})
+    existing = metadata.get("atlas_caption", "")
+    metadata["atlas_caption"] = (
+        (existing + " " + text).strip() if text not in existing else existing
     )
+    fig.update_layout(meta=metadata)
     return fig
 
 
 def style(fig: go.Figure, title: str | None = None) -> go.Figure:
     """Provide style using validated inputs."""
     heading = title or fig.layout.title.text or "Análisis de datos"
+    title_lines = wrap(heading, 30)
+    legend_entries = {
+        trace.name for trace in fig.data if trace.name and trace.showlegend is not False
+    }
+    legend_space = max(100, 70 + 22 * ((len(legend_entries) + 2) // 3))
     fig.update_layout(
         template="plotly_white",
         title={
-            "text": "<br>".join(wrap(heading, 45)),
+            "text": "<br>".join(title_lines),
             "x": 0,
             "xanchor": "left",
             "y": 0.95,
             "yanchor": "top",
-            "font": {"size": 18},
+            "font": {"size": 20, "family": "Manrope, Inter, sans-serif", "color": "#331832"},
         },
-        paper_bgcolor="#FBF9EF",
-        plot_bgcolor="#FBF9EF",
+        paper_bgcolor="rgba(0,0,0,0)",
+        plot_bgcolor="#FDFBF4",
         font={"family": "Inter, Segoe UI, sans-serif", "size": 13, "color": "#331832"},
         colorway=PALETTE,
-        height=520,
+        height=max(500, 300 + 55 + 24 * len(title_lines) + legend_space),
         autosize=True,
         hovermode="closest",
         dragmode="zoom",
         uirevision=heading,
-        margin={"l": 65, "r": 35, "t": 85, "b": 110},
+        margin={"l": 65, "r": 30, "t": 55 + 24 * len(title_lines), "b": legend_space},
         legend={
             "title_text": "",
             "orientation": "h",
             "x": 0,
-            "y": -0.22,
+            "y": -0.20,
             "xanchor": "left",
             "yanchor": "top",
             "font": {"size": 12},
         },
-        hoverlabel={"font_size": 13},
+        hoverlabel={
+            "font_size": 13,
+            "bgcolor": "#331832",
+            "font_color": "#F1ECCE",
+            "bordercolor": "#694D75",
+        },
         separators=",.",
+        scene={
+            "bgcolor": "#FDFBF4",
+            "xaxis": {
+                "gridcolor": "rgba(159,194,204,0.33)",
+                "backgroundcolor": "#FDFBF4",
+                "showbackground": True,
+            },
+            "yaxis": {
+                "gridcolor": "rgba(159,194,204,0.33)",
+                "backgroundcolor": "#FDFBF4",
+                "showbackground": True,
+            },
+            "zaxis": {
+                "gridcolor": "rgba(159,194,204,0.33)",
+                "backgroundcolor": "#FDFBF4",
+                "showbackground": True,
+            },
+        },
     )
     fig.update_xaxes(
         automargin=True,
@@ -153,7 +175,11 @@ def style(fig: go.Figure, title: str | None = None) -> go.Figure:
     for i, trace in enumerate(fig.data):
         if trace.type in {"scatter", "scattergl"}:
             if trace.mode and "markers" in trace.mode:
-                trace.marker.update(size=7, opacity=0.85, line={"width": 0.7, "color": "#331832"})
+                trace.marker.update(
+                    size=trace.marker.size if trace.marker.size is not None else 7,
+                    opacity=trace.marker.opacity if trace.marker.opacity is not None else 0.72,
+                    line={"width": 0.45, "color": "#694D75"},
+                )
             if trace.mode and "lines" in trace.mode:
                 if trace.line.width is None:
                     trace.line.width = 2.5
@@ -166,7 +192,105 @@ def style(fig: go.Figure, title: str | None = None) -> go.Figure:
                         "longdash",
                         "longdashdot",
                     ][i % 6]
+        if trace.type == "bar":
+            trace.marker.line.update(width=0.5, color="#F1ECCE")
+        if trace.type == "heatmap":
+            trace.update(xgap=2, ygap=2)
+        if not trace.hovertemplate and trace.type in {"scatter", "scattergl", "bar"}:
+            trace.hovertemplate = "%{x}<br>%{y}<extra>%{fullData.name}</extra>"
     return fig
+
+
+def chart_frame(fig: go.Figure, visible_only: bool = True) -> pd.DataFrame:
+    """Export actual trace inputs; histogram/box/violin rows are observations, not bins."""
+    rows = []
+    for index, trace in enumerate(fig.data):
+        if visible_only and trace.visible in {False, "legendonly"}:
+            continue
+        if isinstance(trace.meta, dict) and trace.meta.get("atlas_role") == "mask":
+            continue
+        label = trace.name or f"Serie {index + 1}"
+        if trace.type == "heatmap":
+            for i, values in enumerate(trace.z):
+                for j, value in enumerate(values):
+                    rows.append(
+                        {
+                            "Serie": label,
+                            "Tipo": trace.type,
+                            "X": trace.x[j] if trace.x is not None else j,
+                            "Y": trace.y[i] if trace.y is not None else i,
+                            "Valor": value,
+                        }
+                    )
+        else:
+            axes = {axis: getattr(trace, axis, None) for axis in ("x", "y", "z")}
+            if trace.type == "pie":
+                axes = {"Categoría": trace.labels, "Valor": trace.values}
+            length = max((len(values) for values in axes.values() if values is not None), default=0)
+            for point in range(length):
+                row = {"Serie": label, "Tipo": trace.type, "Punto": point}
+                for axis, values in axes.items():
+                    if values is not None and point < len(values):
+                        row[axis.upper() if axis in {"x", "y", "z"} else axis] = values[point]
+                if trace.customdata is not None and point < len(trace.customdata):
+                    row["Contexto"] = str(trace.customdata[point])
+                rows.append(row)
+    return pd.DataFrame(rows)
+
+
+def diagnostic_bars(table: pd.DataFrame, kind: str, limit: int = 15) -> go.Figure:
+    """Render existing coefficients/importances without fitting or recomputing them."""
+    if not 1 <= limit <= 50 or table.empty:
+        raise FrameworkError("Selecciona entre 1 y 50 variables con resultados disponibles.")
+    if kind == "importance":
+        shown = table.nlargest(limit, "importancia").sort_values("importancia")
+        fig = style(
+            px.bar(
+                shown,
+                x="importancia",
+                y="variable",
+                orientation="h",
+                error_x="std" if "std" in shown else None,
+                color_discrete_sequence=PALETTE,
+                labels={"variable": "Variable", "importancia": "Cambio en puntuación al permutar"},
+            ),
+            "¿Qué variables afectan más a las predicciones?",
+        )
+        return note(
+            fig,
+            "Importancia calculada sobre datos de prueba. Las barras de error muestran variabilidad de las permutaciones, no intervalos de confianza. No uses esta prueba para seleccionar variables y después reportar el mismo resultado como independiente.",
+        )
+    if kind != "coefficients":
+        raise FrameworkError("Selecciona coeficientes o importancia de variables.")
+    data = (
+        table.rename_axis("Variable")
+        .reset_index()
+        .melt(id_vars="Variable", var_name="Componente", value_name="Coeficiente")
+    )
+    selected = (
+        data.assign(magnitude=data.Coeficiente.abs())
+        .nlargest(limit, "magnitude")
+        .sort_values("Coeficiente")
+    )
+    selected["Signo"] = np.where(selected.Coeficiente >= 0, "Positivo", "Negativo")
+    fig = style(
+        px.bar(
+            selected,
+            x="Coeficiente",
+            y="Variable",
+            orientation="h",
+            color="Signo",
+            pattern_shape="Componente",
+            color_discrete_map={"Positivo": PALETTE[0], "Negativo": PALETTE[1]},
+            hover_data=["Componente"],
+        ),
+        "¿En qué dirección se relaciona cada variable con la predicción?",
+    )
+    fig.add_vline(x=0, line_color=PALETTE[3], line_width=1)
+    return note(
+        fig,
+        "Coeficientes del modelo entrenado después del preprocesamiento. Sus magnitudes dependen de las unidades y del escalamiento; no prueban causalidad.",
+    )
 
 
 def plot(
@@ -178,6 +302,50 @@ def plot(
     **params: Any,
 ) -> Any:
     """Provide plot using validated inputs."""
+    if not isinstance(df, pd.DataFrame) or df.empty:
+        raise FrameworkError(
+            "No hay registros para representar. Carga datos antes de crear el gráfico."
+        )
+    if kind == "missing_summary":
+        table = pd.DataFrame(
+            {
+                "Variable": df.columns,
+                "Faltantes": df.isna().sum().values,
+                "Porcentaje": df.isna().mean().values * 100,
+            }
+        ).sort_values("Porcentaje")
+        fig = px.bar(
+            table,
+            x="Porcentaje",
+            y="Variable",
+            orientation="h",
+            text="Porcentaje",
+            custom_data=["Faltantes"],
+            color="Porcentaje",
+            color_continuous_scale=SEQUENTIAL,
+            range_color=[0, 100],
+        )
+        style(fig, "¿Dónde falta información?")
+        fig.update_traces(
+            texttemplate="%{x:.1f}%",
+            textposition="outside",
+            cliponaxis=False,
+            hovertemplate="%{y}<br>Faltantes: %{customdata[0]:,}<br>Porcentaje: %{x:.2f}%<extra></extra>",
+        )
+        fig.update_layout(
+            height=max(400, min(1100, len(table) * 28 + 160)),
+            showlegend=False,
+            coloraxis_showscale=False,
+        )
+        fig.update_xaxes(
+            title="Porcentaje de registros sin información",
+            range=[0, max(5, min(110, table.Porcentaje.max() * 1.15))],
+        )
+        fig.update_yaxes(title="")
+        return note(
+            fig,
+            "Las variables con más información faltante aparecen arriba. Se revisaron todos los registros; no se eliminó ni completó ningún valor.",
+        )
     if kind == "missing":
         fig = px.imshow(
             df.head(1000).isna().astype(int).T,
@@ -197,9 +365,16 @@ def plot(
         return note(fig, f"{min(1000, len(df)):,} de {len(df):,} filas · azul = faltante")
     if kind in {"heatmap", "correlation"}:
         numeric = df.select_dtypes(include=np.number)
+        selected = params.get("columns")
+        if selected is not None:
+            if not selected or any(column not in numeric for column in selected):
+                raise FrameworkError("Selecciona al menos una columna numérica para la matriz.")
+            numeric = numeric[list(dict.fromkeys(selected))]
         if numeric.empty:
             raise FrameworkError("La correlación requiere variables numéricas.")
-        method = params.get("metodo", "pearson")
+        method = params.get("method", params.get("metodo", "pearson"))
+        if method not in {"pearson", "spearman", "kendall"}:
+            raise FrameworkError("Selecciona Pearson, Spearman o Kendall.")
         matrix = numeric.iloc[:, :30].corr(method=method)
         fig = px.imshow(
             matrix,
@@ -222,8 +397,10 @@ def plot(
                 text=np.where(matrix.isna(), "N/D", ""),
                 texttemplate="%{text}" if len(matrix) <= 12 else None,
                 hovertemplate="%{y} / %{x}<br>No calculable: datos insuficientes o constantes<extra></extra>",
+                meta={"atlas_role": "mask"},
             )
         fig.update_xaxes(tickangle=-40)
+        fig.data[0].hovertemplate = "%{y} / %{x}<br>Correlación: %{z:.3f}<extra></extra>"
         fig.update_layout(height=max(520, min(1000, len(matrix) * 30 + 200)))
         return note(
             fig,
@@ -234,37 +411,51 @@ def plot(
     if kind == "pairplot":
         columns = list(df.select_dtypes(include=np.number).columns[:6])
         if not columns:
-            raise FrameworkError("Pairplot requiere variables numéricas.")
-        data = df.sample(min(500, len(df)), random_state=42).copy()
-        grouping = {}
-        if color is not None:
-            if color not in data:
-                raise FrameworkError("La variable de color no existe.")
-            group = "_atlas_group"
-            while group in data:
-                group += "_"
-            data[group] = data[color].astype("string").fillna("(Sin dato)").astype(str)
-            grouping = {
-                "hue": group,
-                "palette": categorical_colors(data[group]),
-                "markers": ["o", "D", "s", "P", "^", "X", "*", "v", "<", ">", "p", "h"][
-                    : data[group].nunique()
-                ],
-            }
-        grid = sns.pairplot(
-            data,
-            vars=columns,
-            **grouping,
-            diag_kind="hist",
-            plot_kws={"alpha": 0.6, "s": 18, **({} if grouping else {"color": PALETTE[0]})},
-            diag_kws={} if grouping else {"color": PALETTE[0]},
+            raise FrameworkError("Se necesitan variables numéricas para comparar relaciones.")
+        data = df.sample(min(500, len(df)), random_state=42)
+        groups = (
+            data[color].astype("string").fillna("(Sin dato)")
+            if color
+            else pd.Series("Observaciones", index=data.index)
         )
-        grid.figure.suptitle(
-            f"Relaciones entre variables · {len(data)} filas · hasta 6 variables", y=1.02
+        colors = categorical_colors(groups)
+        fig = make_subplots(
+            rows=len(columns), cols=len(columns), horizontal_spacing=0.04, vertical_spacing=0.05
         )
-        for legend in grid.figure.legends:
-            legend.set_title(color or "")
-        return grid
+        for row, vertical in enumerate(columns, 1):
+            for col, horizontal in enumerate(columns, 1):
+                for label, series_color in colors.items():
+                    subset = data[groups == label]
+                    common = {
+                        "name": label,
+                        "legendgroup": label,
+                        "showlegend": row == 1 and col == 1,
+                    }
+                    if row == col:
+                        trace = go.Histogram(
+                            x=subset[horizontal], marker_color=series_color, opacity=0.65, **common
+                        )
+                    else:
+                        trace = go.Scattergl(
+                            x=subset[horizontal],
+                            y=subset[vertical],
+                            mode="markers",
+                            marker={"color": series_color, "size": 4, "opacity": 0.55},
+                            customdata=subset.index.astype(str),
+                            hovertemplate=f"{horizontal}: %{{x}}<br>{vertical}: %{{y}}<br>Registro: %{{customdata}}<extra>{label}</extra>",
+                            **common,
+                        )
+                    fig.add_trace(trace, row=row, col=col)
+                if row == len(columns):
+                    fig.update_xaxes(title_text=horizontal, row=row, col=col)
+                if col == 1:
+                    fig.update_yaxes(title_text=vertical, row=row, col=col)
+        style(fig, "¿Qué relaciones aparecen entre las variables?")
+        fig.update_layout(height=max(620, len(columns) * 190), barmode="overlay")
+        return note(
+            fig,
+            f"Muestra reproducible de {len(data)} de {len(df)} registros; hasta seis variables. Diagonal: distribución de cada variable.",
+        )
     if (
         x is None
         or x not in df
@@ -280,55 +471,74 @@ def plot(
         values = df[x].replace([np.inf, -np.inf], np.nan).dropna()
         if len(values) < 3 or values.nunique() < 2:
             raise FrameworkError("Se requieren 3+ valores finitos y variación.")
-        fig, ax = plt.subplots(figsize=(8, 5), layout="constrained")
         if kind == "qq":
-            stats.probplot(values, plot=ax)
-            for line, line_color in zip(ax.lines, PALETTE):
-                line.set_color(line_color)
-            ax.set(
-                xlabel="Cuantiles teóricos de la normal",
-                ylabel=f"Cuantiles observados · {x}",
-                title=f"Q-Q normal · {x}",
+            (theoretical, observed), (slope, intercept, _) = stats.probplot(values)
+            positions = np.linspace(
+                0, len(values) - 1, min(MAX_VISUAL_POINTS, len(values)), dtype=int
             )
-        else:
-            if color:
-                sample = df[[x]].copy()
-                group = "_atlas_group"
-                while group in sample:
-                    group += "_"
-                sample[group] = df[color].astype("string").fillna("(Sin dato)").astype(str)
-                sample[x] = sample[x].replace([np.inf, -np.inf], np.nan)
-                valid = sample.groupby(group)[x].agg(["count", "nunique"])
-                valid = valid.index[(valid["count"] >= 3) & (valid["nunique"] > 1)]
-                sample = sample[sample[group].isin(valid)]
-                if sample.empty:
-                    raise FrameworkError(
-                        "KDE por grupo requiere 3+ valores y variación en cada grupo mostrado."
-                    )
-                sns.kdeplot(
-                    data=sample,
-                    x=x,
-                    hue=group,
-                    palette=categorical_colors(sample[group]),
-                    common_norm=False,
-                    ax=ax,
-                    fill=True,
-                    alpha=0.25,
+            fig = go.Figure(
+                go.Scattergl(
+                    x=theoretical[positions],
+                    y=observed[positions],
+                    mode="markers",
+                    name="Valores observados",
+                    hovertemplate="Cuantil normal: %{x:.3f}<br>Valor observado: %{y}<extra></extra>",
                 )
-                if ax.get_legend() is not None:
-                    ax.get_legend().set_title(color)
-                ax.text(
-                    0,
-                    -0.22,
-                    "Cada curva tiene área 1; grupos insuficientes se omiten.",
-                    transform=ax.transAxes,
-                    fontsize=9,
-                )
-            else:
-                sns.kdeplot(values, ax=ax, color=PALETTE[0], fill=True, alpha=0.3)
-            ax.set(xlabel=x, ylabel="Densidad estimada", title=f"Distribución suavizada · {x}")
-        ax.grid(alpha=0.15)
-        return fig
+            )
+            fig.add_scatter(
+                x=[theoretical[0], theoretical[-1]],
+                y=[slope * theoretical[0] + intercept, slope * theoretical[-1] + intercept],
+                mode="lines",
+                name="Referencia normal",
+                line={"color": PALETTE[1], "dash": "dash"},
+            )
+            style(fig, f"¿La distribución se aproxima a una normal? · {x}")
+            fig.update_xaxes(title="Cuantiles teóricos de la normal")
+            fig.update_yaxes(title=f"Cuantiles observados · {x}")
+            return note(
+                fig,
+                f"Se muestran {len(positions):,} de {len(values):,} cuantiles; el ajuste usa todos los valores finitos. Las desviaciones respecto a la línea muestran diferencias de forma; este gráfico no sustituye una prueba de hipótesis.",
+            )
+        groups = (
+            df[color].astype("string").fillna("(Sin dato)")
+            if color
+            else pd.Series("Observaciones", index=df.index)
+        )
+        colors = categorical_colors(groups)
+        fig = go.Figure()
+        skipped = []
+        for label, series_color in colors.items():
+            subset = df.loc[groups == label, x].replace([np.inf, -np.inf], np.nan).dropna()
+            if len(subset) < 3 or subset.nunique() < 2:
+                skipped.append(label)
+                continue
+            estimate = stats.gaussian_kde(subset)
+            bandwidth = float(estimate.factor * subset.std())
+            grid = np.linspace(subset.min() - 3 * bandwidth, subset.max() + 3 * bandwidth, 256)
+            fig.add_scatter(
+                x=grid,
+                y=estimate(grid),
+                name=label,
+                mode="lines",
+                fill="tozeroy",
+                line={"color": series_color},
+                opacity=0.65,
+                hovertemplate=f"{x}: %{{x}}<br>Densidad estimada: %{{y:.4f}}<extra>{label}</extra>",
+            )
+        if not fig.data:
+            raise FrameworkError(
+                "No hay grupos con suficientes valores y variación para estimar densidad."
+            )
+        style(fig, f"¿Cómo se distribuyen los valores? · {x}")
+        fig.update_xaxes(title=x)
+        fig.update_yaxes(title="Densidad estimada")
+        return note(
+            fig,
+            "Cada curva estima una distribución con área 1; no representa cantidades de registros."
+            + (
+                " Grupos omitidos por datos insuficientes: " + ", ".join(skipped) if skipped else ""
+            ),
+        )
     if kind in {"count", "bar", "pie"}:
         values = df[x].astype("string").fillna("(Sin dato)")
         count = "_atlas_count" + ("_" if x == "_atlas_count" else "")
@@ -386,7 +596,18 @@ def plot(
         raise FrameworkError("Tipo de gráfico desconocido.")
     if kind in {"scatter", "line"} and y is None:
         raise FrameworkError("Seleccione también una variable Y.")
-    data = df.head(10000).copy()
+    maximum = params.get("max_points", MAX_VISUAL_POINTS)
+    if not isinstance(maximum, int) or not 100 <= maximum <= 50000:
+        raise FrameworkError("El límite visual admite entre 100 y 50.000 puntos.")
+    data = (
+        df.sample(maximum, random_state=42)
+        if len(df) > maximum and kind not in {"histogram"}
+        else df
+    ).copy()
+    data_index = "_atlas_record"
+    while data_index in data:
+        data_index += "_"
+    data[data_index] = data.index.astype(str)
     kwargs: dict[str, Any] = {
         "x": x,
         "color": color,
@@ -443,10 +664,15 @@ def plot(
     if kind in {"box", "violin"}:
         kwargs.pop("x")
         kwargs["y"] = x
+        kwargs["points"] = "all" if params.get("show_points") else "outliers"
+        if kind == "violin":
+            kwargs["box"] = True
     if kind == "line":
         data = data.sort_values(x, kind="stable")
     if kind != "scatter":
         kwargs.pop("color_continuous_scale")
+    else:
+        kwargs["custom_data"] = [data_index]
     titles = {
         "histogram": f"Distribución de {x}",
         "box": f"Distribución y valores extremos · {x}",
@@ -455,12 +681,30 @@ def plot(
         "line": f"{y} según {x}",
     }
     fig = style(functions[kind](data, **kwargs), titles[kind])
+    if kind == "scatter":
+        # Original source indices remain inspectable after visual sampling.
+        for trace in fig.data:
+            trace.hovertemplate = f"{x}: %{{x}}<br>{y}: %{{y}}<br>Registro: %{{customdata[0]}}<extra>%{{fullData.name}}</extra>"
     if kind == "histogram":
         fig.update_layout(barmode="group", yaxis_title="Frecuencia (registros)", bargap=0.1)
         fig.update_traces(opacity=0.9, bingroup="atlas_histogram")
         fig.update_traces(marker_line_color="#694D75", marker_line_width=0.6)
+        fig.update_traces(
+            hovertemplate=f"{x}: %{{x}}<br>Frecuencia: %{{y:,}} registros<extra>%{{fullData.name}}</extra>"
+        )
+    guides = {
+        "histogram": "La altura de cada barra indica cuántos registros caen en un intervalo. Cambiar los intervalos cambia el detalle visual, no los datos.",
+        "box": "La caja muestra el 50% central y su línea indica la mediana. Los puntos señalados son valores poco habituales, no necesariamente errores.",
+        "violin": "Las zonas anchas representan mayor concentración de valores. La caja interior ayuda a localizar la mediana y el rango central.",
+        "scatter": "Cada punto es un registro. Una relación visual entre variables no demuestra causalidad.",
+        "line": "Las observaciones se unen en orden de X; no se han sumado ni promediado registros con el mismo valor.",
+    }
+    note(fig, guides[kind])
     if len(df) > len(data):
-        note(fig, f"Se muestran las primeras {len(data):,} de {len(df):,} filas.")
+        note(
+            fig,
+            f"Muestra visual reproducible: {len(data):,} de {len(df):,} registros. No cambia las estadísticas del dataset completo.",
+        )
     return fig
 
 

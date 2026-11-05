@@ -55,7 +55,16 @@ class ElbowArgs(ColumnsArgs):
 
 class PlotArgs(Contract):
     kind: Literal[
-        "histogram", "box", "violin", "scatter", "count", "correlation", "missing", "qq", "kde"
+        "histogram",
+        "box",
+        "violin",
+        "scatter",
+        "count",
+        "correlation",
+        "missing",
+        "qq",
+        "kde",
+        "missing_summary",
     ]
     x: str | None = None
     y: str | None = None
@@ -427,15 +436,27 @@ def execute_tool(context: AgentContext, call: ToolCall, problems: set[str]) -> T
     elif name in {"cluster.reduce", "cluster.distances", "cluster.train", "cluster.elbow"}:
         engine = Clustering(eda.df, random_state=eda.random_state)
         if name == "cluster.elbow":
+            table = engine.elbow(args.columns, args.max_k)
             result = analysis(
                 context,
                 "Inercia calculada para los K solicitados; no se infiere automáticamente un K óptimo.",
-                {"elbow": engine.elbow(args.columns, args.max_k)},
+                {"elbow": table},
+                visualizations=[context.artifact(engine.plot_elbow(table))],
             )
         elif name == "cluster.reduce":
             reduced = engine.reduce_dimensions(
                 args.columns, args.method, args.dimensions, scaler=args.scaler
             )
+            compatible = [
+                experiment
+                for experiment in context.experiments
+                if experiment.problem == "clustering"
+                and experiment.dataset_id == context.dataset.content_hash
+                and experiment.config.get("columns") == args.columns
+                and experiment.config.get("scaler", "standard") == args.scaler
+                and len(experiment.details.get("labels", [])) == len(reduced["datos"])
+            ]
+            labels = compatible[-1].details["labels"] if compatible else None
             result = analysis(
                 context,
                 reduced["advertencia"],
@@ -443,7 +464,9 @@ def execute_tool(context: AgentContext, call: ToolCall, problems: set[str]) -> T
                 metrics={"varianza_explicada": reduced["explained_variance_total"]}
                 if reduced["explained_variance_total"] is not None
                 else {},
-                visualizations=[context.artifact(engine.plot_representation(reduced["datos"]))],
+                visualizations=[
+                    context.artifact(engine.plot_representation(reduced["datos"], labels))
+                ],
             )
         elif name == "cluster.distances":
             result = analysis(
@@ -536,7 +559,20 @@ def execute_tool(context: AgentContext, call: ToolCall, problems: set[str]) -> T
         result = analysis(
             context,
             f"Mejor experimento según {args.metric} ({args.direction}): {best}.",
-            {"comparacion": table},
+            {
+                "comparacion": table,
+                "seleccion": pd.DataFrame(
+                    [
+                        {
+                            "experimento": best,
+                            "modelo": next(item.name for item in experiments if item.id == best),
+                            "metrica": args.metric,
+                            "valor": best_value,
+                            "criterio": args.direction,
+                        }
+                    ]
+                ),
+            },
             metrics={"mejor_valor": best_value},
         )
         warnings.append(

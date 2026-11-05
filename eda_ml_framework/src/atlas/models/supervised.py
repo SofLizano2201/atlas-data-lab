@@ -92,7 +92,15 @@ class SupervisedLearning(ExploratoryDataAnalysis):
             if type_of_target(y) not in {"binary", "multiclass"} or y.nunique() < 2:
                 raise FrameworkError("Clasificación requiere 2+ clases discretas.")
             if y.value_counts().min() < 2:
-                raise FrameworkError("Cada clase requiere al menos dos observaciones.")
+                counts = y.value_counts()
+                rare = counts[counts < 2]
+                examples = ", ".join(str(value)[:50] for value in rare.index[:5])
+                raise FrameworkError(
+                    f"No se puede aprender a predecir «{target}»: hay {len(rare)} categorías con un solo ejemplo (por ejemplo: {examples}). "
+                    "Para separar datos de aprendizaje y de prueba, cada categoría necesita al menos dos registros; la validación puede necesitar más. "
+                    "Cambiar de modelo no resuelve este problema. Si elegiste un precio, importe u otra cantidad, usa Regresión. "
+                    "Si elegiste un ID, cambia la columna que quieres predecir. Si son categorías reales, reúne más ejemplos; no dupliques filas para cumplir el mínimo."
+                )
             if y.nunique() > 100:
                 raise FrameworkError(
                     "Más de 100 clases: revise si el objetivo es un identificador."

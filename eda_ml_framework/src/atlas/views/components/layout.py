@@ -84,6 +84,9 @@ PAGES = {
 
 def page_header(page: str) -> None:
     """Provide page header using validated inputs."""
+    notice = st.session_state.pop("assistant_navigation_notice", None)
+    if notice:
+        st.info(notice)
     title, eyebrow, heading, description, agent = PAGES[page]
     with st.container(key="atlas_topbar"):
         left, right = st.columns([2, 1], vertical_alignment="center")
@@ -123,22 +126,21 @@ def page_header(page: str) -> None:
             render_agent_panel(agent, button_only=True)
     context = WorkspaceController.context(st.session_state, title)
     if context:
-        warning = f"{context['missing_cells']} nulos ({context['missing_percentage']:.1f}%) · {context['additional_duplicates']} duplicados"
+        quality_class = (
+            "attention" if context["missing_cells"] or context["additional_duplicates"] else "clear"
+        )
         st.markdown(
-            '<div class="atlas-context-bar">'
-            + ' <span aria-hidden="true">·</span> '.join(
-                escape(str(value))
-                for value in [
-                    context["name"],
-                    f"v{context['version']}",
-                    f"{context['rows']:,} filas",
-                    f"{context['columns']} columnas",
-                    title,
-                    warning,
-                    f"{context['experiments']} experimentos",
-                ]
-            )
-            + "</div>",
+            '<section class="atlas-context-summary" aria-label="Contexto del trabajo">'
+            '<div class="atlas-context-identity"><span class="atlas-context-eyebrow">DATASET ACTIVO</span>'
+            f'<strong title="{escape(str(context["name"]), quote=True)}">{escape(str(context["name"]))}</strong>'
+            f'<span class="atlas-context-version">Versión {context["version"]}</span></div>'
+            '<div class="atlas-context-facts">'
+            f"<div><strong>{context['rows']:,}</strong><span>Filas</span></div>"
+            f"<div><strong>{context['columns']}</strong><span>Variables</span></div>"
+            f"<div><strong>{context['experiments']}</strong><span>Experimentos</span></div></div>"
+            f'<div class="atlas-context-quality {quality_class}"><span class="atlas-context-eyebrow">CALIDAD DE LOS DATOS</span>'
+            f"<strong>{'Hay datos por revisar' if quality_class == 'attention' else 'Sin nulos ni duplicados'}</strong>"
+            f"<span>{context['missing_cells']:,} nulos ({context['missing_percentage']:.1f}%) · {context['additional_duplicates']:,} duplicados</span></div></section>",
             unsafe_allow_html=True,
         )
         stages = WorkspaceController.progress(st.session_state)
@@ -154,10 +156,14 @@ def page_header(page: str) -> None:
             "reports": "Exportación",
         }.get(page)
         st.markdown(
+            '<div class="atlas-workflow-heading">TU FLUJO DE TRABAJO <span>Puedes navegar en cualquier orden</span></div>'
             '<div class="atlas-workflow" aria-label="Estado del flujo">'
             + "".join(
-                f'<span class="atlas-step {"current" if stage == current else "done" if done else "pending"}">{escape(stage)} · {"actual" if stage == current else "completado" if done else "opcional" if stage == "Preparación" else "pendiente"}</span>'
-                for stage, done in stages.items()
+                f'<div class="atlas-step {"current" if stage == current else "done" if done else "pending"}"'
+                + (' aria-current="step"' if stage == current else "")
+                + f'><span class="atlas-step-number">{index}</span><div><strong>{escape(stage)}</strong>'
+                f"<small>{'Estás aquí' if stage == current else 'Completado' if done else 'Opcional' if stage == 'Preparación' else 'Pendiente'}</small></div></div>"
+                for index, (stage, done) in enumerate(stages.items(), 1)
             )
             + "</div>",
             unsafe_allow_html=True,
@@ -172,13 +178,23 @@ def page_header(page: str) -> None:
             "history": "experiments",
             "experiments": "reports",
         }.get(page)
-        if next_slug:
+        modeling_has_results = page not in {"clustering", "classification", "regression"} or any(
+            result.problem
+            == {
+                "clustering": "clustering",
+                "classification": "clasificacion",
+                "regression": "regresion",
+            }.get(page)
+            for result in st.session_state.get("experiments", [])
+        )
+        if next_slug and modeling_has_results:
             destination = next(item for item in NAV_ITEMS if item.slug == next_slug)
             st.button(
                 f"Siguiente: {destination.label}",
                 key=f"next_{page}",
                 on_click=navigate,
                 args=(destination.route,),
+                type="secondary",
             )
     if agent and (page != "home" or "eda" not in st.session_state):
         render_agent_panel(agent, show_button=False)
@@ -208,7 +224,9 @@ def algorithm_cards(
         st.session_state[state_key] = [algorithm] if multiple else algorithm
 
     with st.container(key="atlas_algorithm_cards"):
-        for column, (algorithm, label, description) in zip(st.columns(len(items)), items):
+        columns = st.columns(2 if len(items) == 4 else min(3, len(items)))
+        for index, (algorithm, label, description) in enumerate(items):
+            column = columns[index % len(columns)]
             with column.container(border=True, key=f"atlas_card_algorithm_{algorithm}"):
                 selected = st.session_state.get(state_key, [])
                 active = algorithm in selected if multiple else algorithm == selected

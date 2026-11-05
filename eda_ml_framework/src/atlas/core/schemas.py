@@ -98,6 +98,19 @@ class ToolResult(Contract):
     seconds: float = 0.0
 
 
+class IntelligenceFeedback(Contract):
+    """Evidence-based panel content, separate from tool execution responses."""
+
+    agent: str
+    event_id: str
+    title: str
+    message: str
+    evidence: list[str] = Field(default_factory=list)
+    warnings: list[str] = Field(default_factory=list)
+    candidates: list[dict[str, str]] = Field(default_factory=list)
+    priority: str = "information"
+
+
 class AgentDecision(Contract):
     """Define the AgentDecision contract."""
 
@@ -125,6 +138,39 @@ class Recommendation(Contract):
     text: str
     basis: str
     mode: Literal["deterministic_guidance", "llm_guidance"]
+
+
+class AssistantIdea(Contract):
+    """A validated contextual invitation backed by a capability or internal navigation."""
+
+    id: str
+    title: str
+    description: str
+    why: str
+    expected: str
+    effect: str
+    goal: str | None = None
+    destination: str | None = None
+
+
+class AssistantOverview(Contract):
+    """A small set of evidence-based ideas for one dataset version."""
+
+    welcome: str
+    ideas: list[AssistantIdea] = Field(min_length=2, max_length=3)
+
+
+class AssistantAdvice(Contract):
+    """A concise, actionable explanation grounded in current session metadata."""
+
+    title: str
+    reason: str
+    next_step: str
+    goal: str
+    action_label: str
+    runnable: bool = True
+    destination: str | None = None
+    destination_label: str | None = None
 
 
 class AgentResponse(Contract):

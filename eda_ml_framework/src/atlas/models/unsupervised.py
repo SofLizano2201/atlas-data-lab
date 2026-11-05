@@ -24,6 +24,15 @@ class UnsupervisedLearning(ExploratoryDataAnalysis):
         self.preprocessor: Any = None
         self.representations: dict[str, dict[str, Any]] = {}
 
+    @staticmethod
+    def sample_for_analysis(df: pd.DataFrame, size: int, random_state: int = 42) -> pd.DataFrame:
+        """Return a reproducible subset without modifying the active dataset."""
+        if not isinstance(size, int) or not 3 <= size <= min(5000, len(df)):
+            raise FrameworkError(
+                "Selecciona entre 3 y 5000 filas, sin superar el tamaño del dataset."
+            )
+        return df.sample(n=size, random_state=random_state).copy()
+
     def prepare(self, columns: list[str], **config: Any) -> np.ndarray:
         """Provide prepare using validated inputs."""
         self._columns(columns)
@@ -117,6 +126,11 @@ class UnsupervisedLearning(ExploratoryDataAnalysis):
             else str(column)
             for i, column in enumerate(cols)
         }
+        record = "_atlas_record"
+        while record in data:
+            record += "_"
+        data[record] = data.index.astype(str)
+        axis_labels[record] = "Registro"
         kwargs = {"color_discrete_sequence": PALETTE, "labels": axis_labels}
         if labels is not None:
             if len(labels) != len(data):
@@ -144,13 +158,14 @@ class UnsupervisedLearning(ExploratoryDataAnalysis):
                 "labels": {**axis_labels, group: "Grupo"},
             }
         fig = (
-            px.scatter_3d(data, x=cols[0], y=cols[1], z=cols[2], **kwargs)
+            px.scatter_3d(data, x=cols[0], y=cols[1], z=cols[2], hover_data=[record], **kwargs)
             if len(cols) == 3
-            else px.scatter(data, x=cols[0], y=cols[1], **kwargs)
+            else px.scatter(data, x=cols[0], y=cols[1], hover_data=[record], **kwargs)
         )
         style(fig, f"Representación {method.upper()} · {len(cols)} dimensiones")
         return note(
-            fig, "La proyección simplifica la geometría original. Ruido: símbolo ×, cuando existe."
+            fig,
+            f"{len(data):,} registros representados. La proyección simplifica la geometría original. Ruido: símbolo ×, cuando existe.",
         )
 
     def compare_representations(self) -> pd.DataFrame:

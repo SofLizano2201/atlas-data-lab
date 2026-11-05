@@ -17,4 +17,11 @@ class ReportService:
         )
         state.setdefault("reports", []).append(report)
         state["reports"] = state["reports"][-10:]
+        from atlas.core.events import EventType, emit
+
+        emit(
+            state,
+            EventType.REPORT_GENERATED,
+            {"title": title, "format": file_format, "number": len(state["reports"])},
+        )
         return report

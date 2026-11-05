@@ -20,6 +20,8 @@ def main() -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument("--port", type=int, default=8501)
     parser.add_argument("--all-pages", action="store_true")
+    parser.add_argument("--trained-results", action="store_true")
+    parser.add_argument("--chart-interactions", action="store_true")
     parser.add_argument(
         "--agents", action="store_true", help="Capturar además los paneles abiertos."
     )
@@ -153,6 +155,21 @@ def main() -> None:
                 wait_for("document.querySelector('.atlas-dataset-name')?.innerText==='Iris'")
                 time.sleep(0.5)
                 screenshot("dataset")
+                wait_for("Boolean(document.querySelector('.st-key-atlas_intelligence_panel'))")
+                evaluate(
+                    "document.querySelector('.atlas-page-title').scrollIntoView({block:'start'})"
+                )
+                screenshot("intelligence-desktop")
+                panel_geometry = evaluate(
+                    "(()=>{let p=document.querySelector('.st-key-atlas_intelligence_panel').getBoundingClientRect();return {x:p.x,width:p.width,right:p.right,viewport:innerWidth};})()"
+                )
+                assert (
+                    panel_geometry["width"] > 200
+                    and panel_geometry["right"] <= panel_geometry["viewport"] + 1
+                )
+                (output / "intelligence-geometry.json").write_text(
+                    json.dumps(panel_geometry), encoding="utf-8"
+                )
                 cards = evaluate("""[...document.querySelectorAll('.atlas-metric-item')].map(card=>{
                     const rect=card.getBoundingClientRect();
                     return {height:rect.height,top:rect.top,
@@ -195,6 +212,9 @@ def main() -> None:
                     ]
                     for slug, heading, agent in routes:
                         evaluate(
+                            "[...document.querySelectorAll('[data-testid=stDialog] button')].find(button=>button.innerText==='Cerrar')?.click()"
+                        )
+                        evaluate(
                             f"document.querySelector('.st-key-atlas_nav_{slug} button').click()"
                         )
                         wait_for(
@@ -205,6 +225,137 @@ def main() -> None:
                             "Boolean(document.querySelector('[data-testid=stException]'))"
                         )
                         screenshot(f"page-{slug}")
+                        if args.trained_results and slug in {"classification", "regression"}:
+                            problem = "clasificacion" if slug == "classification" else "regresion"
+                            evaluate(
+                                f"document.querySelector('.st-key-train_{problem} button').click()"
+                            )
+                            wait_for("Boolean(document.querySelector('.atlas-result-grid'))")
+                            assert not evaluate(
+                                "Boolean(document.querySelector('[data-testid=stException]'))"
+                            )
+                            evaluate(
+                                "document.querySelector('.atlas-result-context').scrollIntoView({block:'start'})"
+                            )
+                            time.sleep(0.5)
+                            screenshot(f"results-{slug}")
+                            if args.chart_interactions and slug == "regression":
+                                card = (
+                                    "[class*=st-key-chart_card_summary_][class*=_actual_predicted]"
+                                )
+                                evaluate(
+                                    f"document.querySelector('{card}').scrollIntoView({{block:'center'}})"
+                                )
+                                evaluate(
+                                    f"[...document.querySelectorAll('{card} button')].find(b=>b.innerText.includes('Explorar y descargar')).click()"
+                                )
+                                wait_for(
+                                    "Boolean(document.querySelector('[class*=st-key-chart_inspect_summary_] input'))"
+                                )
+                                evaluate(
+                                    "document.querySelector('[class*=st-key-chart_inspect_summary_] input').click()"
+                                )
+                                plot = f"document.querySelector('{card} .js-plotly-plot')"
+                                wait_for(f"{plot}?._fullLayout?.dragmode==='select'")
+                                evaluate(
+                                    "[...document.querySelectorAll('button')].find(b=>b.innerText.includes('Explorar y descargar') && b.getAttribute('aria-expanded')==='true')?.click()"
+                                )
+                                evaluate(
+                                    f"document.querySelector('{card}').scrollIntoView({{block:'center'}})"
+                                )
+                                bounds = evaluate(
+                                    f"(()=>{{let p={plot},r=p.getBoundingClientRect(),x=p._fullLayout.xaxis,y=p._fullLayout.yaxis;return {{x0:r.x+x._offset+x._length*.15,x1:r.x+x._offset+x._length*.85,y0:r.y+y._offset+y._length*.15,y1:r.y+y._offset+y._length*.85}};}})()"
+                                )
+                                command(
+                                    "Input.dispatchMouseEvent",
+                                    {"type": "mouseMoved", "x": bounds["x0"], "y": bounds["y0"]},
+                                )
+                                command(
+                                    "Input.dispatchMouseEvent",
+                                    {
+                                        "type": "mousePressed",
+                                        "x": bounds["x0"],
+                                        "y": bounds["y0"],
+                                        "button": "left",
+                                        "clickCount": 1,
+                                    },
+                                )
+                                for step in range(1, 8):
+                                    command(
+                                        "Input.dispatchMouseEvent",
+                                        {
+                                            "type": "mouseMoved",
+                                            "x": bounds["x0"]
+                                            + (bounds["x1"] - bounds["x0"]) * step / 7,
+                                            "y": bounds["y0"]
+                                            + (bounds["y1"] - bounds["y0"]) * step / 7,
+                                            "button": "left",
+                                            "buttons": 1,
+                                        },
+                                    )
+                                command(
+                                    "Input.dispatchMouseEvent",
+                                    {
+                                        "type": "mouseReleased",
+                                        "x": bounds["x1"],
+                                        "y": bounds["y1"],
+                                        "button": "left",
+                                        "clickCount": 1,
+                                    },
+                                )
+                                wait_for(
+                                    f"document.querySelector('{card}')?.innerText.includes('Observaciones seleccionadas')"
+                                )
+                                screenshot("chart-selection")
+                                before_range = evaluate(f"{plot}._fullLayout.xaxis.range")
+                                (output / "chart-toolbar.json").write_text(
+                                    json.dumps(
+                                        evaluate(
+                                            f"[...{plot}.querySelectorAll('.modebar-btn')].map(a=>({{tag:a.tagName,title:a.getAttribute('data-title'),label:a.getAttribute('aria-label')}}))"
+                                        )
+                                    ),
+                                    encoding="utf-8",
+                                )
+                                evaluate(
+                                    f"[...{plot}.querySelectorAll('.modebar-btn')].find(a=>/zoom in|acercar|aumentar/i.test(a.getAttribute('data-title') || a.getAttribute('aria-label') || '')).click()"
+                                )
+                                wait_for(
+                                    f"JSON.stringify({plot}._fullLayout.xaxis.range)!=={json.dumps(json.dumps(before_range, separators=(',', ':')))}"
+                                )
+                                evaluate(
+                                    f"[...{plot}.querySelectorAll('.modebar-btn')].find(a=>/^pan$|desplaz/i.test(a.getAttribute('data-title') || a.getAttribute('aria-label') || '')).click()"
+                                )
+                                wait_for(f"{plot}._fullLayout.dragmode==='pan'")
+                                command(
+                                    "Browser.setDownloadBehavior",
+                                    {"behavior": "allow", "downloadPath": str(output)},
+                                )
+                                started_download = time.time()
+                                evaluate(
+                                    f"[...{plot}.querySelectorAll('.modebar-btn')].find(a=>/download|descargar|png/i.test(a.getAttribute('data-title') || a.getAttribute('aria-label') || '')).click()"
+                                )
+                                for _ in range(60):
+                                    downloaded = [
+                                        path
+                                        for path in output.glob("atlas_grafico*.png")
+                                        if path.stat().st_mtime >= started_download
+                                        and path.stat().st_size > 1000
+                                    ]
+                                    if downloaded:
+                                        break
+                                    time.sleep(0.15)
+                                assert downloaded, "La descarga PNG no produjo un archivo real."
+                                (output / "chart-interactions.json").write_text(
+                                    json.dumps(
+                                        {
+                                            "selection": True,
+                                            "zoom": True,
+                                            "pan": True,
+                                            "png": downloaded[0].name,
+                                        }
+                                    ),
+                                    encoding="utf-8",
+                                )
                         if agent and args.agents:
                             already_open = evaluate(
                                 f"Boolean(document.querySelector('.st-key-panel_{agent}'))"
@@ -214,7 +365,27 @@ def main() -> None:
                                     f"document.querySelector('.st-key-open_{agent} button').click()"
                                 )
                             wait_for(f"Boolean(document.querySelector('.st-key-panel_{agent}'))")
+                            (output / "dialog-desktop.json").write_text(
+                                json.dumps(
+                                    evaluate(
+                                        "(()=>{let chain=[];for(let p=document.querySelector('[role=dialog]');p&&p!==document.body;p=p.parentElement){let r=p.getBoundingClientRect(),s=getComputedStyle(p);chain.push({tag:p.tagName,testid:p.dataset.testid,role:p.getAttribute('role'),classes:p.className,width:r.width,maxWidth:s.maxWidth,overflow:s.overflow});}return chain;})()"
+                                    )
+                                ),
+                                encoding="utf-8",
+                            )
                             time.sleep(0.5)
+                            visible = evaluate(
+                                "document.querySelector('[data-testid=stDialog]')?.innerText || ''"
+                            )
+                            assert not any(
+                                text in visible
+                                for text in [
+                                    "pending_confirmation",
+                                    "analysis.configure",
+                                    "Parámetros JSON",
+                                    "request_id",
+                                ]
+                            ), visible
                             assert not evaluate(
                                 "Boolean(document.querySelector('[data-testid=stException]'))"
                             )
@@ -225,6 +396,41 @@ def main() -> None:
                                 )
                             else:
                                 screenshot(f"agent-{slug}")
+                            if slug == "exploration":
+                                evaluate(
+                                    "document.querySelector('[class*=st-key-idea_EDAAgent_] button').click()"
+                                )
+                                wait_for(
+                                    "Boolean(document.querySelector('.atlas-assistant-recommendation'))"
+                                )
+                                time.sleep(0.4)
+                                screenshot("assistant-recommendation")
+                                evaluate(
+                                    "document.querySelector('.st-key-assistant_technical_EDAAgent input').click()"
+                                )
+                                wait_for(
+                                    "Boolean(document.querySelector('.st-key-technical_content_EDAAgent'))"
+                                )
+                                assert not evaluate(
+                                    "Boolean(document.querySelector('[data-testid=stException]'))"
+                                )
+                                evaluate(
+                                    "document.querySelector('.st-key-technical_content_EDAAgent').scrollIntoView({block:'start'})"
+                                )
+                                screenshot("assistant-technical")
+                                evaluate(
+                                    "document.querySelector('.st-key-assistant_technical_EDAAgent input').click()"
+                                )
+                                evaluate(
+                                    "document.querySelector('.st-key-back_EDAAgent button').click()"
+                                )
+                                wait_for(
+                                    "Boolean(document.querySelector('.atlas-assistant-section'))"
+                                )
+                            evaluate(
+                                f"document.querySelector('.st-key-close_{agent} button').click()"
+                            )
+                            wait_for("!document.querySelector('[data-testid=stDialog]')")
                     print(
                         f"{len(routes)} pantallas capturadas sin errores de ejecución.", flush=True
                     )
@@ -234,6 +440,9 @@ def main() -> None:
                     )
                     wait_for(
                         "document.querySelector('.atlas-page-title')?.textContent==='Exploración EDA'"
+                    )
+                    wait_for(
+                        "[...document.querySelectorAll('[role=tab]')].some(tab=>tab.innerText==='Distribuciones y relaciones')"
                     )
                     evaluate(
                         "[...document.querySelectorAll('[role=tab]')].find(tab=>tab.innerText==='Distribuciones y relaciones').click()"
@@ -275,6 +484,19 @@ def main() -> None:
                 (output / "measurements.json").write_text(measurements, encoding="utf-8")
                 print("QA navegador: navegación, dataset y modos 260/72 px comprobados.")
                 print(measurements)
+                if args.agents and args.all_pages:
+                    evaluate("document.querySelector('.st-key-open_EDAAgent button').click()")
+                    wait_for("Boolean(document.querySelector('.st-key-panel_EDAAgent'))")
+                    screenshot("mobile-assistant")
+                    dialog_measurements = evaluate(
+                        "(()=>{let element=document.querySelector('[role=dialog]')||document.querySelector('[data-testid=stDialog]');let rect=element.getBoundingClientRect();return {viewport:innerWidth,width:rect.width,x:rect.x,documentWidth:document.documentElement.scrollWidth};})()"
+                    )
+                    assert dialog_measurements["width"] <= dialog_measurements["viewport"] + 1
+                    assert dialog_measurements["documentWidth"] == dialog_measurements["viewport"]
+                    (output / "dialog-mobile.json").write_text(
+                        json.dumps(dialog_measurements), encoding="utf-8"
+                    )
+                    evaluate("document.querySelector('.st-key-close_EDAAgent button').click()")
                 command("Browser.close")
         finally:
             try:

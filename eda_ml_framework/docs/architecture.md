@@ -1,5 +1,11 @@
 # Architecture
 
+Current event-driven integration: [automatic EDA and persistent intelligence](event_intelligence.md).
+`core/events.py` carries typed session-owned facts. `WorkflowController` dispatches
+them to `BaseAgent.on_event`. `AutomaticEDAController` orchestrates existing Model
+calculations. Automatic feedback uses `NoProvider`; optional language-model setup
+remains restricted to explicitly opened assistance. The legacy API remains compatible.
+
 ATLAS 1.2 uses MVC within the existing application. The canonical source is
 `src/atlas`, with thin legacy import adapters retained at the project root.
 See [MVC responsibilities, contracts and extension](mvc.md) for the full design.

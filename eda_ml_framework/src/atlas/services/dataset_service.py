@@ -39,8 +39,18 @@ class DatasetService:
                 "eda_selection",
                 "comparison_selection",
                 "eda_chart_request",
+                "active_assistant",
             } or key.startswith(
-                ("agent_last_", "args_", "history_", "consent_", "analysis_", "new_predictions_")
+                (
+                    "agent_last_",
+                    "args_",
+                    "history_",
+                    "consent_",
+                    "analysis_",
+                    "new_predictions_",
+                    "assistant_flow_",
+                    "assistant_technical_",
+                )
             ):
                 state.pop(key, None)
         state.update(
@@ -52,6 +62,8 @@ class DatasetService:
             models={},
             metrics={},
             graphs={},
+            chart_preferences={},
+            chart_selections={},
             diagnostics={},
             pending=None,
             preprocessing={},
@@ -59,3 +71,19 @@ class DatasetService:
             problem=None,
             eda_reviewed=False,
         )
+        from atlas.controllers.automatic_eda_controller import AutomaticEDAController
+        from atlas.core.events import EventType, emit
+
+        for key in [
+            "workflow_events",
+            "workflow_snapshot",
+            "workflow_experiments",
+            "intelligence_feedback",
+            "intelligence_errors",
+            "dismissed_intelligence",
+            "workflow_dataset_key",
+        ]:
+            state.pop(key, None)
+        emit(state, EventType.DATASET_UPLOADED, {"name": name})
+        emit(state, EventType.DATASET_CONFIRMED, {"name": name})
+        AutomaticEDAController.run(state, progress=state.get("eda_progress_callback"))

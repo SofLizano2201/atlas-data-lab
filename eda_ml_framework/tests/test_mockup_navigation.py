@@ -23,7 +23,9 @@ def test_model_card_updates_real_algorithm_selector():
     assert not app.exception
     assert app.multiselect(key="atlas_algorithms_clasificacion").value == ["knn"]
     assert len(app.session_state["experiments"]) == 0
-    next(b for b in app.button if b.label == "Entrenar y evaluar").click().run(timeout=60)
+    next(b for b in app.button if b.label == "Crear modelo y revisar resultados").click().run(
+        timeout=60
+    )
     assert not app.exception
     assert app.session_state["experiments"][0].name == "knn"
 

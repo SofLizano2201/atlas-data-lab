@@ -1,0 +1,84 @@
+{
+  "csv_import": {
+    "rows": 150,
+    "eda_operations": 48
+  },
+  "classification": {
+    "first": {
+      "Accuracy": 0.9333333333333333,
+      "Balanced_accuracy": 0.9333333333333332,
+      "F1_macro": 0.9333333333333332,
+      "F1_weighted": 0.9333333333333333,
+      "Precision": 0.9333333333333332,
+      "Recall": 0.9333333333333332,
+      "F1": 0.9333333333333332,
+      "Log_loss": 0.17397259306520427,
+      "ROC_AUC_macro_ovr": 0.9966666666666667,
+      "Average_precision_macro": 0.9939393939393938,
+      "CV_media": 0.958473296251074,
+      "CV_std": 0.011206010057387633
+    },
+    "second": {
+      "Accuracy": 0.9333333333333333,
+      "Balanced_accuracy": 0.9333333333333332,
+      "F1_macro": 0.9333333333333332,
+      "F1_weighted": 0.9333333333333333,
+      "Precision": 0.9333333333333332,
+      "Recall": 0.9333333333333332,
+      "F1": 0.9333333333333332,
+      "Log_loss": 2.4029102259411435,
+      "ROC_AUC_macro_ovr": 0.9499999999999998,
+      "Average_precision_macro": 0.8955555555555555,
+      "CV_media": 0.9419897797675576,
+      "CV_std": 0.030499393030060384
+    }
+  },
+  "comparison": {
+    "agent": "ModelComparisonAgent",
+    "event_id": "65b59e33313222477d3d5d07477cbd8b71feb370c90c9e486881cb9ecf3dc27d",
+    "title": "Comparación disponible con resultados guardados",
+    "message": "Según porcentaje global de aciertos, la alternativa favorecida es Regresión logística (valor 0.9333). Revisa también sus errores y su tiempo antes de elegirla; no es la mejor para todos los casos.",
+    "evidence": [
+      "150 registros · 5 variables",
+      "0 celdas vacías · 1 filas repetidas adicionales",
+      "Se compararon pruebas con la misma cohorte y según una métrica explícita; no se entrenaron modelos."
+    ],
+    "warnings": [],
+    "candidates": [],
+    "priority": "information"
+  },
+  "clustering": {
+    "clusters": 3.0,
+    "ruido": 0.0,
+    "Silhouette": 0.8489575922867991,
+    "Davies_Bouldin": 0.20818076647551811,
+    "Calinski_Harabasz": 1528.588500044621,
+    "Inercia": 4.980635632012931
+  },
+  "regression": {
+    "MAE": 42.811999418348904,
+    "MSE": 2892.014565750175,
+    "RMSE": 53.77745406534392,
+    "R2": 0.4541465207069818,
+    "MAPE": 0.3744816405198749,
+    "sMAPE": 0.31619388496665757,
+    "ER": 0.2936849042880416,
+    "CV_media": -55.7402788143955,
+    "CV_std": 1.8954589751840782
+  },
+  "regression_feedback": {
+    "agent": "RegressionAgent",
+    "event_id": "7ed93fb77830d35de44b435c5c8e81f48117527c88f8a39e575829fb97d16ece",
+    "title": "Tus predicciones ya fueron evaluadas",
+    "message": "Mira cuánto se alejan las predicciones de los valores reales. Si los errores son demasiado grandes para tu objetivo, compara otro modelo con la misma separación de datos.",
+    "evidence": [
+      "442 registros · 11 variables",
+      "0 celdas vacías · 0 filas repetidas adicionales",
+      "MAE: 42.812",
+      "RMSE: 53.777"
+    ],
+    "warnings": [],
+    "candidates": [],
+    "priority": "information"
+  }
+}

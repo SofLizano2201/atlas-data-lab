@@ -1,5 +1,16 @@
 # Guía del usuario
 
+Al confirmar un dataset, espera la exploración inicial automática. Sus estadísticas,
+gráficos y operaciones omitidas están en Exploración. El panel **Inteligencia ATLAS**
+permanece disponible y actualiza sus consejos al cambiar de módulo o guardar un modelo.
+En pantallas pequeñas se coloca debajo del contenido para no tapar controles.
+Puedes ocultarlo, reabrirlo o descartar un aviso sin borrar resultados.
+
+Los candidatos a variable objetivo son sugerencias: tú eliges qué quieres predecir.
+El análisis automático no entrena modelos ni limpia datos por sí solo. Cuando una
+idea requiera una acción costosa o cambiar datos, revisa el plan y confirma.
+Consulta [el flujo y sus límites](event_intelligence.md).
+
 1. **Inicio** muestra estado, filas, variables, faltantes y experimentos. Los botones
    abren Datos, Exploración y Clasificación.
 2. **Datos**: selecciona un CSV/XLSX/JSON/Parquet (25 MB máximo), configura separador,

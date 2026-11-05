@@ -12,7 +12,7 @@ from atlas.core.exceptions import FrameworkError, OptionalDependencyError
 from .experiment import Experiment
 from .metrics import regression_metrics
 from .supervised import SupervisedLearning
-from .visualization import PALETTE, plot, style
+from .visualization import PALETTE, SEQUENTIAL, note, plot, style
 
 REGRESSORS = {
     "linear_simple": linear_model.LinearRegression,
@@ -98,8 +98,24 @@ class Regression(SupervisedLearning):
     def plot_result(self, result: Experiment, kind: str = "actual_predicted") -> Any:
         """Build an interpretable diagnostic from already calculated experiment results."""
         data = result.predictions.assign(residuo=result.details["residuos"])
+        data["Registro"] = data.index.astype(str)
+        data["Error absoluto"] = data.residuo.abs()
+        shown = data.sample(min(len(data), 10000), random_state=self.random_state)
+        hover = {"real": True, "prediccion": True, "residuo": True, "Registro": True}
         if kind == "actual_predicted":
-            fig = px.scatter(data, x="real", y="prediccion", color_discrete_sequence=PALETTE)
+            fig = px.scatter(
+                shown,
+                x="real",
+                y="prediccion",
+                color="Error absoluto",
+                color_continuous_scale=SEQUENTIAL,
+                hover_data=hover,
+                labels={
+                    "real": "Valor real",
+                    "prediccion": "Predicción",
+                    "residuo": "Error · real − predicción",
+                },
+            )
             fig.update_traces(name="Observaciones", showlegend=True)
             low, high = (
                 min(data.real.min(), data["prediccion"].min()),
@@ -115,17 +131,33 @@ class Regression(SupervisedLearning):
             style(fig, "Valores reales frente a predichos")
             fig.update_xaxes(title="Valor real", range=[low, high])
             fig.update_yaxes(title="Valor predicho", range=[low, high])
-            return fig
+            return note(
+                fig,
+                f"{len(shown):,} de {len(data):,} observaciones de prueba. La línea representa predicciones perfectas; el color muestra la magnitud del error. No se modificaron las métricas.",
+            )
         if kind == "residuals":
             fig = style(
-                px.scatter(data, x="prediccion", y="residuo", color_discrete_sequence=PALETTE),
-                "Residuos frente a la predicción",
+                px.scatter(
+                    shown,
+                    x="prediccion",
+                    y="residuo",
+                    color="Error absoluto",
+                    color_continuous_scale=SEQUENTIAL,
+                    hover_data=hover,
+                ),
+                "¿Dónde se producen los errores de predicción?",
             )
             fig.add_hline(y=0, line_dash="dash", line_color=PALETTE[1])
             fig.update_xaxes(title="Valor predicho")
             fig.update_yaxes(title="Residuo · real − predicho")
-            return fig
-        return plot(data, "qq" if kind == "qq" else "histogram", x="residuo")
+            return note(
+                fig,
+                f"{len(shown):,} de {len(data):,} observaciones de prueba. Sobre cero: el valor real fue mayor que la predicción. Bajo cero: fue menor.",
+            )
+        fig = plot(data, "qq" if kind == "qq" else "histogram", x="residuo")
+        if kind != "qq":
+            fig.add_vline(x=0, line_dash="dash", line_color=PALETTE[1])
+        return fig
 
     def compare_lasso(self) -> pd.DataFrame:
         """Provide compare lasso using validated inputs."""

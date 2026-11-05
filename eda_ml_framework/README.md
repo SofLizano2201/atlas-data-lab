@@ -7,8 +7,20 @@ Las clases funcionan desde Python sin importar Streamlit.
 
 ## Espacio de trabajo y agentes offline
 
+Al confirmar datos, ATLAS ejecuta una exploración inicial con las operaciones
+compatibles, límites explícitos y resultados guardados por versión. El panel
+**Inteligencia ATLAS** permanece disponible al navegar y actualiza sus consejos
+con eventos del flujo. No inicia entrenamientos automáticamente.
+Consulta [la implementación, verificación y limitaciones](docs/event_intelligence.md).
+
+Los cinco asistentes se abren en un diálogo contextual con dos o tres ideas basadas
+en el dataset y los resultados actuales. Cada idea explica su utilidad y permite
+continuar con una acción clara. Las herramientas técnicas quedan ocultas hasta
+solicitar detalles. Consulta
+[el flujo simplificado de asistencia](docs/assistant_ux.md).
+
 La asistencia predeterminada funciona sin claves API ni servicios de pago: selecciona
-un objetivo guiado y el agente evalúa requisitos, llama una herramienta real y presenta
+una idea y el agente evalúa requisitos, llama una herramienta real y presenta
 evidencia. Los entrenamientos y cambios sensibles requieren confirmación. Este motor
 local usa políticas explícitas; la conversación generativa es opcional mediante un
 modelo compatible, incluido Ollama instalado localmente.
@@ -54,6 +66,7 @@ públicos y sin simular inferencia de un LLM:
 
 ```powershell
 python tools/demo_agents.py --confirm-training
+python tools/demo_event_workflow.py
 python tools/audit_capabilities.py
 python -m pytest -q
 ```
@@ -258,3 +271,6 @@ restantes se describen en [la guía visual](docs/mockups_2026_10_27.md).
 
 El [estándar de visualización](docs/visualization_standard.md) explica colores,
 escalas, referencias estadísticas, límites y cómo verificar las figuras.
+
+El [informe del rediseño de gráficos](docs/visualization_redesign.md) documenta
+componentes, interacciones, correcciones, pruebas y límites de exportación.

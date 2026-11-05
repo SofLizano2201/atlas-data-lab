@@ -36,6 +36,16 @@
     },
     {
       "class": "ExploratoryDataAnalysis",
+      "method": "feature_roles",
+      "parameters": "(self) -> 'dict[str, list[str]]'",
+      "expected_behavior": "Flag explicit identifier/date names conservatively; retain continuous unique values.",
+      "implemented_in": "atlas.models.eda",
+      "agent_tools": [],
+      "test_reference_exists": true,
+      "verification_note": "A test reference is not a guarantee of coverage for every input. Optional dependencies and abstract hooks are documented separately."
+    },
+    {
+      "class": "ExploratoryDataAnalysis",
       "method": "original",
       "parameters": "(self) -> 'pd.DataFrame'",
       "expected_behavior": "Return a defensive copy of the immutable original.",
@@ -152,6 +162,16 @@
       "implemented_in": "atlas.models.eda",
       "agent_tools": [],
       "test_reference_exists": true,
+      "verification_note": "A test reference is not a guarantee of coverage for every input. Optional dependencies and abstract hooks are documented separately."
+    },
+    {
+      "class": "ExploratoryDataAnalysis",
+      "method": "visualization_sample",
+      "parameters": "(self, maximum: 'int' = 1000)",
+      "expected_behavior": "Return a reproducible display-only model without replacing source statistics.",
+      "implemented_in": "atlas.models.eda",
+      "agent_tools": [],
+      "test_reference_exists": false,
       "verification_note": "A test reference is not a guarantee of coverage for every input. Optional dependencies and abstract hooks are documented separately."
     },
     {
@@ -595,6 +615,16 @@
       "parameters": "(self) -> 'str'",
       "expected_behavior": "Provide report using validated inputs.",
       "implemented_in": "atlas.models.eda",
+      "agent_tools": [],
+      "test_reference_exists": true,
+      "verification_note": "A test reference is not a guarantee of coverage for every input. Optional dependencies and abstract hooks are documented separately."
+    },
+    {
+      "class": "UnsupervisedLearning",
+      "method": "sample_for_analysis",
+      "parameters": "(df: pandas.core.frame.DataFrame, size: int, random_state: int = 42) -> pandas.core.frame.DataFrame",
+      "expected_behavior": "Return a reproducible subset without modifying the active dataset.",
+      "implemented_in": "atlas.models.unsupervised",
       "agent_tools": [],
       "test_reference_exists": true,
       "verification_note": "A test reference is not a guarantee of coverage for every input. Optional dependencies and abstract hooks are documented separately."

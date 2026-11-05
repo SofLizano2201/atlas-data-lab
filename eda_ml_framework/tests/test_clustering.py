@@ -8,6 +8,17 @@ from framework.exceptions import FrameworkError
 from framework.metrics import clustering_metrics
 
 
+def test_analysis_sample_is_reproducible_and_preserves_source(blobs):
+    from atlas.controllers.clustering_controller import ClusteringController
+
+    first = ClusteringController.sample_for_analysis(blobs, 30, 42)
+    second = ClusteringController.sample_for_analysis(blobs, 30, 42)
+    assert first.equals(second) and len(first) == 30
+    assert len(blobs) > 30
+    with pytest.raises(FrameworkError):
+        ClusteringController.sample_for_analysis(blobs, 5001)
+
+
 @pytest.mark.parametrize("algorithm", [a for a in Clustering.algoritmos() if a != "kmedoids"])
 def test_clustering(blobs, algorithm):
     engine = Clustering(blobs)

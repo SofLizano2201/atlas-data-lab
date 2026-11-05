@@ -2,7 +2,6 @@
 
 from typing import Any
 
-import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 import plotly.express as px
@@ -24,7 +23,7 @@ from .estimators import EncodedClassifier
 from .experiment import Experiment
 from .metrics import classification_metrics
 from .supervised import SupervisedLearning
-from .visualization import PALETTE, SEQUENTIAL, categorical_colors, style
+from .visualization import PALETTE, SEQUENTIAL, categorical_colors, note, style
 
 CLASSIFIERS = {
     "logistic": linear_model.LogisticRegression,
@@ -130,6 +129,7 @@ class Classification(SupervisedLearning):
             )
         elif scores is not None:
             details["roc_multiclase"], details["pr_multiclase"] = ({}, {})
+            details["roc_auc_by_class"], details["ap_by_class"] = ({}, {})
             auc, ap = ([], [])
             for i, label in enumerate(classes):
                 binary = (y.to_numpy() == label).astype(int)
@@ -139,6 +139,8 @@ class Classification(SupervisedLearning):
                 )
                 auc.append(metrics.roc_auc_score(binary, scores[:, i]))
                 ap.append(metrics.average_precision_score(binary, scores[:, i]))
+                details["roc_auc_by_class"][str(label)] = auc[-1]
+                details["ap_by_class"][str(label)] = ap[-1]
             values["ROC_AUC_macro_ovr"] = float(np.mean(auc))
             values["Average_precision_macro"] = float(np.mean(ap))
         return (values, details)
@@ -190,6 +192,12 @@ class Classification(SupervisedLearning):
             )
             if kind == "confusion_normalized":
                 fig.update_coloraxes(colorbar_tickformat=".0%")
+            fig.update_traces(
+                customdata=d["confusion"],
+                hovertemplate="Clase real: %{y}<br>Predicción: %{x}<br>Registros: %{customdata:,}<br>Proporción: %{z:.1%}<extra></extra>"
+                if kind == "confusion_normalized"
+                else "Clase real: %{y}<br>Predicción: %{x}<br>Registros: %{z:,}<extra></extra>",
+            )
             return fig
         if kind in {"roc", "pr"}:
             curves = d.get(f"{kind}_multiclase", {str(d["classes"][-1]): d.get(kind)})
@@ -201,12 +209,29 @@ class Classification(SupervisedLearning):
                 if points is None:
                     continue
                 a, b, _ = points
+                score = d.get("roc_auc_by_class" if kind == "roc" else "ap_by_class", {}).get(
+                    str(name),
+                    result.metrics.get("ROC_AUC" if kind == "roc" else "Average_precision")
+                    if len(d["classes"]) == 2
+                    else None,
+                )
                 fig.add_scatter(
                     x=a if kind == "roc" else b,
                     y=b if kind == "roc" else a,
-                    name=name,
+                    name=f"Clase {name}"
+                    + (
+                        f" · {'AUC' if kind == 'roc' else 'AP'} {score:.3f}"
+                        if score is not None
+                        else ""
+                    ),
                     mode="lines",
                     line={"color": colors[str(name)]},
+                    hovertemplate=(
+                        "Falsas alarmas: %{x:.1%}<br>Detección: %{y:.1%}"
+                        if kind == "roc"
+                        else "Detección: %{x:.1%}<br>Precisión: %{y:.1%}"
+                    )
+                    + "<extra>%{fullData.name}</extra>",
                 )
             fig.update_layout(
                 xaxis_title="Tasa de falsos positivos"
@@ -232,20 +257,67 @@ class Classification(SupervisedLearning):
             estimator = result.model.named_steps["model"]
             if not isinstance(estimator, tree.DecisionTreeClassifier):
                 raise FrameworkError("Seleccione un árbol de decisión individual.")
-            fig, ax = plt.subplots(figsize=(16, 8))
-            tree.plot_tree(
-                estimator,
-                max_depth=3,
-                feature_names=result.model.named_steps["preprocess"].get_feature_names_out(),
-                class_names=list(map(str, d["classes"])),
-                rounded=True,
-                precision=2,
-                fontsize=9,
-                ax=ax,
+            structure = estimator.tree_
+            features = result.model.named_steps["preprocess"].get_feature_names_out()
+            nodes, edges = [], []
+
+            def visit(node, depth, left, right):
+                horizontal = (left + right) / 2
+                feature = structure.feature[node]
+                leaf = structure.children_left[node] == structure.children_right[node]
+                prediction = str(d["classes"][int(np.argmax(structure.value[node][0]))])
+                rule = "Hoja" if leaf else f"{features[feature]} ≤ {structure.threshold[node]:.4g}"
+                nodes.append(
+                    {
+                        "x": horizontal,
+                        "y": -depth,
+                        "label": f"Nodo {node}" if not leaf else f"Clase {prediction}",
+                        "detail": f"{rule}<br>Predicción: {prediction}<br>Registros de entrenamiento: {structure.n_node_samples[node]}<br>Impureza: {structure.impurity[node]:.4f}",
+                        "class": prediction,
+                    }
+                )
+                if not leaf and depth < 3:
+                    for child, start, end in [
+                        (structure.children_left[node], left, horizontal),
+                        (structure.children_right[node], horizontal, right),
+                    ]:
+                        edges.extend(
+                            [(horizontal, -depth), ((start + end) / 2, -depth - 1), (None, None)]
+                        )
+                        visit(child, depth + 1, start, end)
+
+            visit(0, 0, 0, 1)
+            fig = go.Figure()
+            if edges:
+                fig.add_scatter(
+                    x=[point[0] for point in edges],
+                    y=[point[1] for point in edges],
+                    mode="lines",
+                    line={"color": PALETTE[2]},
+                    hoverinfo="skip",
+                    showlegend=False,
+                )
+            colors = categorical_colors([node["class"] for node in nodes])
+            for label, series_color in colors.items():
+                subset = [node for node in nodes if node["class"] == label]
+                fig.add_scatter(
+                    x=[node["x"] for node in subset],
+                    y=[node["y"] for node in subset],
+                    text=[node["label"] for node in subset],
+                    customdata=[node["detail"] for node in subset],
+                    mode="markers+text",
+                    textposition="bottom center",
+                    name=f"Predice {label}",
+                    marker={"color": series_color, "size": 16},
+                    hovertemplate="%{customdata}<extra></extra>",
+                )
+            style(fig, "¿Qué reglas sigue el árbol de decisión?")
+            fig.update_xaxes(visible=False, range=[-0.05, 1.05])
+            fig.update_yaxes(visible=False, range=[-3.6, 0.5])
+            return note(
+                fig,
+                "Vista hasta profundidad 3. Pasa el cursor por un nodo para ver su regla y sus registros de entrenamiento. Los umbrales corresponden a las variables después del preprocesamiento.",
             )
-            ax.set_title("Árbol de decisión · vista hasta profundidad 3", pad=18)
-            fig.tight_layout()
-            return fig
         table = result.predictions.assign(
             result=lambda v: np.where(v.real == v.prediccion, "Correcta", "Incorrecta")
         )

@@ -47,7 +47,9 @@ def test_home_navigation_and_state():
 def test_train_from_frontend():
     app = active_app()
     navigate(app, "🎯 Clasificación")
-    next(b for b in app.button if b.label == "Entrenar y evaluar").click().run(timeout=60)
+    next(b for b in app.button if b.label == "Crear modelo y revisar resultados").click().run(
+        timeout=60
+    )
     assert not app.exception
     assert len(app.session_state["experiments"]) == 1
     assert app.session_state["experiments"][0].metrics["Accuracy"] > 0.8
@@ -68,10 +70,36 @@ def test_clean_confirmation():
 def test_cluster_from_frontend():
     app = active_app()
     navigate(app, "🧩 Clustering")
-    next(b for b in app.button if b.label == "Ejecutar agrupamiento").click().run(timeout=60)
+    next(b for b in app.button if b.label == "Encontrar grupos en mis datos").click().run(
+        timeout=60
+    )
     assert not app.exception
     assert app.session_state["experiments"][0].problem == "clustering"
-    next(b for b in app.button if b.label == "Visualizar grupos con PCA").click().run()
+    next(b for b in app.button if b.label == "Ver mis grupos en un gráfico").click().run()
+    assert not app.exception
+
+
+def test_cluster_sample_requires_explicit_choice_and_preserves_dataset():
+    import pandas as pd
+
+    from atlas.models import ExploratoryDataAnalysis
+
+    app = active_app()
+    frame = pd.concat([app.session_state["eda"].df] * 40, ignore_index=True)
+    app.session_state["eda"] = ExploratoryDataAnalysis(frame)
+    app.session_state["original"] = frame.copy(deep=True)
+    navigate(app, "🧩 Clustering")
+    assert not app.exception
+    assert not any(b.label == "Encontrar grupos en mis datos" for b in app.button)
+    assert not app.session_state["experiments"]
+    app.checkbox(key="cluster_use_sample").check().run()
+    assert not app.exception
+    assert any(b.label == "Encontrar grupos en mis datos" for b in app.button)
+    assert len(app.session_state["eda"].df) == 6000
+    assert not app.session_state["experiments"]
+    app.number_input(key="cluster_sample_size").set_value(1000).run()
+    assert app.checkbox(key="cluster_use_sample").value
+    assert len(app.session_state["original"]) == 6000
     assert not app.exception
 
 
@@ -81,7 +109,9 @@ def test_regression_from_frontend():
     next(s for s in app.selectbox if s.label == "Ejemplo").set_value("Diabetes").run()
     next(b for b in app.button if b.label == "Activar ejemplo").click().run()
     navigate(app, "📈 Regresión")
-    next(b for b in app.button if b.label == "Entrenar y evaluar").click().run(timeout=60)
+    next(b for b in app.button if b.label == "Crear modelo y revisar resultados").click().run(
+        timeout=60
+    )
     assert not app.exception
     assert app.session_state["experiments"][0].problem == "regresion"
     assert app.session_state["experiments"][0].metrics["RMSE"] > 0
@@ -122,8 +152,11 @@ def test_agent_buttons_offline_and_real_tools(monkeypatch):
         navigate(app, route)
         app.button(key=f"open_{name}").click().run()
         assert not app.exception
-        assert app.button(key=f"ask_{name}").disabled
+        assert not any(button.key == f"ask_{name}" for button in app.button)
+        assert any(button.key and button.key.startswith(f"idea_{name}_") for button in app.button)
     navigate(app, "🔎 Exploración")
+    app.button(key="open_EDAAgent").click().run()
+    app.toggle(key="assistant_technical_EDAAgent").set_value(True).run()
     app.selectbox(key="tool_EDAAgent").set_value("eda.profile").run()
     app.button(key="quick_EDAAgent").click().run()
     assert not app.exception
@@ -136,6 +169,7 @@ def test_agent_training_requires_confirmation():
     app = active_app()
     navigate(app, "🎯 Clasificación")
     app.button(key="open_ClassificationAgent").click().run()
+    app.toggle(key="assistant_technical_ClassificationAgent").set_value(True).run()
     app.selectbox(key="tool_ClassificationAgent").set_value("classification.train").run()
     app.button(key="quick_ClassificationAgent").click().run()
     assert len(app.session_state["experiments"]) == 0

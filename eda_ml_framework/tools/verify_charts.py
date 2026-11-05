@@ -10,7 +10,6 @@ import time
 from pathlib import Path
 from urllib.request import urlopen
 
-import matplotlib.pyplot as plt
 import pandas as pd
 from sklearn.datasets import load_diabetes, load_iris, make_blobs
 from websockets.sync.client import connect
@@ -49,6 +48,25 @@ def main() -> None:
         plot(iris, "count", "Especie"),
         before_after(iris, iris[iris[features[0]] < 7], features[0]),
     ]
+    for kind in ["qq", "kde", "pairplot", "box", "violin"]:
+        figures.append(
+            plot(
+                iris[features[:2] + ["Especie"]],
+                kind,
+                features[0],
+                color="Especie" if kind != "qq" else None,
+            )
+        )
+    figures.extend(
+        [
+            plot(iris, "missing_summary"),
+            cluster.dendrogram(["x", "y"]),
+            classifier.grafico_resultado(classification, "confusion_normalized"),
+            classifier.grafico_resultado(classification, "pr"),
+            regressor.grafico_resultado(regression, "histogram"),
+            regressor.grafico_resultado(regression, "qq"),
+        ]
+    )
     content = [
         "<!doctype html><meta charset='utf-8'><meta name='viewport' content='width=device-width,initial-scale=1'><title>Atlas · Verificación de gráficos</title>",
         (
@@ -72,16 +90,6 @@ def main() -> None:
     content.append("</main>")
     gallery = output / "gallery.html"
     gallery.write_text("".join(content), encoding="utf-8")
-    for kind in ["qq", "kde", "pairplot"]:
-        native = plot(
-            iris[features[:2] + ["Especie"]],
-            kind,
-            features[0],
-            color="Especie" if kind != "qq" else None,
-        )
-        figure = native.figure if hasattr(native, "figure") else native
-        figure.savefig(output / f"{kind}.png", bbox_inches="tight", dpi=160)
-        plt.close(figure)
     (output / "manifest.json").write_text(
         json.dumps(
             [{"title": fig.layout.title.text, "traces": len(fig.data)} for fig in figures],
@@ -91,7 +99,9 @@ def main() -> None:
         encoding="utf-8",
     )
     capture(gallery, output, len(figures))
-    print(f"Verificados {len(figures)} gráficos Plotly y tres figuras estadísticas. {gallery}")
+    print(
+        f"Verificados {len(figures)} gráficos Plotly interactivos, incluidos gráficos estadísticos. {gallery}"
+    )
 
 
 def capture(gallery: Path, output: Path, count: int) -> None:

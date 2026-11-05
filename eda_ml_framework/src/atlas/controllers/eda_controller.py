@@ -10,6 +10,9 @@ from atlas.models import ExploratoryDataAnalysis
 class EDAController:
     model_type = ExploratoryDataAnalysis
 
+    def feature_roles(self):
+        return self._model.feature_roles()
+
     def profile(self) -> dict[str, Any]:
         return self._model.profile()
 

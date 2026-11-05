@@ -8,6 +8,10 @@ from .unsupervised_controller import UnsupervisedController
 
 
 class ClusteringController(UnsupervisedController):
+    @staticmethod
+    def sample_for_analysis(df, size, random_state=42):
+        return Clustering.sample_for_analysis(df, size, random_state)
+
     def cluster_sizes(self, result):
         return self._model.cluster_sizes(result)
 
@@ -31,6 +35,9 @@ class ClusteringController(UnsupervisedController):
 
     def silhouette_plot(self, *args: Any, **kwargs: Any) -> Any:
         return self._model.silhouette_plot(*args, **kwargs)
+
+    def plot_elbow(self, table):
+        return self._model.plot_elbow(table)
 
     def dendrogram(self, *args: Any, **kwargs: Any) -> Any:
         return self._model.dendrogram(*args, **kwargs)

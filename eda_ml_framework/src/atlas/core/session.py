@@ -1,6 +1,7 @@
 """Shared typed infrastructure and dependency contracts."""
 
 import json
+from copy import deepcopy
 from dataclasses import dataclass, field
 from typing import Any
 from uuid import uuid4
@@ -34,8 +35,11 @@ class AgentContext:
     pending: dict[str, Any] = field(default_factory=dict)
     decisions: list[AgentDecision] = field(default_factory=list)
     conversation: dict[str, list[Any]] = field(default_factory=dict)
+    event_evidence: dict[str, Any] = field(default_factory=dict)
     selections: dict[str, Any] = field(default_factory=dict)
     application_state: Any = None
+    _metadata_key: str = field(default="", repr=False)
+    _metadata_base: dict[str, Any] = field(default_factory=dict, repr=False)
 
     @property
     def dataset(self) -> DatasetVersion:
@@ -73,15 +77,27 @@ class AgentContext:
 
     def metadata(self) -> dict[str, Any]:
         """Provide metadata using validated inputs."""
-        df = self.eda.df
-        profile = self.eda.profile()
+        if getattr(self, "_metadata_key", "") != self.key:
+            df = self.eda.df
+            profile = self.eda.profile()
+            self._metadata_base = {
+                "rows": profile["rows"],
+                "columns": [
+                    {"name": str(c)[:100], "dtype": str(df[c].dtype)} for c in df.columns[:80]
+                ],
+                "column_count": profile["columns"],
+                "missing_cells": profile["missing_cells"],
+                "additional_duplicates": profile["additional_duplicates"],
+                "constant_columns": profile["constant_columns"],
+                "constant_names": self.eda.constant_columns()[:30],
+                "missing_by_column": self.eda.missing_values().to_dict(orient="index"),
+                "training_columns": self.eda.source_columns[:80],
+                "feature_roles": self.eda.feature_roles(),
+            }
+            self._metadata_key = self.key
         return {
-            "rows": profile["rows"],
-            "columns": [{"name": str(c)[:100], "dtype": str(df[c].dtype)} for c in df.columns[:80]],
-            "column_count": profile["columns"],
-            "missing_cells": profile["missing_cells"],
-            "active_selection": self.selections,
-            "training_columns": self.eda.source_columns[:80],
+            **deepcopy(self._metadata_base),
+            "active_selection": deepcopy(self.selections),
             "experiments": [
                 {
                     "id": e.id,

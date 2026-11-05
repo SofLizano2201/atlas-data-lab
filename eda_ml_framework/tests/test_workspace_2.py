@@ -94,13 +94,20 @@ def test_manual_end_to_end_without_ai(monkeypatch):
     assert app.session_state["eda"].version_count == 2
     navigate(app, "🎯 Clasificación")
     app.multiselect(key="atlas_algorithms_clasificacion").set_value(["logistic", "tree"]).run()
-    next(b for b in app.button if b.label == "Entrenar y evaluar").click().run(timeout=60)
+    next(b for b in app.button if b.label == "Crear modelo y revisar resultados").click().run(
+        timeout=60
+    )
     assert not app.exception and not app.error
     assert len(app.session_state["experiments"]) == 2
     app.run()
     assert len(app.session_state["experiments"]) == 2
     navigate(app, "experiment_history")
     assert not app.exception and not app.error
+    assert not app.button(key="history_compare").disabled
+    selected = app.selectbox(key="history_experiment").value
+    app.button(key=f"history_chart_{selected.id}").click().run()
+    assert not app.exception and len(app.session_state["experiments"]) == 2
+    assert f"history_{selected.id}" in app.session_state["graphs"]
     navigate(app, "⚖️ Experimentos")
     next(s for s in app.multiselect if s.label == "Experimentos").set_value(
         app.session_state["experiments"]
@@ -116,11 +123,11 @@ def test_offline_panel_guidance_and_history_navigation():
     app = active_app()
     navigate(app, "🔎 Exploración")
     app.button(key="open_EDAAgent").click().run()
-    app.button(key="guided_EDAAgent").click().run()
+    app.button(key="idea_EDAAgent_diagnose").click().run()
     assert not app.exception and not app.error
     response = app.session_state["agent_last_EDAAgent"]
     assert response.status == "success" and response.provider is None
-    app.button(key="dismiss_EDAAgent").click().run()
-    assert app.session_state["agent_last_EDAAgent"] is None
+    app.button(key="back_EDAAgent").click().run()
+    assert app.session_state["assistant_flow_EDAAgent"]["phase"] == "ideas"
     navigate(app, "experiment_history")
     assert not app.exception

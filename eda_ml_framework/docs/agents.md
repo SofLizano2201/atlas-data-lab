@@ -1,5 +1,10 @@
 # Agents and provider configuration
 
+The persistent intelligence panel now receives deduplicated workflow events and
+reads actual results automatically. See [event behavior and verification](event_intelligence.md).
+Automatic assistance uses NoProvider and cannot grant training or mutation permissions.
+The explicit specialist dialog remains available for confirmed actions and optional conversation.
+
 ATLAS 2.0 defaults to finite offline decision policies, not a required language
 model. Open a specialist and select a guided goal; no API key or JSON editing is
 necessary. Existing advanced tool calls and optional consented conversation remain

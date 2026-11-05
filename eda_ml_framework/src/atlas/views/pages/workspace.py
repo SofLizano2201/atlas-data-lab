@@ -220,6 +220,9 @@ def data_page() -> None:
 def eda_page() -> None:
     """Provide eda page using validated inputs."""
     page_header("exploration")
+    from atlas.views.components.intelligence_panel import render_automatic_eda_results
+
+    render_automatic_eda_results()
     eda = EDAController(st.session_state.eda)
     profile = eda.profile()
     metric_cards(
@@ -274,7 +277,12 @@ def eda_page() -> None:
         st.write("Filas duplicadas", len(eda.duplicates()))
         st.dataframe(eda.duplicates().head(100))
         st.dataframe(eda.type_inconsistencies())
-        figure(eda.chart("missing"), "missing")
+        figure(eda.chart("missing_summary"), "missing")
+        with st.expander("Ver el patrón por registro"):
+            if st.button("Mostrar patrón de datos faltantes"):
+                st.session_state.graphs["missing_pattern"] = eda.chart("missing")
+            if "missing_pattern" in st.session_state.graphs:
+                figure(st.session_state.graphs["missing_pattern"], "missing_pattern")
         if numeric:
             outcols = st.multiselect("Variables para outliers", numeric, default=numeric[:1])
             method = st.selectbox("Detección", ["iqr", "zscore", "isolation"])
@@ -303,6 +311,21 @@ def eda_page() -> None:
                 "count",
                 "outliers",
             ],
+            format_func={
+                "histogram": "Cómo se distribuyen los valores",
+                "box": "Rango central y valores poco habituales",
+                "violin": "Forma y concentración de los valores",
+                "scatter": "Relación entre dos variables",
+                "bar": "Cantidad por categoría",
+                "line": "Evolución según una variable",
+                "pie": "Proporción por categoría",
+                "correlation": "Qué variables se relacionan",
+                "pairplot": "Relaciones entre varias variables",
+                "kde": "Distribución suavizada",
+                "qq": "Comparar con una distribución normal",
+                "count": "Frecuencias de categorías",
+                "outliers": "Valores poco habituales",
+            }.get,
         )
         x_choices = (
             numeric
@@ -320,9 +343,22 @@ def eda_page() -> None:
             "Color por variable",
             ["Ninguna"] + eda.columns(),
             help="Categorías: colores y símbolos. En dispersión, una variable numérica continua usa una escala con barra.",
+            disabled=kind == "correlation",
         )
-        corr = st.selectbox("Correlación", ["pearson", "spearman", "kendall"])
+        corr = st.selectbox(
+            "Método para medir la relación",
+            ["pearson", "spearman", "kendall"],
+            disabled=kind != "correlation",
+            help="Pearson mide relación lineal; Spearman y Kendall comparan el orden de los valores. Solo se aplica a la matriz de correlación.",
+        )
         options = {}
+        if kind == "correlation":
+            options["columns"] = st.multiselect(
+                "Variables numéricas de la matriz",
+                numeric,
+                default=numeric[:30],
+                key="eda_correlation_columns",
+            )
         with st.expander("Ajustes de visualización"):
             automatic = st.checkbox(
                 "Actualizar al cambiar variables", value=True, key="eda_automatic"
@@ -330,6 +366,17 @@ def eda_page() -> None:
             if kind == "histogram":
                 options["nbins"] = st.slider(
                     "Intervalos del histograma", 5, 150, 30, key="eda_bins"
+                )
+            if kind in {"box", "violin"}:
+                options["show_points"] = st.checkbox(
+                    "Mostrar observaciones individuales", key="eda_show_points"
+                )
+            if kind in {"scatter", "box", "violin", "line"}:
+                options["max_points"] = st.select_slider(
+                    "Límite de puntos para visualizar",
+                    options=[1000, 3000, 10000, 30000],
+                    value=10000,
+                    key="eda_max_points",
                 )
             if kind in {"histogram", "scatter", "line"}:
                 options["log_x"] = st.checkbox("Escala X logarítmica", key="eda_log_x")

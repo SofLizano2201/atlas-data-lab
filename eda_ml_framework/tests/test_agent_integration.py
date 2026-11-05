@@ -62,6 +62,7 @@ def test_agent_configuration_updates_real_streamlit_controls_only_after_confirma
     app = active_app()
     navigate(app, "🎯 Clasificación")
     app.button(key="open_ClassificationAgent").click().run()
+    app.toggle(key="assistant_technical_ClassificationAgent").set_value(True).run()
     app.selectbox(key="tool_ClassificationAgent").set_value("analysis.configure").run()
     params = {
         "problem": "classification",

@@ -59,6 +59,33 @@ class ExploratoryDataAnalysis:
             "constant_columns": len(self.constant_columns()),
             "numeric_columns": len(self._df.select_dtypes(include=np.number).columns),
             "categorical_columns": len(self._df.select_dtypes(exclude=np.number).columns),
+            "temporal_columns": len(
+                self._df.select_dtypes(include=["datetime", "datetimetz"]).columns
+            ),
+        }
+
+    def feature_roles(self) -> dict[str, list[str]]:
+        """Flag explicit identifier/date names conservatively; retain continuous unique values."""
+        identifiers, dates = [], []
+        for column in self._df:
+            name = re.sub(r"[^a-z0-9]+", "_", column.lower()).strip("_")
+            if name in {"id", "index", "uuid", "codigo", "identificador"} or name.endswith(
+                ("_id", "_uuid")
+            ):
+                identifiers.append(column)
+            if (
+                name in {"date", "fecha", "timestamp", "datetime"}
+                or name.endswith(("_date", "_fecha", "_timestamp"))
+                or pd.api.types.is_datetime64_any_dtype(self._df[column])
+            ):
+                dates.append(column)
+        constants = self.constant_columns()
+        excluded = set(identifiers + dates + constants)
+        return {
+            "identifiers": identifiers,
+            "dates": dates,
+            "constants": constants,
+            "suggested": [column for column in self._df if column not in excluded],
         }
 
     def __init__(self, df: pd.DataFrame, random_state: int = 42) -> None:
@@ -204,6 +231,13 @@ class ExploratoryDataAnalysis:
     def dimensions(self) -> tuple[int, int]:
         """Provide dimensions using validated inputs."""
         return self._df.shape
+
+    def visualization_sample(self, maximum: int = 1000):
+        """Return a reproducible display-only model without replacing source statistics."""
+        if maximum < 1:
+            raise FrameworkError("Chart point limit must be positive")
+        frame = self._df.sample(min(maximum, len(self._df)), random_state=self.random_state)
+        return type(self)(frame, random_state=self.random_state)
 
     def columns(self) -> list[str]:
         """Provide columns using validated inputs."""

@@ -16,3 +16,15 @@ class ExperimentService:
     def remember(state: MutableMapping[str, Any], result: Any, engine: Any) -> None:
         ExperimentService.record(state["experiments"], state["models"], result, engine)
         state["metrics"][result.id] = result.metrics
+        from atlas.core.events import EventType, emit
+
+        payload = {"experiment_id": result.id, "problem": result.problem}
+        emit(
+            state,
+            EventType.CLUSTERING_COMPLETED
+            if result.problem == "clustering"
+            else EventType.TRAINING_COMPLETED,
+            payload,
+        )
+        emit(state, EventType.MODEL_EVALUATED, payload)
+        emit(state, EventType.EXPERIMENT_SAVED, payload)

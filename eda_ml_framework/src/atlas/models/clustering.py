@@ -5,10 +5,10 @@ from hashlib import sha256
 from time import perf_counter
 from typing import Any
 
-import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 import plotly.express as px
+import plotly.graph_objects as go
 from scipy.cluster.hierarchy import dendrogram, fcluster, linkage
 from sklearn import cluster
 from sklearn.metrics import silhouette_samples
@@ -19,7 +19,7 @@ from atlas.core.exceptions import FrameworkError, OptionalDependencyError
 from .experiment import Experiment, compare
 from .metrics import clustering_metrics
 from .unsupervised import UnsupervisedLearning
-from .visualization import categorical_colors, style
+from .visualization import NOISE_COLOR, categorical_colors, note, style
 
 ALGORITHMS = {
     "kmeans": cluster.KMeans,
@@ -145,6 +145,7 @@ class Clustering(UnsupervisedLearning):
                 y="silhouette",
                 color="cluster",
                 color_discrete_map=categorical_colors(table.cluster),
+                points="all",
                 labels={"cluster": "Grupo", "silhouette": "Coeficiente de silueta"},
             ),
             "Silueta por grupo · distribución individual, sin ruido",
@@ -158,25 +159,61 @@ class Clustering(UnsupervisedLearning):
         )
         return fig
 
+    @staticmethod
+    def plot_elbow(table: pd.DataFrame):
+        """Plot stored elbow results without repeating K-Means fits."""
+        fig = style(
+            px.line(
+                table,
+                x="k",
+                y="inercia",
+                markers=True,
+                color_discrete_sequence=["#1B5299"],
+                labels={"k": "Cantidad de grupos (K)", "inercia": "Inercia"},
+            ),
+            "¿Cómo cambia el agrupamiento al variar K?",
+        )
+        fig.update_traces(
+            hovertemplate="Grupos: %{x}<br>Inercia calculada: %{y:,.3f}<extra></extra>"
+        )
+        return note(
+            fig,
+            "La curva usa los valores calculados. Un cambio de pendiente orienta qué K probar; no demuestra por sí solo una cantidad óptima de grupos.",
+        )
+
     def dendrogram(self, columns: list[str], method: str = "ward", **preprocessing: Any) -> Any:
         """Provide dendrogram using validated inputs."""
         if len(self._df) > 2000:
             raise FrameworkError("Dendrograma limitado a 2000 filas.")
-        fig, ax = plt.subplots(figsize=(10, 5))
-        dendrogram(
+        branches = dendrogram(
             linkage(self.prepare(columns, **preprocessing), method=method),
-            ax=ax,
+            no_plot=True,
             truncate_mode="lastp",
             p=30,
             link_color_func=lambda _: "#1B5299",
         )
-        ax.set(
-            title=f"Dendrograma · enlace {method} · hasta 30 ramas",
-            xlabel="Observación o grupo agregado",
-            ylabel="Distancia de enlace",
+        fig = go.Figure()
+        for horizontal, vertical in zip(branches["icoord"], branches["dcoord"]):
+            fig.add_scatter(
+                x=horizontal,
+                y=vertical,
+                mode="lines",
+                line={"color": "#1B5299", "width": 2},
+                showlegend=False,
+                hovertemplate="Distancia de enlace: %{y:.4g}<extra></extra>",
+            )
+        style(fig, f"¿Qué registros se unen primero? · enlace {method}")
+        fig.update_xaxes(
+            title="Observación o grupo agregado",
+            tickvals=list(range(5, 10 * len(branches["ivl"]), 10)),
+            ticktext=branches["ivl"],
+            tickangle=-45,
         )
-        fig.tight_layout()
-        return fig
+        fig.update_yaxes(title="Distancia de enlace", rangemode="tozero")
+        return note(
+            fig,
+            "Se muestran hasta 30 ramas. La altura de cada unión corresponde a su distancia calculada; los números entre paréntesis representan grupos agregados.",
+        )
 
     def characterize(self, result: Experiment) -> pd.DataFrame:
         """Provide characterize using validated inputs."""
@@ -195,6 +232,9 @@ class Clustering(UnsupervisedLearning):
         counts["cluster"] = counts["cluster"].map(
             lambda value: "Ruido" if value == -1 else f"Grupo {value}"
         )
+        colors = categorical_colors(counts["cluster"], max_categories=24)
+        if "Ruido" in colors:
+            colors["Ruido"] = NOISE_COLOR
         return style(
             px.bar(
                 counts,
@@ -202,7 +242,8 @@ class Clustering(UnsupervisedLearning):
                 y="records",
                 color="cluster",
                 pattern_shape="cluster",
-                color_discrete_map=categorical_colors(counts["cluster"], max_categories=24),
+                color_discrete_map=colors,
+                text="records",
                 labels={"cluster": "Grupo", "records": "Registros"},
             ),
             "Distribución de tamaños · incluye ruido",
@@ -213,15 +254,18 @@ class Clustering(UnsupervisedLearning):
         means = self.characterize(result).xs("mean", axis=1, level=1)
         if means.empty:
             raise FrameworkError("No hay variables numéricas para caracterizar grupos.")
-        return style(
-            px.imshow(
-                means,
-                text_auto=".3g",
-                aspect="auto",
-                color_continuous_scale=[[0, "#F1ECCE"], [1, "#1B5299"]],
-                labels={"color": "Media original", "x": "Variable", "y": "Grupo"},
+        return note(
+            style(
+                px.imshow(
+                    means,
+                    text_auto=".3g",
+                    aspect="auto",
+                    color_continuous_scale=[[0, "#F1ECCE"], [1, "#1B5299"]],
+                    labels={"color": "Media original", "x": "Variable", "y": "Grupo"},
+                ),
+                "Perfil de grupos · medias en unidades originales",
             ),
-            "Perfil de grupos · medias en unidades originales",
+            "Cada columna mantiene sus propias unidades. No compares colores entre variables con escalas diferentes; revisa los valores del tooltip.",
         )
 
     def inspect_cluster(self, result: Experiment, label: int) -> pd.DataFrame:

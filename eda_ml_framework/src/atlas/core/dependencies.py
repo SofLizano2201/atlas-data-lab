@@ -24,3 +24,10 @@ def get_default_arguments(context, tool, problems):
     from atlas.agents.agent import default_arguments
 
     return default_arguments(tool, context, problems)
+
+
+def build_offline_agent(name, context):
+    """Construct event-driven assistance without probing any LLM configuration."""
+    from atlas.agents.agent import AgentFactory, NoProvider
+
+    return AgentFactory.get_agent(name, context, NoProvider(), gateway=build_gateway(context)), None

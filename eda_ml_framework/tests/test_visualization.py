@@ -1,6 +1,5 @@
 """Regresiones visuales semánticas: colores, rangos, orden y datos realmente representados."""
 
-import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 import pytest
@@ -132,5 +131,5 @@ def test_statistical_graphs_have_labeled_axes():
     frame = pd.DataFrame({"x": [1.0, 2.0, 3.0, 4.0, 5.0, 6.0], "g": ["a"] * 3 + ["b"] * 3})
     for kind in ["qq", "kde"]:
         fig = plot(frame, kind, "x", color="g" if kind == "kde" else None)
-        assert fig.axes[0].get_xlabel() and fig.axes[0].get_ylabel()
-        plt.close(fig)
+        assert fig.layout.xaxis.title.text and fig.layout.yaxis.title.text
+        assert fig.data[0].hovertemplate

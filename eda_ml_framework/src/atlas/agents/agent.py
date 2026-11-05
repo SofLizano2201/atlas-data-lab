@@ -22,7 +22,11 @@ from atlas.core.schemas import (
     AgentRequest,
     AgentResponse,
     AnalysisResult,
+    AssistantAdvice,
+    AssistantIdea,
+    AssistantOverview,
     Contract,
+    IntelligenceFeedback,
     ToolCall,
     ToolResult,
 )
@@ -365,6 +369,9 @@ SPECIALIST_POLICIES = {
     ),
     "ClusteringAgent": (
         DecisionPolicy(
+            "compare", "Comparar agrupamientos compatibles", "comparison.compare", "comparison"
+        ),
+        DecisionPolicy(
             "configure", "Proponer configuración de agrupamiento", "analysis.configure", "features"
         ),
         DecisionPolicy("project", "Explorar una proyección PCA", "cluster.reduce", "numeric_pair"),
@@ -417,14 +424,637 @@ SPECIALIST_POLICIES = {
     ),
 }
 
+# Domain language and prerequisites remain in the same agent implementation file.
+IDEA_COPY = {
+    "diagnose": (
+        "Revisar la calidad",
+        "Comprueba si faltan datos o hay filas repetidas.",
+        "Esos problemas pueden cambiar la interpretación del análisis.",
+        "Un resumen real de los puntos que conviene revisar.",
+    ),
+    "explore": (
+        "Explorar mis datos",
+        "Observa cómo se distribuyen los valores de una variable.",
+        "Conocer los valores habituales ayuda a reconocer casos poco comunes.",
+        "Un gráfico de los valores disponibles, sin cambiar el dataset.",
+    ),
+    "relationships": (
+        "Descubrir relaciones",
+        "Revisa qué variables numéricas cambian juntas.",
+        "Puede ayudarte a elegir qué relaciones investigar; no demuestra causas.",
+        "Un mapa de relaciones calculado con las variables disponibles.",
+    ),
+    "outliers": (
+        "Ver qué llama la atención",
+        "Busca registros con valores poco habituales.",
+        "Un valor extremo puede ser un caso real o un error; conviene revisarlo.",
+        "Una lista de casos para inspeccionar, sin eliminarlos.",
+    ),
+    "configure": (
+        "Preparar un primer análisis",
+        "Recibe una configuración inicial que puedas revisar.",
+        "Un punto de partida sencillo permite evaluar antes de probar alternativas.",
+        "Opciones preparadas en el formulario; el entrenamiento no empieza solo.",
+    ),
+    "train": (
+        "Probar un primer modelo",
+        "Crea un resultado para evaluar con los datos elegidos.",
+        "Necesitamos un primer resultado antes de hablar de mejoras.",
+        "Un modelo y sus resultados reales, guardados en esta sesión.",
+    ),
+    "project": (
+        "Explorar patrones",
+        "Mira una representación visual de las variables elegidas.",
+        "Una vista reducida puede mostrar estructura, aunque simplifica las distancias.",
+        "Un gráfico calculado con tus datos; no cambia las observaciones.",
+    ),
+    "elbow": (
+        "Explorar distintas cantidades de grupos",
+        "Contrasta varias opciones antes de decidir.",
+        "El tamaño del agrupamiento puede cambiar la estructura encontrada.",
+        "Un diagnóstico para comparar opciones; no una elección óptima garantizada.",
+    ),
+    "classes": (
+        "Conocer las categorías",
+        "Revisa si hay muchos o pocos ejemplos de cada categoría.",
+        "Un modelo puede acertar mucho en total y fallar en categorías poco frecuentes.",
+        "Una tabla con el reparto real de los ejemplos.",
+    ),
+    "evaluate": (
+        "Revisar mis resultados",
+        "Consulta el último resultado disponible para estos datos.",
+        "Conviene revisar lo que ya tienes antes de repetir el trabajo.",
+        "Las medidas calculadas del resultado guardado, sin reentrenar.",
+    ),
+    "errors": (
+        "Entender los errores",
+        "Observa dónde se alejan las predicciones de lo esperado.",
+        "Los errores concretos ayudan a decidir qué revisar después.",
+        "Un diagnóstico del modelo guardado, sin crear otro modelo.",
+    ),
+    "compare": (
+        "Comparar resultados",
+        "Contrasta alternativas que usan los mismos datos y prueba.",
+        "Una comparación justa necesita resultados obtenidos en condiciones compatibles.",
+        "Una comparación basada en resultados reales y la medida seleccionada.",
+    ),
+}
+DOMAIN_IDEA_COPY = {
+    "ClusteringAgent": {
+        "configure": (
+            "Preparar la búsqueda de grupos",
+            "Elige un punto de partida para descubrir casos similares.",
+        ),
+        "train": ("Encontrar grupos similares", "Busca registros que compartan características."),
+        "evaluate": (
+            "Entender mis grupos",
+            "Revisa la separación y los casos que quedaron sin grupo.",
+        ),
+    },
+    "ClassificationAgent": {
+        "configure": (
+            "Ayúdame a elegir un modelo",
+            "Prepara una primera alternativa para predecir categorías.",
+        )
+    },
+    "RegressionAgent": {
+        "configure": (
+            "Preparar mis predicciones",
+            "Prepara una primera alternativa para predecir una cantidad.",
+        ),
+        "errors": (
+            "Revisar mis predicciones",
+            "Observa diferencias entre valores reales y estimados.",
+        ),
+    },
+}
+
 
 class BaseAgent(ABC):
-    """Define the BaseAgent contract."""
+    """Common specialist contract for explicit requests and read-only application events."""
+
+    def read_event_evidence(self, call: ToolCall) -> ToolResult:
+        """Reuse read-only evidence; event handling cannot grant training or mutation."""
+        if (
+            call.tool
+            not in {
+                "eda.profile",
+                "classification.class_distribution",
+                "model.metrics",
+                "comparison.compare",
+            }
+            or call.tool not in self.get_allowed_tools()
+        ):
+            raise ValueError("Event handlers may only read authorized evidence")
+        key = json.dumps([self.context.key, call.tool, call.parameters], sort_keys=True)
+        if not hasattr(self.context, "event_evidence"):
+            self.context.event_evidence = {}
+        if key not in self.context.event_evidence:
+            self.context.event_evidence[key] = self.gateway.execute(call, self.problems)
+        while len(self.context.event_evidence) > 30:
+            self.context.event_evidence.pop(next(iter(self.context.event_evidence)))
+        return self.context.event_evidence[key]
+
+    def on_event(self, event) -> IntelligenceFeedback:
+        """Interpret stored evidence through specialist policies; never train from an event."""
+        metadata = self.context.metadata()
+        advice = self.advice()
+        evidence = [
+            f"{metadata['rows']:,} registros · {metadata['column_count']} variables",
+            f"{metadata['missing_cells']:,} celdas vacías · {metadata['additional_duplicates']:,} filas repetidas adicionales",
+        ]
+        warnings = []
+        candidates = []
+        title, message, priority = advice.title, advice.next_step, "information"
+        state = self.context.application_state or {}
+        if event.type == "ANALYSIS_FAILED":
+            return IntelligenceFeedback(
+                agent=self.name,
+                event_id=event.id,
+                title="La operación necesita una revisión",
+                message="No se pudo completar la última acción. Revisa el requisito indicado antes de intentar otra alternativa.",
+                evidence=evidence,
+                warnings=[str(event.payload.get("message", "Revisa la selección actual."))],
+                priority="critical",
+            )
+        if self.name == "EDAAgent":
+            execution = state.get("automatic_eda", {}).get(self.context.key)
+            if execution and execution.status != "running":
+                title = "Tu exploración inicial está disponible"
+                message = "Revisé el perfil, la calidad y los análisis compatibles de tus datos. Puedes consultar los resultados y qué operaciones se omitieron."
+                if execution.status in {"partial", "failed"}:
+                    warnings.append(
+                        "Algunas operaciones se omitieron por límites o no pudieron completarse. Consulta el registro del EDA."
+                    )
+                if execution.status == "failed":
+                    title, message, priority = (
+                        "No se completó la exploración inicial",
+                        "Tus datos se conservan. Abre EDA para revisar el error e intentar actualizar el análisis.",
+                        "critical",
+                    )
+                excluded = set(
+                    execution.roles.get("identifiers", [])
+                    + execution.roles.get("dates", [])
+                    + execution.roles.get("constants", [])
+                )
+                for column in execution.columns:
+                    name = column["name"]
+                    if (
+                        name in excluded
+                        or column["missing_percentage"] > 20
+                        or column["unique"] < 2
+                    ):
+                        continue
+                    named_target = any(
+                        token in name.lower()
+                        for token in (
+                            "target",
+                            "price",
+                            "precio",
+                            "sales",
+                            "ventas",
+                            "label",
+                            "outcome",
+                            "churn",
+                            "diagnosis",
+                        )
+                    )
+                    if not named_target:
+                        continue
+                    numeric = any(
+                        kind in column["dtype"].lower() for kind in ("int", "float", "double")
+                    )
+                    objective = (
+                        "predecir una cantidad"
+                        if numeric and column["unique"] > 20
+                        else "distinguir categorías"
+                        if column["unique"] <= 20
+                        else None
+                    )
+                    if objective:
+                        candidates.append(
+                            {
+                                "column": name,
+                                "objective": objective,
+                                "limitation": "Candidato por nombre, tipo y variedad de valores; tú decides si corresponde al objetivo. Revisa posibles fugas de información.",
+                            }
+                        )
+                    if len(candidates) >= 3:
+                        break
+            if metadata["missing_cells"] or metadata["additional_duplicates"]:
+                title = "Hay datos que conviene revisar primero"
+                message = advice.reason + " " + advice.next_step
+                priority = "warning"
+        else:
+            selection = metadata.get("active_selection", {}).get("analysis_selection") or {}
+            relevant = [
+                item
+                for item in metadata["experiments"]
+                if item["problem"] in self.problems
+                and item["dataset_id"]
+                in {self.context.dataset.dataset_id, self.context.dataset.content_hash}
+                and (
+                    self.name not in {"ClassificationAgent", "RegressionAgent"}
+                    or not selection.get("target")
+                    or item["validation"].get("target") == selection["target"]
+                )
+            ]
+            if self.name == "ClassificationAgent" and selection.get("target") and not relevant:
+                try:
+                    call = ToolCall(
+                        tool="classification.class_distribution",
+                        parameters={"column": selection["target"]},
+                    )
+                    output = self.read_event_evidence(call)
+                    rows = output.result.tables.get("frecuencias", []) if output.result else []
+                    rare = next((row for row in rows if row.get("absoluta", 0) < 2), None)
+                    dominant = next((row for row in rows if row.get("relativa", 0) > 0.8), None)
+                    if rare:
+                        title, message, priority = (
+                            "Faltan ejemplos de alguna categoría",
+                            "Hay una categoría con un solo registro. Cambiar de modelo no lo resuelve. Revisa si elegiste un ID o una cantidad; para cantidades utiliza Regresión.",
+                            "critical",
+                        )
+                    elif dominant:
+                        title, message, priority = (
+                            "Las categorías tienen tamaños desiguales",
+                            "Una categoría reúne más del 80% de los ejemplos. Revisa la detección por categoría y el equilibrio entre aciertos; el porcentaje global puede ocultar errores.",
+                            "warning",
+                        )
+                        evidence.append(
+                            f"Categoría más frecuente: {dominant['relativa']:.1%} de los registros."
+                        )
+                except (ValueError, TypeError, KeyError, RuntimeError) as exc:
+                    warnings.append(f"No se pudo comprobar el objetivo: {str(exc)[:240]}")
+            if self.name == "ModelComparisonAgent":
+                try:
+                    call = self.local_calls("compare")[0]
+                    output = self.read_event_evidence(call)
+                    interpretation = self.interpret_result(output)
+                    title = "Comparación disponible con resultados guardados"
+                    if self.context.application_state is not None:
+                        from atlas.core.events import EventType, emit
+
+                        emit(
+                            self.context.application_state,
+                            EventType.COMPARISON_UPDATED,
+                            call.parameters,
+                        )
+                    message = interpretation["recommendations"][0]["text"]
+                    evidence.append(
+                        "Se compararon pruebas con la misma cohorte y según una métrica explícita; no se entrenaron modelos."
+                    )
+                except (ValueError, TypeError, KeyError, RuntimeError):
+                    title, message = advice.title, advice.next_step
+            elif relevant:
+                try:
+                    call = ToolCall(
+                        tool="model.metrics", parameters={"experiment_id": relevant[-1]["id"]}
+                    )
+                    output = self.read_event_evidence(call)
+                    interpretation = self.interpret_result(output)
+                    title = {
+                        "ClusteringAgent": "Tus grupos ya tienen resultados",
+                        "ClassificationAgent": "Tu modelo de categorías ya fue evaluado",
+                        "RegressionAgent": "Tus predicciones ya fueron evaluadas",
+                    }[self.name]
+                    message = interpretation["recommendations"][0]["text"]
+                    for name, value in relevant[-1]["metrics"].items():
+                        if (
+                            name
+                            in {
+                                "MAE",
+                                "RMSE",
+                                "Accuracy",
+                                "F1_macro",
+                                "Silhouette",
+                                "ruido",
+                                "clusters",
+                            }
+                            and value is not None
+                        ):
+                            evidence.append(f"{name}: {value:,.3f}")
+                except (ValueError, TypeError, KeyError, RuntimeError) as exc:
+                    warnings.append(f"No se pudo consultar el resultado guardado: {str(exc)[:200]}")
+            if self.name == "ClusteringAgent" and metadata["rows"] > 5000:
+                title, message, priority = (
+                    "El agrupamiento necesita una muestra",
+                    "El límite es 5.000 filas. Selecciona una muestra en el formulario manual; el agente no la usa automáticamente. No se entrenó ningún modelo al abrir esta pantalla.",
+                    "warning",
+                )
+        return IntelligenceFeedback(
+            agent=self.name,
+            event_id=event.id,
+            title=title,
+            message=message,
+            evidence=evidence,
+            warnings=warnings,
+            candidates=candidates,
+            priority=priority,
+        )
 
     name = "BaseAgent"
     objective = ""
     allowed_tools: frozenset[str] = frozenset()
     problems: frozenset[str] = frozenset()
+
+    def suggestions(self) -> AssistantOverview:
+        """Read bounded model metadata; never train, mutate or execute tools on opening."""
+        advice = self.advice()
+        metadata = self.context.metadata()
+        if (
+            self.name == "EDAAgent"
+            and self.context.selections.get("workspace_page") == "preparation"
+        ):
+            return self.preparation_overview(metadata)
+        ideas: list[AssistantIdea] = []
+        domain_priority = {
+            "EDAAgent": ["explore", "relationships", "outliers", "diagnose"],
+            "ClusteringAgent": [
+                "compare",
+                "compare_groups",
+                "elbow",
+                "project",
+                "configure",
+                "evaluate",
+            ],
+            "ClassificationAgent": ["classes", "configure", "errors", "train", "evaluate"],
+            "RegressionAgent": ["errors", "configure", "train", "evaluate"],
+            "ModelComparisonAgent": ["compare", "evaluate"],
+        }
+        priority = [advice.goal, *domain_priority[self.name], *self.guided_actions()]
+        seen = set()
+        for goal in priority:
+            if goal in seen:
+                continue
+            seen.add(goal)
+            try:
+                calls = self.local_calls(goal)
+                self._validate(self.request(f"guided:{goal}", calls))
+            except (ValueError, TypeError, KeyError):
+                continue
+            title, description, why, expected = (
+                (
+                    "Buscar cuántos grupos funcionan mejor",
+                    "Prueba de 2 a 4 grupos con las mismas variables.",
+                    "El número de grupos debe evaluarse con resultados, no adivinarse.",
+                    "Guardaré las alternativas para comparar su separación. Una puntuación alta no garantiza utilidad práctica.",
+                )
+                if goal == "compare_groups"
+                else IDEA_COPY[goal]
+            )
+            title, description = DOMAIN_IDEA_COPY.get(self.name, {}).get(goal, (title, description))
+            call = calls[0]
+            effect = {
+                "analysis.configure": "Cambiará las opciones del formulario solo si decides continuar. No entrenará un modelo.",
+                "cluster.train": "Calculará un agrupamiento y guardará el resultado. Te pediré permiso antes de empezar.",
+                "classification.train": "Entrenará un modelo y guardará sus resultados. Te pediré permiso antes de empezar.",
+                "regression.train": "Entrenará un modelo y guardará sus resultados. Te pediré permiso antes de empezar.",
+            }.get(call.tool, "No modificará tus datos ni volverá a entrenar modelos.")
+            if self.requires_confirmation(call) and call.tool not in {
+                "analysis.configure",
+                "cluster.train",
+                "classification.train",
+                "regression.train",
+            }:
+                effect = (
+                    "Este cálculo puede tardar. Solo empezará cuando confirmes; no eliminará datos."
+                )
+            if goal == "compare_groups":
+                effect = "Entrenará tres alternativas (2, 3 y 4 grupos) con las mismas variables. Solo empezará si confirmas."
+            ideas.append(
+                AssistantIdea(
+                    id=goal,
+                    title=title,
+                    description=description,
+                    why=why,
+                    expected=expected,
+                    effect=effect,
+                    goal=goal,
+                    destination=advice.destination
+                    if goal == "diagnose" and goal == advice.goal
+                    else None,
+                )
+            )
+            if len(ideas) == 3:
+                break
+        destinations = []
+        if advice.destination:
+            destinations.append(
+                (advice.destination, advice.destination_label or "Continuar", advice.next_step)
+            )
+        if self.name == "ModelComparisonAgent" and not ideas:
+            destinations = [
+                (
+                    "classification",
+                    "Predecir categorías",
+                    "Crea un modelo para distinguir categorías.",
+                ),
+                (
+                    "regression",
+                    "Predecir una cantidad",
+                    "Crea un modelo para estimar valores numéricos.",
+                ),
+            ]
+        if self.name in {"ClassificationAgent", "RegressionAgent"}:
+            destination = "classification" if self.name == "ClassificationAgent" else "regression"
+            destinations.append(
+                (
+                    destination,
+                    "Revisar qué quiero predecir",
+                    "Comprueba la variable elegida en el formulario.",
+                )
+            )
+        destinations.extend(
+            [
+                (
+                    "exploration",
+                    "Seguir explorando",
+                    "Continúa revisando tus variables en la pantalla principal.",
+                ),
+                (
+                    "data",
+                    "Revisar los datos activos",
+                    "Consulta la vista previa y el tipo de cada columna.",
+                ),
+            ]
+        )
+        for destination, title, description in destinations:
+            if len(ideas) >= 2:
+                break
+            if any(idea.destination == destination for idea in ideas):
+                continue
+            ideas.append(
+                AssistantIdea(
+                    id=f"navigate_{destination}",
+                    title=title,
+                    description=description,
+                    why=advice.reason,
+                    expected=description,
+                    effect="Solo abrirá la pantalla correspondiente; no modificará datos.",
+                    destination=destination,
+                )
+            )
+        selection = metadata.get("active_selection", {}).get("analysis_selection") or {}
+        relevant = [
+            item
+            for item in metadata["experiments"]
+            if item["problem"] in self.problems
+            and item["dataset_id"]
+            in {self.context.dataset.dataset_id, self.context.dataset.content_hash}
+        ]
+        if self.name == "ModelComparisonAgent":
+            welcome = (
+                "Podemos contrastar las alternativas guardadas y revisar si son comparables."
+                if len(relevant) >= 2
+                else "Antes de comparar necesitamos dos alternativas obtenidas con los mismos datos. Estas opciones te ayudan a comenzar."
+            )
+        elif self.name != "EDAAgent" and relevant:
+            welcome = "Ya tienes resultados en este análisis. Podemos entenderlos mejor o preparar otra prueba sin repetir el trabajo al abrir la ayuda."
+        elif self.name == "ClusteringAgent":
+            welcome = (
+                f"Tus {metadata['rows']:,} registros superan el límite de 5.000 del agrupamiento interactivo. En el formulario selecciona una muestra (por ejemplo 2.000 filas) y ejecuta allí el análisis. La búsqueda guiada del agente no usa esa muestra automáticamente."
+                if metadata["rows"] > 5000
+                else f"Podemos buscar casos parecidos entre tus {metadata['rows']:,} registros. Te propongo estas formas de empezar."
+            )
+        elif self.name == "ClassificationAgent" and selection.get("target"):
+            welcome = f"Podemos revisar las categorías de {selection['target']} y preparar una primera prueba para reconocerlas."
+        elif self.name == "RegressionAgent" and selection.get("target"):
+            welcome = f"Podemos preparar una primera prueba para predecir {selection['target']} y después revisar cuánto se equivoca."
+        elif metadata["missing_cells"]:
+            welcome = f"Encontré {metadata['missing_cells']:,} celdas sin información. Conviene revisarlas antes de interpretar los resultados."
+        elif self.context.experiments:
+            welcome = "Ya tienes resultados guardados. Podemos revisarlos o elegir otra forma de continuar sin repetir el trabajo."
+        elif metadata["additional_duplicates"]:
+            welcome = f"Encontré filas repetidas adicionales: {metadata['additional_duplicates']:,}. Podemos revisarlas y explorar el resto de tus datos."
+        else:
+            welcome = f"Revisé la información disponible de tus {metadata['rows']:,} registros. Estas ideas pueden ayudarte a comenzar."
+        return AssistantOverview(welcome=welcome, ideas=ideas)
+
+    def preparation_overview(self, metadata: dict[str, Any]) -> AssistantOverview:
+        """Select reversible preparation proposals from existing model diagnostics."""
+        ideas = []
+        for goal, parameters, title, description, why in self.preparation_options(metadata):
+            ideas.append(
+                AssistantIdea(
+                    id=goal,
+                    goal=goal,
+                    title=title,
+                    description=description,
+                    why=why,
+                    expected="Verás una comparación antes y después antes de decidir si aplicas el cambio.",
+                    effect="Solo prepara una vista previa. Aplicar el cambio requiere tu confirmación.",
+                )
+            )
+        if len(ideas) < 3:
+            has_numeric = any(
+                any(kind in column["dtype"].lower() for kind in ("int", "float", "double"))
+                for column in metadata["columns"]
+            )
+            ideas.append(
+                AssistantIdea(
+                    id="outliers" if has_numeric else "diagnose",
+                    goal="outliers" if has_numeric else "diagnose",
+                    title="Revisar valores poco habituales"
+                    if has_numeric
+                    else "Revisar la calidad general",
+                    description="Comprueba si son errores o casos válidos antes de borrarlos.",
+                    why="Un valor extremo puede ser información importante; detectarlo no justifica eliminarlo.",
+                    expected="Una lista de casos para revisar.",
+                    effect="No modificará datos.",
+                )
+            )
+        if len(ideas) < 2:
+            ideas.append(
+                AssistantIdea(
+                    id="navigate_clustering",
+                    destination="clustering",
+                    title="Preparar el siguiente análisis",
+                    description="Elige qué variables usar para buscar grupos.",
+                    why="No hay nulos ni duplicados detectados que resolver primero.",
+                    expected="Abrirás Clustering para seleccionar variables y preprocesamiento.",
+                    effect="Solo cambia de pantalla.",
+                )
+            )
+        return AssistantOverview(
+            welcome=(
+                "Estamos preparando tus datos. Te propongo cambios concretos y reversibles; revisa su efecto antes de aplicarlos."
+                if metadata["missing_cells"]
+                or metadata["additional_duplicates"]
+                or metadata["constant_columns"]
+                else "No detecté nulos, duplicados ni columnas constantes. No hace falta borrar datos por rutina; revisa los valores poco habituales o continúa al modelado."
+            ),
+            ideas=ideas[:3],
+        )
+
+    def preparation_options(self, metadata: dict[str, Any]) -> list[tuple]:
+        """Explicit policies; counts and percentages are supplied by the EDA model."""
+        options = []
+        missing = metadata.get("missing_by_column", {})
+        roles = metadata.get("feature_roles", {})
+        excluded = set(roles.get("identifiers", []) + roles.get("dates", []))
+        types = {column["name"]: column["dtype"] for column in metadata["columns"]}
+        for numeric, operation, label in [
+            (True, "median", "mediana"),
+            (False, "mode", "categoría más frecuente"),
+        ]:
+            columns = [
+                column
+                for column, values in missing.items()
+                if column in types
+                and column not in excluded
+                and 0 < values["porcentaje"] < 50
+                and any(kind in types[column].lower() for kind in ("int", "float", "double"))
+                == numeric
+            ][:30]
+            if columns:
+                names = ", ".join(columns[:4]) + ("…" if len(columns) > 4 else "")
+                options.append(
+                    (
+                        f"prepare_{operation}",
+                        {"operation": operation, "columns": columns},
+                        f"Completar {names}",
+                        f"Previsualiza los datos faltantes con la {label}.",
+                        f"Estas columnas tienen menos del 50% de datos faltantes. La {label} es una primera alternativa {'resistente a valores extremos' if numeric else 'que conserva categorías existentes'}; puede reducir la variabilidad y debe revisarse según el significado de los datos.",
+                    )
+                )
+        if metadata["additional_duplicates"] and metadata["column_count"] <= 30:
+            options.append(
+                (
+                    "prepare_duplicates",
+                    {
+                        "operation": "duplicates",
+                        "columns": [c["name"] for c in metadata["columns"]][:30],
+                    },
+                    f"Revisar {metadata['additional_duplicates']:,} filas repetidas",
+                    "Previsualiza qué cambia al quitar registros idénticos.",
+                    "Elimina solo si son copias por error. Las observaciones legítimamente repetidas deben conservarse.",
+                )
+            )
+        columns = [column for column, values in missing.items() if values["porcentaje"] >= 50][:30]
+        if columns and len(columns) < metadata["column_count"]:
+            options.insert(
+                0,
+                (
+                    "prepare_sparse",
+                    {"operation": "drop_columns", "columns": columns},
+                    "Revisar columnas con mucha información faltante",
+                    f"Posible exclusión: {', '.join(columns[:4])}.",
+                    "Falta al menos la mitad de los valores. Antes de eliminarlas, considera su importancia y si puedes recuperar información; no conviene rellenarlas automáticamente.",
+                ),
+            )
+        constants = metadata.get("constant_names", [])
+        if constants and len(constants) < metadata["column_count"]:
+            options.append(
+                (
+                    "prepare_constants",
+                    {"operation": "drop_columns", "columns": constants},
+                    "Revisar columnas sin variación",
+                    f"Posible exclusión: {', '.join(constants[:4])}.",
+                    "No distinguen registros en estos datos. Conserva las que tengan valor documental; excluirlas del modelado puede simplificar el análisis.",
+                )
+            )
+        return options[:3]
 
     def provider_status(self) -> dict[str, Any]:
         """Keep transport detection in the single agent implementation file."""
@@ -449,7 +1079,8 @@ class BaseAgent(ABC):
             item
             for item in metadata["experiments"]
             if item["problem"] in self.problems
-            and item["dataset_id"] == self.context.dataset.dataset_id
+            and item["dataset_id"]
+            in {self.context.dataset.dataset_id, self.context.dataset.content_hash}
         ]
         previous = self.context.conversation.get(self.name, [])
         preferences = {
@@ -473,12 +1104,226 @@ class BaseAgent(ABC):
         )
         return {preferred: actions[preferred], **actions}
 
+    def advice(self) -> AssistantAdvice:
+        """Explain one next step; all counts and metrics originate in the model layer."""
+        metadata = self.context.metadata()
+        selection = metadata.get("active_selection", {}).get("analysis_selection") or {}
+        page = self.context.selections.get("workspace_page")
+        relevant = [
+            item
+            for item in metadata["experiments"]
+            if item["problem"] in self.problems
+            and item["dataset_id"]
+            in {self.context.dataset.dataset_id, self.context.dataset.content_hash}
+        ]
+        if self.name in {"ClassificationAgent", "RegressionAgent"} and selection.get("target"):
+            relevant = [
+                item for item in relevant if item["validation"].get("target") == selection["target"]
+            ]
+        if self.name == "EDAAgent":
+            if metadata["missing_cells"]:
+                return AssistantAdvice(
+                    title="Primero revisa los datos que faltan",
+                    reason=f"Celdas sin información detectadas: {metadata['missing_cells']:,}.",
+                    next_step="Revisa qué columnas están afectadas. Después elige cómo completar esos valores y previsualiza el cambio antes de aplicarlo.",
+                    goal="diagnose",
+                    action_label="Revisar mis datos",
+                    destination="preparation" if page != "preparation" else None,
+                    destination_label="Ir a preparación",
+                )
+            if metadata["additional_duplicates"]:
+                return AssistantAdvice(
+                    title="Comprueba las filas repetidas",
+                    reason=f"Filas adicionales idénticas detectadas: {metadata['additional_duplicates']:,}.",
+                    next_step="Comprueba si son registros repetidos por error. Si decides quitarlos, previsualiza la eliminación antes de confirmar.",
+                    goal="diagnose",
+                    action_label="Revisar mis datos",
+                    destination="preparation" if page != "preparation" else None,
+                    destination_label="Revisar en preparación",
+                )
+            return AssistantAdvice(
+                title="Empieza por conocer tus variables",
+                reason="No se detectan celdas vacías ni filas idénticas adicionales. Esto no descarta otros problemas.",
+                next_step="Elige una variable importante y observa su distribución para identificar valores poco habituales.",
+                goal="explore",
+                action_label="Mostrar una distribución",
+                destination="exploration" if page != "exploration" else None,
+                destination_label="Ir a exploración",
+            )
+        if self.name == "ModelComparisonAgent":
+            if len(relevant) < 2:
+                return AssistantAdvice(
+                    title="Necesitas dos modelos para comparar",
+                    reason=f"Resultados guardados para estos datos: {len(relevant)}.",
+                    next_step="Entrena dos alternativas con los mismos datos, variables y separación de prueba. Luego compara la medida que te importe.",
+                    goal="evaluate" if relevant else "compare",
+                    action_label="Revisar experimento" if relevant else "Primero crea dos modelos",
+                    runnable=bool(relevant),
+                    destination="history" if relevant else "home",
+                    destination_label="Ver experimentos" if relevant else "Elegir un análisis",
+                )
+            candidates = [
+                item
+                for item in relevant
+                if (item["problem"], item["cohort"])
+                in {
+                    (other["problem"], other["cohort"])
+                    for other in relevant
+                    if other["id"] != item["id"]
+                }
+            ]
+            compatible = [
+                item
+                for item in candidates
+                if (item["problem"], item["cohort"])
+                == (candidates[-1]["problem"], candidates[-1]["cohort"])
+            ]
+            if len(compatible) < 2:
+                return AssistantAdvice(
+                    title="Estos resultados no se pueden comparar directamente",
+                    reason="Los experimentos disponibles usan distintos datos o separaciones de prueba.",
+                    next_step="Entrena otra alternativa con la misma configuración de datos. Comparar solo sus cifras podría llevarte a una conclusión incorrecta.",
+                    goal="evaluate",
+                    action_label="Revisar el último resultado",
+                    destination="history",
+                    destination_label="Ver configuraciones",
+                )
+            return AssistantAdvice(
+                title="Elige qué resultado es más importante para ti",
+                reason="Hay al menos dos resultados obtenidos con los mismos datos y separación de prueba.",
+                next_step="En el comparador selecciona una medida y si buscas un valor mayor o menor. Considera también el tiempo de entrenamiento.",
+                goal="compare",
+                action_label="Comparar resultados",
+                destination="experiments",
+                destination_label="Elegir medida de comparación",
+            )
+        if relevant:
+            return AssistantAdvice(
+                title="Revisa dónde falla antes de entrenar otra vez",
+                reason="Ya tienes un resultado guardado para estos datos; puedes revisarlo sin repetir el entrenamiento.",
+                next_step={
+                    "ClusteringAgent": "Comprueba si los grupos son útiles y si quedaron muchos registros sin grupo.",
+                    "ClassificationAgent": "Observa qué categorías confunde y presta atención a las que tienen pocos casos.",
+                    "RegressionAgent": "Observa cuánto se alejan las predicciones de los valores reales y si los errores muestran un patrón.",
+                }[self.name],
+                goal="evaluate" if self.name == "ClusteringAgent" else "errors",
+                action_label="Revisar mis grupos"
+                if self.name == "ClusteringAgent"
+                else "Ver errores del modelo",
+            )
+        if self.name == "ClusteringAgent":
+            if metadata["rows"] > 5000:
+                return AssistantAdvice(
+                    title="Selecciona una muestra antes de agrupar",
+                    reason=f"Hay {metadata['rows']:,} filas y el límite interactivo es 5.000.",
+                    next_step="En el formulario de Clustering elige 2.000 filas y activa el uso de la muestra. Los resultados describirán solo esos registros.",
+                    goal="configure",
+                    action_label="Revisar variables primero",
+                )
+            return AssistantAdvice(
+                title="Prepara las variables antes de buscar grupos",
+                reason="El agrupamiento depende de las variables elegidas y de sus escalas.",
+                next_step="Elige características que describan los casos. Evita códigos de cliente o documentos. Te propongo una configuración inicial que podrás revisar.",
+                goal="configure",
+                action_label="Preparar una configuración",
+            )
+        target = selection.get("target")
+        if target in metadata.get("feature_roles", {}).get("identifiers", []):
+            return AssistantAdvice(
+                title="Revisa qué quieres predecir",
+                reason=f"{target} parece un identificador por su nombre, no un resultado que predecir.",
+                next_step="Selecciona una categoría o cantidad con significado para tu objetivo. No conviene entrenar para adivinar códigos de registro.",
+                goal="diagnose",
+                action_label="Revisar los datos",
+            )
+        if not target:
+            return AssistantAdvice(
+                title="Elige qué quieres predecir",
+                reason="Todavía no hay una variable objetivo seleccionada en este módulo.",
+                next_step="Selecciona esa columna en el formulario: una categoría para clasificación o una cantidad para regresión.",
+                goal="diagnose",
+                action_label="Revisar los datos primero",
+            )
+        if self.name == "ClassificationAgent":
+            return AssistantAdvice(
+                title=f"Revisa las categorías de {target}",
+                reason="Antes de entrenar conviene saber si alguna categoría tiene muy pocos ejemplos.",
+                next_step="Revisa sus cantidades. Después prepara un primer modelo; no te guíes únicamente por el porcentaje total de aciertos.",
+                goal="classes",
+                action_label="Ver cómo se reparten las categorías",
+            )
+        numeric_target = any(
+            column["name"] == target
+            and any(kind in column["dtype"].lower() for kind in ("int", "float", "double"))
+            for column in metadata["columns"]
+        )
+        if not numeric_target:
+            return AssistantAdvice(
+                title="Selecciona una cantidad para predecir",
+                reason=f"La columna {target} no se ha identificado como numérica.",
+                next_step="Si quieres predecir una categoría, usa Clasificación. Para regresión, selecciona un valor numérico, como precio o duración.",
+                goal="diagnose",
+                action_label="Revisar mis datos",
+            )
+        return AssistantAdvice(
+            title=f"Prepara un primer modelo para {target}",
+            reason="Ya elegiste una cantidad numérica como objetivo.",
+            next_step="Empieza con una configuración sencilla. Reserva datos para comprobar las predicciones y revisa los errores antes de probar alternativas.",
+            goal="configure",
+            action_label="Preparar el primer modelo",
+        )
+
     def decision_policies(self) -> tuple[DecisionPolicy, ...]:
         common = COMMON_POLICIES if "eda.profile" in self.get_allowed_tools() else ()
         return common + SPECIALIST_POLICIES[self.name]
 
     def local_calls(self, goal: str) -> list[ToolCall]:
         """Evaluate explicit prerequisites using model-supplied metadata, without metrics."""
+        if self.name == "EDAAgent" and goal.startswith("prepare_"):
+            if self.context.selections.get("workspace_page") != "preparation":
+                raise ValueError("Esta propuesta pertenece a Preparación.")
+            option = next(
+                (
+                    item
+                    for item in self.preparation_options(self.context.metadata())
+                    if item[0] == goal
+                ),
+                None,
+            )
+            if not option:
+                raise ValueError("La propuesta ya no corresponde al dataset actual.")
+            return [ToolCall(tool="eda.preview", parameters=option[1], reason=option[4])]
+        if self.name == "ClusteringAgent" and goal == "compare_groups":
+            metadata = self.context.metadata()
+            if not 10 <= metadata["rows"] <= 5000:
+                raise ValueError("La búsqueda guiada admite entre 10 y 5000 registros.")
+            parameters = default_arguments("cluster.train", self.context, set(self.problems))
+            selection = metadata.get("active_selection", {}).get("analysis_selection") or {}
+            if selection.get("predictors"):
+                parameters["columns"] = selection["predictors"]
+            unsafe = self.context.metadata().get("feature_roles", {})
+            flagged = set(
+                unsafe.get("identifiers", [])
+                + unsafe.get("dates", [])
+                + unsafe.get("constants", [])
+            )
+            if flagged.intersection(parameters["columns"]):
+                raise ValueError(
+                    "Revisa identificadores, fechas o constantes en las variables elegidas antes de comparar grupos."
+                )
+            parameters["scaler"] = selection.get("scaler", "standard")
+            return [
+                ToolCall(
+                    tool="cluster.train",
+                    parameters={
+                        **parameters,
+                        "algorithm": "kmeans",
+                        "parameters": {"n_clusters": k},
+                    },
+                    reason="Comparar cantidades de grupos con las mismas variables y preprocesamiento.",
+                )
+                for k in range(2, 5)
+            ]
         policy = next((item for item in self.decision_policies() if item.goal == goal), None)
         if policy is None:
             raise ValueError(
@@ -496,8 +1341,21 @@ class BaseAgent(ABC):
         experiments = [
             e
             for e in metadata["experiments"]
-            if e["problem"] in self.problems and e["dataset_id"] == self.context.dataset.dataset_id
+            if e["problem"] in self.problems
+            and e["dataset_id"]
+            in {self.context.dataset.dataset_id, self.context.dataset.content_hash}
         ]
+        if self.name in {"ClassificationAgent", "RegressionAgent"} and target:
+            experiments = [
+                item for item in experiments if item["validation"].get("target") == target
+            ]
+        comparison_ids = selection.get("experiment_ids") or (
+            default_arguments("comparison.compare", self.context, set(self.problems))[
+                "experiment_ids"
+            ]
+            if policy.tool == "comparison.compare"
+            else []
+        )
         checks = {
             "dataset": (metadata["rows"] > 0, "Confirma un dataset con registros."),
             "numeric": (bool(numeric), "Selecciona variables numéricas para este diagnóstico."),
@@ -520,14 +1378,35 @@ class BaseAgent(ABC):
                 "Entrena primero un modelo en este módulo y dataset.",
             ),
             "comparison": (
-                len(experiments) >= 2,
-                "Guarda al menos dos experimentos antes de comparar; el comparador verificará su compatibilidad.",
+                len(comparison_ids) >= 2,
+                "Selecciona al menos dos modelos entrenados con los mismos datos y separación de prueba antes de comparar.",
             ),
         }
         allowed, reason = checks[policy.prerequisite]
         if not allowed:
             raise ValueError(reason)
         parameters = default_arguments(policy.tool, self.context, set(self.problems))
+        if self.name == "ClusteringAgent" and policy.tool.startswith("cluster."):
+            if metadata["rows"] > 5000:
+                raise ValueError(
+                    "El agrupamiento interactivo admite hasta 5.000 filas. Selecciona una muestra en el formulario y ejecuta allí; el agente no utiliza esa muestra automáticamente."
+                )
+            if "predictors" in selection:
+                if not selection["predictors"]:
+                    raise ValueError(
+                        "Selecciona al menos una variable de agrupamiento antes de continuar."
+                    )
+                parameters["columns"] = selection["predictors"]
+            roles = metadata.get("feature_roles", {})
+            flagged = set(
+                roles.get("identifiers", []) + roles.get("dates", []) + roles.get("constants", [])
+            )
+            if flagged.intersection(parameters["columns"]):
+                raise ValueError(
+                    "Quita identificadores, fechas sin transformar y constantes antes de usar la búsqueda guiada. Puedes revisar la configuración primero."
+                )
+            if "scaler" in self.gateway.tools[policy.tool].arguments.model_fields:
+                parameters["scaler"] = selection.get("scaler", "standard")
         if policy.tool == "comparison.compare" and selection.get("experiment_ids"):
             parameters = {
                 key: selection[key]
@@ -779,12 +1658,35 @@ class BaseAgent(ABC):
             self.context.pending.pop(token)
 
     def _execute(self, request: AgentRequest, *, confirmed: bool = False) -> AgentResponse:
+        from atlas.core.events import EventType, emit
+
         outputs = []
+        state = self.context.application_state
         for call in request.calls:
             try:
+                if state is not None and call.tool.endswith(".train"):
+                    emit(
+                        state,
+                        EventType.TRAINING_STARTED,
+                        {
+                            "request_id": request.request_id,
+                            "tool": call.tool,
+                            "parameters": call.parameters,
+                        },
+                    )
                 outputs.append(self.gateway.execute(call, self.problems, confirmed=confirmed))
+                if state is not None and call.tool == "eda.apply":
+                    emit(state, EventType.DATA_CLEANED)
+                if state is not None and call.tool == "comparison.compare":
+                    emit(state, EventType.COMPARISON_UPDATED, call.parameters)
             except (ValueError, TypeError, KeyError, ImportError, RuntimeError, OSError) as exc:
                 outputs.append(ToolResult(call=call, status="error", error=str(exc)))
+                if state is not None:
+                    emit(
+                        state,
+                        EventType.ANALYSIS_FAILED,
+                        {"request_id": request.request_id, "tool": call.tool, "message": str(exc)},
+                    )
                 break
         status = "error" if any(t.status == "error" for t in outputs) else "success"
         summaries = [
@@ -853,6 +1755,13 @@ class BaseAgent(ABC):
                 "warnings": ["No hay resultados calculados que interpretar."],
             }
         record = result.result
+        next_action = {
+            "analysis.configure": "La configuración está preparada en el formulario. Revísala y pulsa Entrenar y evaluar cuando quieras crear el modelo.",
+            "eda.preview": "Revisa los resultados propuestos antes de aplicar el cambio. Tus datos todavía no se han modificado.",
+            "eda.apply": "El cambio se aplicó al dataset de trabajo. Revisa el resultado antes de seguir; puedes restaurar una versión anterior en Preparación.",
+        }.get(result.call.tool, next_action)
+        if result.call.tool == "eda.profile":
+            next_action = self.advice().next_step
         source_id = (
             record.source_experiment_id
             if hasattr(record, "source_experiment_id")
@@ -914,16 +1823,32 @@ class EDAAgent(BaseAgent):
         interpretation = self._interpret(
             result,
             "calidad y exploración",
-            "Revisa faltantes, tipos y distribuciones antes de proponer cambios; toda cifra procede de la herramienta indicada.",
+            "Elige una variable importante y observa cómo se distribuyen sus valores. Después revisa si los valores poco habituales son errores o casos válidos.",
         )
         metrics = result.result.metrics if result.result else {}
+        if self.context.selections.get("workspace_page") == "preparation":
+            options = self.preparation_options(self.context.metadata())
+            if result.call.tool == "eda.preview":
+                option = next((item for item in options if item[1] == result.call.parameters), None)
+                interpretation["recommendations"][0]["text"] = (
+                    (
+                        option[4]
+                        if option
+                        else "Revisa la vista previa y comprueba que el cambio tenga sentido para tus datos."
+                    )
+                    + " Tus datos siguen intactos; aplica la propuesta solo después de revisar el antes y el después."
+                )
+                return interpretation
+            if options and result.call.tool == "eda.profile":
+                interpretation["recommendations"][0]["text"] = options[0][2] + ". " + options[0][4]
+                return interpretation
         if metrics.get("celdas_nulas", 0) > 0:
             interpretation["recommendations"][0]["text"] = (
-                "Hay celdas faltantes registradas: prioriza revisar su patrón y los tipos de columnas antes de proponer imputación. Los cambios requieren confirmación."
+                f"Hay {metrics['celdas_nulas']:,} valores faltantes. Ve a Preparación, revisa las columnas afectadas y previsualiza cómo completar esos valores antes de confirmar."
             )
         elif metrics.get("duplicadas_adicionales", 0) > 0:
             interpretation["recommendations"][0]["text"] = (
-                "Se registraron duplicados adicionales. Examina las filas antes de proponer eliminarlos; podrían representar observaciones válidas."
+                f"Hay {metrics['duplicadas_adicionales']:,} filas repetidas adicionales. Revísalas en Preparación y elimínalas solo si representan el mismo registro por error."
             )
         elif metrics.get("categorical_columns", 0) > metrics.get("numeric_columns", 0):
             interpretation["recommendations"][0]["text"] = (
@@ -943,6 +1868,7 @@ class ClusteringAgent(BaseAgent):
             "cluster.distances",
             "cluster.train",
             "cluster.elbow",
+            "comparison.compare",
             "model.metrics",
         }
     )
@@ -958,11 +1884,31 @@ class ClusteringAgent(BaseAgent):
         interpretation = self._interpret(
             result,
             "agrupamiento",
-            "Contrasta separación, ruido y escalamiento con diagnósticos adicionales; una sola métrica no demuestra estabilidad.",
+            "Revisa qué caracteriza a cada grupo y si tiene sentido para tu objetivo. Prueba otra configuración con las mismas variables antes de decidir.",
         )
         if result.result and result.result.metrics.get("ruido", 0) > 0.3:
             interpretation["recommendations"][0]["text"] = (
-                "La proporción de ruido registrada es alta. Revisa escalamiento, variables y parámetros de densidad antes de interpretar los grupos; no se ajustan automáticamente."
+                "Muchos registros quedaron sin grupo. Antes de cambiar el algoritmo, revisa las variables elegidas y su escalamiento; después compara otra configuración."
+            )
+        if isinstance(result.result, AnalysisResult) and result.result.tables.get("seleccion"):
+            selected = result.result.tables["seleccion"][0]
+            experiment = next(
+                (
+                    item
+                    for item in self.context.experiments
+                    if item.id == selected.get("experimento")
+                ),
+                None,
+            )
+            if experiment:
+                count = experiment.config.get("params", {}).get("n_clusters")
+                grouping = f"{count} grupos" if count is not None else experiment.name
+                interpretation["recommendations"][0]["text"] = (
+                    f"Entre las alternativas comparables probadas, {grouping} destaca según {selected['metrica']} ({selected['valor']:.3g}). Revisa qué caracteriza a cada grupo antes de elegirlo. Esta comparación no demuestra estabilidad ni que sea la mejor opción para todos los usos."
+                )
+        elif result.call.tool == "cluster.train" and result.status == "success":
+            interpretation["recommendations"][0]["text"] = (
+                "El agrupamiento quedó guardado. Abre «Ver otras ideas» y compara las alternativas para saber qué cantidad de grupos presenta una separación más clara con estas variables."
             )
         return interpretation
 
@@ -993,13 +1939,17 @@ class ClassificationAgent(BaseAgent):
         interpretation = self._interpret(
             result,
             "clasificación",
-            "Revisa distribución de clases y errores por clase; decide la métrica según los costes del problema y valida sobre entrenamiento.",
+            "Revisa qué categorías confunde el modelo, especialmente las que tienen pocos ejemplos. Decide qué error es más importante evitar antes de comparar modelos.",
         )
         if isinstance(result.result, AnalysisResult):
             rows = result.result.tables.get("frecuencias", [])
+            if rows:
+                interpretation["recommendations"][0]["text"] = (
+                    "Este es el reparto de tus categorías. Ahora puedes preparar un primer modelo y comprobar después cómo responde para cada una, especialmente si tiene pocos ejemplos."
+                )
             if len(rows) > 1 and any(row.get("relativa", 0) > 0.8 for row in rows):
                 interpretation["recommendations"][0]["text"] = (
-                    "La tabla muestra una clase dominante. Contrasta F1 macro, Balanced Accuracy y sensibilidad por clase; Accuracy sola puede ocultar errores de la minoría."
+                    "Hay una clase dominante: una categoría tiene muchos más ejemplos. Revisa los aciertos de cada categoría; el porcentaje total de aciertos puede ocultar fallos en las menos frecuentes."
                 )
         return interpretation
 
@@ -1029,16 +1979,16 @@ class RegressionAgent(BaseAgent):
         interpretation = self._interpret(
             result,
             "regresión",
-            "Interpreta los errores en unidades del objetivo y consulta residuos; no selecciones hiperparámetros con el conjunto de prueba.",
+            "Mira cuánto se alejan las predicciones de los valores reales. Si los errores son demasiado grandes para tu objetivo, compara otro modelo con la misma separación de datos.",
         )
         metrics = result.result.metrics if result.result else {}
         if "MAPE" in metrics and metrics["MAPE"] is None:
             interpretation["recommendations"][0]["text"] = (
-                "MAPE no está definido en este resultado. Usa MAE o RMSE y revisa ceros del objetivo; no sustituyas una métrica indefinida por cero."
+                "El error porcentual no se pudo calcular. Revisa si el objetivo contiene ceros y utiliza el error absoluto para saber cuánto se equivoca en sus unidades originales."
             )
         elif metrics.get("R2") is not None and metrics["R2"] < 0:
             interpretation["recommendations"][0]["text"] = (
-                "El R² registrado es negativo. Revisa variables, partición y residuos antes de probar alternativas; no se ha demostrado la causa ni sobreajuste."
+                "El modelo no está dando un buen ajuste en la prueba. Revisa las variables elegidas y la separación de datos antes de probar otra alternativa."
             )
         return interpretation
 
@@ -1056,11 +2006,31 @@ class ModelComparisonAgent(BaseAgent):
         return self.allowed_tools
 
     def interpret_result(self, result: ToolResult) -> dict[str, Any]:
-        return self._interpret(
+        interpretation = self._interpret(
             result,
             "comparación",
-            "Mantén cohorte, partición y métrica compatibles; considera el tiempo y la interpretabilidad sin declarar un ganador universal.",
+            "El resultado favorece un modelo solo según la medida elegida. Revisa también su tiempo y los errores importantes para tu caso antes de elegirlo.",
         )
+        if isinstance(result.result, AnalysisResult) and result.result.tables.get("seleccion"):
+            selected = result.result.tables["seleccion"][0]
+            model = {
+                "logistic": "Regresión logística",
+                "tree": "Árbol de decisión",
+                "forest": "Random Forest",
+                "ridge": "Ridge",
+                "linear_multiple": "Regresión lineal",
+            }.get(selected["modelo"], selected["modelo"])
+            metric = {
+                "Accuracy": "porcentaje global de aciertos",
+                "F1_macro": "equilibrio entre aciertos y detección por categoría",
+                "RMSE": "error de predicción",
+                "MAE": "error absoluto",
+                "segundos": "tiempo de entrenamiento",
+            }.get(selected["metrica"], selected["metrica"])
+            interpretation["recommendations"][0]["text"] = (
+                f"Según {metric}, la alternativa favorecida es {model} (valor {selected['valor']:.4g}). Revisa también sus errores y su tiempo antes de elegirla; no es la mejor para todos los casos."
+            )
+        return interpretation
 
 
 AGENTS = {
@@ -1109,13 +2079,14 @@ def default_arguments(tool: str, context: AgentContext, problems: set[str]) -> d
     metadata = context.metadata()
     selection = context.selections.get("analysis_selection") or {}
     available_columns = context.dataset.columns
+    suggested = metadata.get("feature_roles", {}).get("suggested", available_columns)
     numeric = [
         c["name"]
         for c in metadata["columns"]
         if c["name"] in available_columns
         and any(t in c["dtype"].lower() for t in ["int", "float", "double"])
     ]
-    columns = numeric[:4] or available_columns[:1]
+    columns = [column for column in numeric if column in suggested][:4] or suggested[:1]
     ids = [e.id for e in context.experiments if e.problem in problems]
     if tool in {"eda.frequencies", "classification.class_distribution"}:
         return {"column": selection.get("target") or available_columns[-1]}
@@ -1134,7 +2105,9 @@ def default_arguments(tool: str, context: AgentContext, problems: set[str]) -> d
             "problem": problem,
             "target": target,
             "predictors": [
-                c for c in (selection.get("predictors") or available_columns[:4]) if c != target
+                c
+                for c in (selection.get("predictors") or suggested[:4])
+                if c != target and c in suggested
             ],
         }
     if tool in {"eda.profile", "eda.correlation"}:
@@ -1165,13 +2138,21 @@ def default_arguments(tool: str, context: AgentContext, problems: set[str]) -> d
         return {
             "algorithm": "logistic" if tool.startswith("classification") else "ridge",
             "target": target,
-            "predictors": [str(c) for c in source if c != target][:12],
+            "predictors": [str(c) for c in source if c != target and c in suggested][:12],
         }
     if tool == "comparison.compare":
         eligible = [e for e in context.experiments if e.problem in problems]
         if not eligible:
             return {"experiment_ids": [], "metric": "RMSE", "direction": "min"}
-        anchor = eligible[-1]
+        candidates = [
+            item
+            for item in eligible
+            if any(
+                other.id != item.id and (other.problem, other.cohort) == (item.problem, item.cohort)
+                for other in eligible
+            )
+        ]
+        anchor = candidates[-1] if candidates else eligible[-1]
         compatible = [
             e.id for e in eligible if (e.problem, e.cohort) == (anchor.problem, anchor.cohort)
         ]
@@ -1185,7 +2166,7 @@ def default_arguments(tool: str, context: AgentContext, problems: set[str]) -> d
             else "ruido"
         )
         return {
-            "experiment_ids": compatible[-2:],
+            "experiment_ids": compatible[-20:] if "clustering" in problems else compatible[-2:],
             "metric": metric,
             "direction": "max" if metric in {"Accuracy", "Silhouette"} else "min",
         }

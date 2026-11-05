@@ -6,7 +6,7 @@ import plotly.express as px
 import plotly.graph_objects as go
 
 from .experiment import compare
-from .visualization import PALETTE, style
+from .visualization import PALETTE, note, style
 
 
 class ExperimentComparison:
@@ -22,11 +22,79 @@ class ExperimentComparison:
         return groups
 
     @staticmethod
-    def chart(experiments, metric, kind="ranking"):
+    def chart(experiments, metric, kind="ranking", direction=None, metrics=None):
         """Render stored metrics only; never retrain or invent stability evidence."""
         table = compare(experiments).reset_index()
+        table["Prueba"] = [f"{name} · prueba {index + 1}" for index, name in enumerate(table.modelo)]
         if metric not in table or not pd.api.types.is_numeric_dtype(table[metric]):
             raise ValueError("Selecciona una métrica numérica disponible.")
+        if kind == "k_silhouette":
+            rows = [
+                {
+                    "Grupos": result.metrics.get("clusters"),
+                    "Silueta": result.metrics.get("Silhouette"),
+                    "Algoritmo": result.name,
+                    "Prueba": result.id,
+                }
+                for result in experiments
+                if result.problem == "clustering"
+                and result.metrics.get("Silhouette") is not None
+                and np.isfinite(result.metrics["Silhouette"])
+                and result.metrics.get("clusters", 0) > 1
+            ]
+            if len(rows) < 2:
+                raise ValueError(
+                    "Guarda al menos dos agrupamientos compatibles con silueta válida. No se inventan valores para cantidades de grupos sin evaluar."
+                )
+            source = pd.DataFrame(rows).sort_values("Grupos")
+            fig = style(
+                px.scatter(
+                    source,
+                    x="Grupos",
+                    y="Silueta",
+                    color="Algoritmo",
+                    symbol="Algoritmo",
+                    hover_data=["Prueba"],
+                    color_discrete_sequence=PALETTE,
+                ),
+                "¿Qué separación muestran las cantidades de grupos probadas?",
+            )
+            fig.update_yaxes(range=[-1, 1])
+            fig.update_xaxes(dtick=1)
+            return note(
+                fig,
+                "Solo se muestran pruebas guardadas y compatibles. El eje X indica los grupos realmente encontrados. Una silueta mayor no garantiza estabilidad ni utilidad para tu objetivo.",
+            )
+        if kind == "metrics":
+            chosen = metrics or [metric]
+            if not chosen or any(
+                name not in table or not pd.api.types.is_numeric_dtype(table[name])
+                for name in chosen
+            ):
+                raise ValueError("Selecciona métricas numéricas disponibles para estas pruebas.")
+            long = table.melt(
+                id_vars=["id", "modelo", "Prueba"],
+                value_vars=chosen,
+                var_name="Indicador",
+                value_name="Valor",
+            )
+            fig = style(
+                px.bar(
+                    long,
+                    x="modelo",
+                    y="Valor",
+                    color="Prueba",
+                    barmode="group",
+                    facet_col="Indicador",
+                    facet_col_wrap=2,
+                    color_discrete_sequence=PALETTE,
+                    custom_data=["id"],
+                    labels={"modelo": "Modelo"},
+                ),
+                "¿Cómo cambia cada indicador entre las alternativas?",
+            )
+            fig.update_yaxes(matches=None)
+            return fig
         if kind == "cost":
             return style(
                 px.scatter(
@@ -45,13 +113,13 @@ class ExperimentComparison:
             return style(
                 px.bar(
                     table,
-                    x="id",
+                    x="Prueba",
                     y="segundos",
                     color="modelo",
                     pattern_shape="modelo",
                     color_discrete_sequence=PALETTE,
                     labels={
-                        "id": "Experimento",
+                        "Prueba": "Prueba",
                         "segundos": "Tiempo total (s)",
                         "modelo": "Modelo",
                     },
@@ -115,16 +183,42 @@ class ExperimentComparison:
                 title="Tasa de verdaderos positivos" if kind == "roc" else "Precision", range=[0, 1]
             )
             return figure
+        if direction is not None:
+            _, best, _ = ExperimentComparison.rank(experiments, metric, direction)
+            table["Criterio"] = np.where(
+                table.id == best, "Favorecido según el criterio", "Otra alternativa"
+            )
+            ordered = table.sort_values(metric, ascending=direction == "max")
+            fig = style(
+                px.bar(
+                    ordered,
+                    y="Prueba",
+                    x=metric,
+                    color="Criterio",
+                    orientation="h",
+                    text=metric,
+                    hover_data=["modelo", "id"],
+                    color_discrete_map={
+                        "Favorecido según el criterio": PALETTE[0],
+                        "Otra alternativa": PALETTE[1],
+                    },
+                    labels={metric: metric},
+                ),
+                f"¿Qué alternativa destaca según {metric}?",
+            )
+            fig.update_yaxes(categoryorder="array", categoryarray=ordered.Prueba.tolist())
+            fig.update_traces(texttemplate="%{x:,.3f}", textposition="outside", cliponaxis=False)
+            return fig
         return style(
             px.bar(
                 table.sort_values(metric),
-                y="id",
+                y="Prueba",
                 x=metric,
                 color="modelo",
                 pattern_shape="modelo",
                 orientation="h",
                 color_discrete_sequence=PALETTE,
-                labels={"id": "Experimento", "modelo": "Modelo"},
+                labels={"Prueba": "Prueba", "modelo": "Modelo"},
             ),
             f"Comparación registrada · {metric}",
         )
