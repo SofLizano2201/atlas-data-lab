@@ -1,3 +1,3 @@
-"""Compatibility re-exports; implementations live only in atlas.agents.agent."""
+"""Compatibility re-exports; implementations live in the modular atlas.agents package."""
 
 from atlas.agents import *

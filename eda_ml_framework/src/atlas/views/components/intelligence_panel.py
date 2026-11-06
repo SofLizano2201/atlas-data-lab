@@ -9,7 +9,8 @@ from atlas.controllers.agent_controller import AgentController
 from atlas.controllers.automatic_eda_controller import AutomaticEDAController
 from atlas.controllers.workflow_controller import WorkflowController
 from atlas.views.components.agent_panel import render_agent_panel
-from atlas.views.components.sidebar import NAV_ITEMS, navigate
+from atlas.views.components.sidebar import NAV_ITEMS, icon_svg, navigate
+from atlas.views.components.tables import data_table
 from atlas.views.components.ui import figure
 
 LABELS = {
@@ -110,49 +111,96 @@ def render_intelligence_panel():
                     if response:
                         agent.finish(response)
                     st.rerun()
+        if name == "EDAAgent":
+            with st.container(border=True, key="intelligence_next_step"):
+                st.markdown(
+                    '<div class="atlas-panel-section">'
+                    + icon_svg("search-check")
+                    + "<div><span>CONTINÚA POR AQUÍ</span><strong class=atlas-panel-title>Revisa tus resultados</strong></div></div>",
+                    unsafe_allow_html=True,
+                )
+                st.caption(
+                    "Abre la exploración para ver qué contienen tus datos y elegir qué quieres investigar."
+                )
+                st.button(
+                    "Explorar mis resultados",
+                    key="intelligence_eda",
+                    type="primary",
+                    on_click=open_workspace,
+                    args=("exploration",),
+                    use_container_width=True,
+                )
         if feedback.candidates:
-            with st.expander("Posibles objetivos"):
-                for candidate in feedback.candidates:
-                    st.write(
-                        f"**{candidate['column']}**: podría servir para {candidate['objective']}."
+            with st.container(border=True, key="intelligence_targets"):
+                st.markdown(
+                    '<div class="atlas-panel-section">'
+                    + icon_svg("sliders-horizontal")
+                    + "<div><strong class=atlas-panel-title>¿Qué podrías predecir?</strong></div></div>",
+                    unsafe_allow_html=True,
+                )
+                run = st.session_state.get("autonomous_runs", {}).get(
+                    st.session_state.get("autonomous_active")
+                )
+                if run and run.target:
+                    st.caption(
+                        f"El análisis automático está explorando «{run.target}». "
+                        + (
+                            "Es una propuesta que puedes cambiar."
+                            if run.provisional
+                            else "Tú elegiste esta columna."
+                        )
                     )
-                    st.caption(candidate["limitation"])
-                st.caption("No elegí un objetivo por ti. Clustering no requiere uno.")
-        with st.expander("Evidencia y limitaciones"):
+                else:
+                    st.caption(
+                        "Estas columnas podrían servir como punto de partida. Primero decide qué necesitas averiguar."
+                    )
+                with st.expander("Ver ideas de predicción"):
+                    for candidate in feedback.candidates:
+                        st.markdown(f"**{candidate['column']}**")
+                        st.write(f"Podría servir para {candidate['objective']}.")
+                    st.caption(
+                        "Son sugerencias por nombre y tipo de dato; no cambian el objetivo. El agrupamiento busca similitudes y no necesita una columna que predecir."
+                    )
+        with st.expander("Qué revisé y qué debes tener en cuenta"):
             for evidence in feedback.evidence:
                 st.write(evidence)
             for warning in feedback.warnings:
                 st.warning(warning)
             st.caption(
-                "Orientación local basada en reglas; no se envían datos ni se requiere una cuenta de IA."
+                "Orientación local basada en los resultados disponibles. Tus datos no se envían a un servicio de IA."
             )
-        if name == "EDAAgent":
-            st.button(
-                "Ver análisis EDA",
-                key="intelligence_eda",
-                type="primary",
-                on_click=open_workspace,
-                args=("exploration",),
-                use_container_width=True,
+        recent = activity_groups(st.session_state.get("workflow_events", {}).values())
+        with st.container(border=True, key="intelligence_activity"):
+            st.markdown(
+                '<div class="atlas-panel-section">'
+                + icon_svg("file-chart-column")
+                + "<div><strong class=atlas-panel-title>Lo que ya se hizo</strong></div></div>",
+                unsafe_allow_html=True,
             )
-        st.markdown("**Actividad reciente**")
-        activity = {
-            "EDA_COMPLETED": "Exploración inicial disponible",
-            "DATA_CLEANED": "Nueva versión de datos",
-            "TRAINING_COMPLETED": "Modelo entrenado",
-            "CLUSTERING_COMPLETED": "Agrupamiento calculado",
-            "EXPERIMENT_SAVED": "Prueba guardada",
-            "COMPARISON_UPDATED": "Comparación actualizada",
-            "REPORT_GENERATED": "Reporte generado",
-        }
-        recent = [
-            event
-            for event in st.session_state.get("workflow_events", {}).values()
-            if event.type in activity and event.status != "outdated"
-        ][-4:]
-        for event in reversed(recent):
-            st.caption(activity[event.type])
-        if st.button("Pedir más ayuda", key="intelligence_more_help"):
+            if recent:
+                rows = []
+                for item in reversed(recent[-4:]):
+                    repetition = (
+                        f"Se realizó {item['count']} veces en esta sesión"
+                        if item["count"] > 1
+                        else "Disponible en esta sesión"
+                    )
+                    rows.append(
+                        f"<li><strong>{escape(item['label'])}</strong><span>{escape(repetition)}</span></li>"
+                    )
+                st.markdown(
+                    '<ol class="atlas-activity-list">' + "".join(rows) + "</ol>",
+                    unsafe_allow_html=True,
+                )
+            else:
+                st.caption(
+                    "Aquí aparecerán las acciones completadas cuando empieces a analizar tus datos."
+                )
+        if st.button(
+            "Ayúdame a decidir el siguiente paso",
+            key="intelligence_more_help",
+            use_container_width=True,
+        ):
             agent.open()
             st.rerun()
         if st.session_state.get(f"agent_open_{name}") and not st.session_state.get(
@@ -205,9 +253,9 @@ def render_automatic_eda_results():
             value = available[name]["value"]
             if isinstance(value, dict) and "rows" in value:
                 st.metric("Registros señalados para revisar", value["count"])
-                st.dataframe(value["rows"], use_container_width=True)
+                data_table(value["rows"], use_container_width=True, target=st)
             else:
-                st.dataframe(value, use_container_width=True)
+                data_table(value, use_container_width=True, target=st)
     with charts:
         for name, item in execution.operations.items():
             if name.startswith("chart:") and item["status"] == "completed":
@@ -219,7 +267,7 @@ def render_automatic_eda_results():
                 figure(item["value"], f"auto_{execution.key}_{name}")
     with coverage:
         statuses = {"completed": "Completado", "failed": "Falló", "skipped": "No ejecutado"}
-        st.dataframe(
+        data_table(
             pd.DataFrame(
                 [
                     {
@@ -236,12 +284,13 @@ def render_automatic_eda_results():
             ),
             hide_index=True,
             use_container_width=True,
+            target=st,
         )
         st.caption(
             "Las pruebas de hipótesis requieren una pregunta y supuestos definidos. No se ejecutan automáticamente. Los análisis costosos se limitan por tamaño, cantidad de variables y tiempo disponible."
         )
         with st.expander("Motivos exactos y registro de ejecución"):
-            st.dataframe(
+            data_table(
                 pd.DataFrame(
                     [
                         {
@@ -254,6 +303,7 @@ def render_automatic_eda_results():
                 ),
                 hide_index=True,
                 use_container_width=True,
+                target=st,
             )
     if execution.report:
         st.download_button(
@@ -263,3 +313,33 @@ def render_automatic_eda_results():
             "text/html",
             key="automatic_eda_report",
         )
+
+
+def activity_groups(events):
+    """Group consecutive repeated display events; retain the original activity history."""
+    labels = {
+        "EDA_COMPLETED": "Exploración de datos lista",
+        "DATA_CLEANED": "Cambios de preparación guardados",
+        "TRAINING_COMPLETED": "Modelo de predicción creado",
+        "CLUSTERING_COMPLETED": "Grupos encontrados",
+        "EXPERIMENT_SAVED": "Análisis guardado",
+        "COMPARISON_UPDATED": "Alternativas comparadas",
+        "REPORT_GENERATED": "Informe preparado",
+    }
+    groups = []
+    for event in events:
+        if event.type not in labels or event.status == "outdated" or event.payload.get("reused"):
+            continue
+        signature = (
+            event.type,
+            event.dataset_id,
+            event.dataset_version,
+            event.payload.get("experiment_id"),
+        )
+        if groups and groups[-1]["signature"] == signature:
+            groups[-1]["count"] += 1
+        else:
+            groups.append({"signature": signature, "label": labels[event.type], "count": 1})
+    return groups
+
+

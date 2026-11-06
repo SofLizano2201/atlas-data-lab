@@ -11,6 +11,20 @@ from atlas.views.components.ui import figure
 def reports_page() -> None:
     """Provide reports page using validated inputs."""
     page_header("reports")
+    run = st.session_state.get("autonomous_runs", {}).get(st.session_state.get("autonomous_active"))
+    if run and run.report:
+        with st.container(border=True, key="workflow_autonomous_report"):
+            st.subheader("Informe del recorrido automático")
+            st.caption(
+                "Incluye decisiones, variables, experimentos, advertencias y gráficos interactivos. Se descarga como HTML y funciona sin conexión."
+            )
+            st.download_button(
+                "Descargar todo lo que analizó ATLAS",
+                run.report,
+                "atlas_analisis_automatico.html",
+                "text/html",
+                type="primary",
+            )
     eda = EDAController(st.session_state.eda)
     st.subheader("Tipos de reportes")
     st.session_state.setdefault("atlas_report_type", "eda")
@@ -36,7 +50,9 @@ def reports_page() -> None:
         for e in st.session_state.experiments
         if kind not in {"clustering", "clasificacion", "regresion"} or e.problem == kind
     ]
-    configuration, preview, actions = st.columns([1.1, 1.5, 0.85])
+    configuration, preview, actions = st.tabs(
+        ["1. Configurar el informe", "2. Historial y descargas", "3. Exportar datos y gráficos"]
+    )
     with configuration.container(border=True, key="atlas_card_report_config"):
         st.subheader("Configuración del reporte")
         selected = st.multiselect(
@@ -52,7 +68,9 @@ def reports_page() -> None:
                 ReportController.generate_for_session(
                     st.session_state, eda, selected, fmt, title, experiments
                 )
-            st.success("Reporte generado y guardado en el historial de esta sesión.")
+            st.success(
+                "Informe listo. Abre «2. Historial y descargas» para consultarlo y descargarlo."
+            )
     with preview.container(border=True, key="atlas_card_report_preview"):
         st.subheader("Vista previa e historial")
         reports = st.session_state.get("reports", [])
@@ -89,11 +107,7 @@ def reports_page() -> None:
         st.caption(
             "Los documentos contienen resultados de esta sesión. No se incluyen cifras simuladas."
         )
-        st.divider()
-        st.markdown("**Automatización**")
-        st.info("Programación y envío no configurados.")
-        st.caption("Genera y descarga el informe con los controles de esta pantalla.")
-    with st.expander("Exportar tablas y gráficos calculados"):
+    with actions, st.expander("Exportar tablas y gráficos calculados"):
         fmt_table = st.selectbox("Formato de tabla", ["csv", "xlsx", "json", "parquet"])
         st.download_button(
             "Descargar dataset de trabajo", eda.export(fmt_table), f"datos.{fmt_table}"
@@ -109,6 +123,3 @@ def reports_page() -> None:
         st.caption(
             "Las figuras de agentes también pueden descargarse en sus paneles de asistencia."
         )
-    st.caption(
-        "Programación y envío de reportes no configurados. Los documentos se descargan localmente."
-    )

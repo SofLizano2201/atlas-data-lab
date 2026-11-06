@@ -49,3 +49,37 @@ def test_automatic_results_are_available_after_import_without_eda_click():
     navigate(app, "🔎 Exploración")
     assert app.selectbox(key="automatic_eda_result")
     assert not app.exception
+
+
+def test_activity_groups_repetitions_without_changing_history():
+    from types import SimpleNamespace
+
+    from atlas.views.components.intelligence_panel import activity_groups
+
+    events = [
+        SimpleNamespace(
+            type="EDA_COMPLETED", status="handled", dataset_id="data", dataset_version=0, payload={}
+        )
+        for _ in range(4)
+    ]
+    events.append(
+        SimpleNamespace(
+            type="EDA_COMPLETED",
+            status="handled",
+            dataset_id="data",
+            dataset_version=0,
+            payload={"reused": True},
+        )
+    )
+    groups = activity_groups(events)
+    assert len(groups) == 1 and groups[0]["count"] == 4
+    assert len(events) == 5 and all(event.status == "handled" for event in events)
+
+
+def test_clear_next_step_opens_exploration_without_training():
+    app = active_app()
+    assert app.button(key="intelligence_eda").label == "Explorar mis resultados"
+    app.button(key="intelligence_eda").click().run()
+    assert app.session_state["navigation"] == "🔎 Exploración"
+    assert not app.exception
+    assert not app.session_state["experiments"]

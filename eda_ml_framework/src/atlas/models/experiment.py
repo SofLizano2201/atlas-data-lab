@@ -108,13 +108,18 @@ def export_frame(df: pd.DataFrame, fmt: str = "csv") -> bytes:
     return buffer.getvalue()
 
 
+TABLE_CSS = "table{border-collapse:separate;border-spacing:0;background:#FFFFFF;border:1px solid #DFE4EB;border-radius:12px;overflow:hidden;font-size:14px}td,th{padding:10px 14px;border:0;border-bottom:1px solid #DFE4EB;text-align:left}thead th{background:#EAE4F0;color:#331832}tbody tr:nth-child(even){background:#F1F5F9}tbody tr:hover{background:#E7EEF7}tbody th{color:#694D75;font-weight:600}"
+
+
 def html_report(title: str, tables: dict[str, pd.DataFrame], note: str = "") -> str:
     """Provide html report using validated inputs."""
     body = "".join((f"<h2>{escape(k)}</h2>{v.to_html(escape=True)}" for k, v in tables.items()))
     return (
         "<!doctype html><html lang='es'><meta charset='utf-8'><title>"
         + escape(title)
-        + "</title><style>body{font:16px system-ui;background:#F1ECCE;color:#331832;margin:3rem}table{border-collapse:collapse}td,th{padding:.5rem;border:1px solid #9FC2CC}h2{color:#1B5299}</style><h1>"
+        + "</title><style>body{font:16px system-ui;background:#F1ECCE;color:#331832;margin:3rem}h2{color:#1B5299}"
+        + TABLE_CSS
+        + "</style><h1>"
         + escape(title)
         + "</h1><p>"
         + escape(note)

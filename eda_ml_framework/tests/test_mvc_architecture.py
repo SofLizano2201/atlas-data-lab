@@ -20,7 +20,7 @@ def test_models_do_not_depend_on_views_agents_or_streamlit():
         ), path
 
 
-def test_single_agent_file_and_no_scientific_libraries_in_agent_layer():
+def test_modular_agents_have_one_definition_and_no_scientific_dependencies():
     definitions = {}
     for path in ROOT.rglob("*.py"):
         for node in ast.walk(ast.parse(path.read_text(encoding="utf-8"))):
@@ -32,17 +32,32 @@ def test_single_agent_file_and_no_scientific_libraries_in_agent_layer():
                 "RegressionAgent",
                 "ModelComparisonAgent",
             }:
+                assert node.name not in definitions, f"Duplicate definition: {node.name}"
                 definitions[node.name] = path
     assert len(definitions) == 6
-    assert set(definitions.values()) == {ROOT / "agents" / "agent.py"}
-    assert not any(
-        name.startswith(("sklearn", "scipy", "numpy", "pandas", "streamlit")) or "views" in name
-        for name in imports(ROOT / "agents" / "agent.py")
-    )
-    assert sorted(path.name for path in (ROOT / "agents").glob("*.py")) == [
-        "__init__.py",
-        "agent.py",
-    ]
+    expected = {
+        "BaseAgent": "base.py",
+        "EDAAgent": "eda_agent.py",
+        "ClusteringAgent": "clustering_agent.py",
+        "ClassificationAgent": "classification_agent.py",
+        "RegressionAgent": "regression_agent.py",
+        "ModelComparisonAgent": "comparison_agent.py",
+    }
+    assert {name: path.name for name, path in definitions.items()} == expected
+    for path in (ROOT / "agents").glob("*.py"):
+        assert not any(
+            name.startswith(("sklearn", "scipy", "numpy", "pandas", "streamlit")) or "views" in name
+            for name in imports(path)
+        ), path
+
+
+def test_legacy_agent_imports_share_the_canonical_classes():
+    from atlas.agents import agent
+    from atlas.agents.factory import AgentFactory
+
+    for cls in AgentFactory.registry.values():
+        assert getattr(agent, cls.__name__) is cls
+        assert cls.__module__ != "atlas.agents.agent"
 
 
 def test_views_use_controllers_and_do_not_fit_or_compute_statistics():

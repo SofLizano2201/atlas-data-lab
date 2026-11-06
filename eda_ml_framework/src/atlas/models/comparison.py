@@ -25,7 +25,9 @@ class ExperimentComparison:
     def chart(experiments, metric, kind="ranking", direction=None, metrics=None):
         """Render stored metrics only; never retrain or invent stability evidence."""
         table = compare(experiments).reset_index()
-        table["Prueba"] = [f"{name} · prueba {index + 1}" for index, name in enumerate(table.modelo)]
+        table["Prueba"] = [
+            f"{name} · prueba {index + 1}" for index, name in enumerate(table.modelo)
+        ]
         if metric not in table or not pd.api.types.is_numeric_dtype(table[metric]):
             raise ValueError("Selecciona una métrica numérica disponible.")
         if kind == "k_silhouette":

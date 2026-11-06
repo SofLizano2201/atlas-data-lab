@@ -10,10 +10,10 @@ model. Open a specialist and select a guided goal; no API key or JSON editing is
 necessary. Existing advanced tool calls and optional consented conversation remain
 available. See [2.0 policies and optional Ollama setup](atlas_2_0.md).
 
-The only agent implementation file is `src/atlas/agents/agent.py`. It defines the
-abstract BaseAgent, EDAAgent, ClusteringAgent, ClassificationAgent, RegressionAgent,
-ModelComparisonAgent, AgentFactory and provider adapters. Root `agents/` modules
-are import-compatibility shims, not separate implementations.
+Agents are organized by responsibility in `src/atlas/agents/`, with one file per
+specialist. See [module map and extension guide](agents_structure.md). The
+`agent.py` facade and root `agents/` package preserve legacy imports without
+duplicating implementations.
 
 ## Local actions and conversation
 

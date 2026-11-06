@@ -220,10 +220,18 @@ class AutomaticEDAController:
         if len(pairs) > limits.max_pairs:
             skip("additional_relationships", "Configured pair budget reached")
         # Charts use a labelled reproducible sample; metrics above always use full data.
-        chart_model = model
+        chart_columns = execution.roles.get("suggested", [])
+        numeric = [column for column in numeric if column in chart_columns]
+        low_cardinality = [column for column in low_cardinality if column in chart_columns]
+        chart_model = type(model)(frame[chart_columns]) if chart_columns else model
         sampled = len(frame) > limits.max_chart_points
         if sampled:
-            chart_model = model.visualization_sample(limits.max_chart_points)
+            chart_model = chart_model.visualization_sample(limits.max_chart_points)
+        if execution.roles.get("identifiers"):
+            skip(
+                "identifier_charts",
+                "Identifier distributions do not describe analytical characteristics; identifiers remain in quality tables",
+            )
         chart_plan = []
         if numeric:
             chart_plan.extend(

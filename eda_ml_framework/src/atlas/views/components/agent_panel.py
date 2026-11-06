@@ -10,6 +10,7 @@ from atlas.controllers.agent_controller import AgentController
 from atlas.controllers.capabilities import SPECS
 from atlas.core.schemas import AgentResponse, AnalysisResult, ExperimentResult
 from atlas.views.components.sidebar import NAV_ITEMS, icon_mask, navigate
+from atlas.views.components.tables import data_table
 from atlas.views.components.ui import figure, format_number
 
 ASSISTANTS = {
@@ -262,7 +263,9 @@ def render_response(response: AgentResponse, context, key: str):
         ]
         if additional:
             with st.expander("Ver todas las métricas (avanzado)"):
-                st.dataframe(pd.DataFrame(additional), hide_index=True, use_container_width=True)
+                data_table(
+                    pd.DataFrame(additional), hide_index=True, use_container_width=True, target=st
+                )
         if isinstance(result, ExperimentResult):
             st.caption(
                 f"Modelo: {result.model.algorithm} · Tiempo: {result.seconds:.2f} s · Guardado en Experimentos"
@@ -272,7 +275,7 @@ def render_response(response: AgentResponse, context, key: str):
             )
             if experiment is not None:
                 st.markdown("**Muestra de los resultados guardados**")
-                st.dataframe(experiment.predictions.head(50), use_container_width=True)
+                data_table(experiment.predictions.head(50), use_container_width=True, target=st)
         if isinstance(result, AnalysisResult):
             titles = {
                 "outliers": "Registros con valores poco habituales",
@@ -297,7 +300,7 @@ def render_response(response: AgentResponse, context, key: str):
                     frame = pd.DataFrame(records).rename(
                         columns={"indice_fila": "Registro / variable"}
                     )
-                    st.dataframe(frame, hide_index=True, use_container_width=True)
+                    data_table(frame, hide_index=True, use_container_width=True, target=st)
                     st.download_button(
                         "Descargar esta tabla",
                         frame.to_csv(index=False).encode("utf-8-sig"),
@@ -320,9 +323,10 @@ def render_response(response: AgentResponse, context, key: str):
                     (after, "Después", "despues"),
                 ]:
                     column.caption(label)
-                    column.dataframe(
+                    data_table(
                         pd.DataFrame(result.tables.get(table, [])).head(10),
                         use_container_width=True,
+                        target=column,
                     )
                 if st.button(
                     "Aplicar este cambio", key=f"apply_preview_{key}_{index}", type="primary"
@@ -347,7 +351,7 @@ def render_response(response: AgentResponse, context, key: str):
                     st.rerun()
             if result.tables.get("frecuencias"):
                 st.caption("Ejemplos disponibles por categoría")
-                st.dataframe(
+                data_table(
                     pd.DataFrame(result.tables["frecuencias"])
                     .head(20)
                     .rename(
@@ -358,6 +362,7 @@ def render_response(response: AgentResponse, context, key: str):
                         }
                     ),
                     use_container_width=True,
+                    target=st,
                 )
         for image_id in result.visualizations:
             if image_id in context.artifacts:
@@ -402,7 +407,7 @@ def _technical_controls(agent, name):
                         f"**{SPECS[output.call.tool].description if output.call.tool in SPECS else 'Acción registrada'}**"
                     )
                     if output.result and output.result.metrics:
-                        st.dataframe(
+                        data_table(
                             pd.DataFrame(
                                 [
                                     {
@@ -414,6 +419,7 @@ def _technical_controls(agent, name):
                             ),
                             hide_index=True,
                             use_container_width=True,
+                            target=st,
                         )
                 st.caption("Los cálculos los realiza el framework sobre el dataset de esta sesión.")
         with tools:
@@ -502,7 +508,7 @@ def _technical_controls(agent, name):
                 if isinstance(output.result, AnalysisResult):
                     for table_name, records in output.result.tables.items():
                         st.caption(table_name)
-                        st.dataframe(pd.DataFrame(records), use_container_width=True)
+                        data_table(pd.DataFrame(records), use_container_width=True, target=st)
                     if output.result.proposal_id and st.button(
                         "Preparar aplicación de la propuesta", key=f"apply_proposal_{name}_{index}"
                     ):

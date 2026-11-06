@@ -1,3 +1,4 @@
-"""Compatibility re-export of the single canonical agent module."""
+"""Legacy imports forwarded to the modular ATLAS agents package."""
 
 from atlas.agents.agent import *
+

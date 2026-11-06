@@ -3,9 +3,6 @@
 from textwrap import wrap
 from typing import Any
 
-import matplotlib
-
-matplotlib.use("Agg")
 import numpy as np
 import pandas as pd
 import plotly.express as px
@@ -55,22 +52,6 @@ SYMBOLS = [
     "square-open",
     "triangle-up-open",
 ]
-matplotlib.rcParams.update(
-    {
-        "axes.prop_cycle": matplotlib.cycler(color=PALETTE),
-        "figure.facecolor": "#FBF9EF",
-        "axes.facecolor": "#FBF9EF",
-        "text.color": "#331832",
-        "axes.labelcolor": "#331832",
-        "xtick.color": "#331832",
-        "ytick.color": "#331832",
-        "font.size": 11,
-        "axes.titlesize": 14,
-        "axes.spines.top": False,
-        "axes.spines.right": False,
-        "savefig.dpi": 160,
-    }
-)
 
 
 def categorical_colors(values: Any, max_categories: int = 12) -> dict[str, str]:
@@ -96,14 +77,14 @@ def note(fig: go.Figure, text: str) -> go.Figure:
 
 def style(fig: go.Figure, title: str | None = None) -> go.Figure:
     """Provide style using validated inputs."""
-    heading = title or fig.layout.title.text or "Análisis de datos"
+    heading = (title or fig.layout.title.text or "Análisis de datos").replace("<br>", " ")
     title_lines = wrap(heading, 30)
     legend_entries = {
         trace.name for trace in fig.data if trace.name and trace.showlegend is not False
     }
     legend_space = max(100, 70 + 22 * ((len(legend_entries) + 2) // 3))
     fig.update_layout(
-        template="plotly_white",
+        template=go.layout.Template(layout={"colorway": PALETTE, "plot_bgcolor": "#F5F2F8"}),
         title={
             "text": "<br>".join(title_lines),
             "x": 0,
@@ -113,9 +94,10 @@ def style(fig: go.Figure, title: str | None = None) -> go.Figure:
             "font": {"size": 20, "family": "Manrope, Inter, sans-serif", "color": "#331832"},
         },
         paper_bgcolor="rgba(0,0,0,0)",
-        plot_bgcolor="#FDFBF4",
+        plot_bgcolor="#F5F2F8",
         font={"family": "Inter, Segoe UI, sans-serif", "size": 13, "color": "#331832"},
         colorway=PALETTE,
+        modebar={"bgcolor": "#FFFFFF", "color": "#694D75", "activecolor": "#1B5299"},
         height=max(500, 300 + 55 + 24 * len(title_lines) + legend_space),
         autosize=True,
         hovermode="closest",
@@ -142,17 +124,17 @@ def style(fig: go.Figure, title: str | None = None) -> go.Figure:
             "bgcolor": "#FDFBF4",
             "xaxis": {
                 "gridcolor": "rgba(159,194,204,0.33)",
-                "backgroundcolor": "#FDFBF4",
+                "backgroundcolor": "#F5F2F8",
                 "showbackground": True,
             },
             "yaxis": {
                 "gridcolor": "rgba(159,194,204,0.33)",
-                "backgroundcolor": "#FDFBF4",
+                "backgroundcolor": "#F5F2F8",
                 "showbackground": True,
             },
             "zaxis": {
                 "gridcolor": "rgba(159,194,204,0.33)",
-                "backgroundcolor": "#FDFBF4",
+                "backgroundcolor": "#F5F2F8",
                 "showbackground": True,
             },
         },
@@ -172,6 +154,9 @@ def style(fig: go.Figure, title: str | None = None) -> go.Figure:
         zeroline=False,
         tickfont_size=12,
     )
+    histograms = [trace for trace in fig.data if trace.type == "histogram"]
+    if len(histograms) == 1:
+        histograms[0].marker.color = "#694D75"
     for i, trace in enumerate(fig.data):
         if trace.type in {"scatter", "scattergl"}:
             if trace.mode and "markers" in trace.mode:
@@ -614,6 +599,12 @@ def plot(
         "color_discrete_sequence": PALETTE,
         "color_continuous_scale": SEQUENTIAL,
     }
+    if not color:
+        kwargs["color_discrete_sequence"] = [
+            {"histogram": "#694D75", "violin": "#9672A4", "scatter": "#331832"}.get(
+                kind, PALETTE[0]
+            )
+        ]
     if kind == "histogram":
         bins = params.get("nbins", 30)
         if not isinstance(bins, int) or not 5 <= bins <= 150:

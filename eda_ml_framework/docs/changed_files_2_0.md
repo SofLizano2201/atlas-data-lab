@@ -1,3 +1,7 @@
+> Nota de arquitectura: la organización actual de agentes está documentada en
+> [agents_structure.md](agents_structure.md). Las referencias al antiguo archivo
+> único describen la estructura anterior a la modularización.
+
 # Changes introduced for ATLAS 2.0
 
 The previous MVC migration was already present locally. This list identifies 2.0

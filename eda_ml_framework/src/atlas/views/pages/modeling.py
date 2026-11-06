@@ -18,6 +18,8 @@ from atlas.controllers.report_controller import export_frame, html_report
 from atlas.controllers.workflow_controller import WorkflowController
 from atlas.core.exceptions import FrameworkError
 from atlas.views.components.layout import algorithm_cards, metric_cards, page_header
+from atlas.views.components.sidebar import NAV_ITEMS, navigate
+from atlas.views.components.tables import data_table
 from atlas.views.components.ui import figure, format_number
 
 
@@ -163,7 +165,7 @@ def supervised_page(problem: str) -> None:
                     f"La columna «{target}» contiene categorías que aparecen una sola vez. Una categoría es cada respuesta posible, como «sí» o «no». Necesitamos varios ejemplos de cada respuesta para aprender y comprobar el modelo. Cambiar de algoritmo no lo soluciona: si quieres predecir un precio o cantidad, ve a Regresión; si es un código, elige otra columna. Para categorías reales, consigue más ejemplos sin duplicar filas artificialmente."
                 )
             with st.expander("Distribución de clases y definición de métricas"):
-                st.dataframe(distribution, use_container_width=True)
+                data_table(distribution, use_container_width=True, target=st)
                 st.caption(
                     "Precision, Recall y F1 usan promedio macro; se añaden métricas binarias cuando corresponde."
                 )
@@ -410,14 +412,16 @@ def supervised_page(problem: str) -> None:
             ]
         )
         with metrics:
-            st.dataframe(
-                pd.Series(result.metrics, name="valor").to_frame(), use_container_width=True
+            data_table(
+                pd.Series(result.metrics, name="valor").to_frame(),
+                use_container_width=True,
+                target=st,
             )
             st.caption(
                 "CV de regresión usa RMSE negativo (más alto es mejor). CV_seleccion es el valor usado para elegir parámetros, no una estimación independiente."
             )
             if problem == "clasificacion":
-                st.dataframe(result.details["report"])
+                data_table(result.details["report"], target=st)
         with charts:
             kinds = (
                 [
@@ -453,7 +457,7 @@ def supervised_page(problem: str) -> None:
             if result.id in st.session_state.graphs:
                 figure(st.session_state.graphs[result.id], "model")
         with predictions:
-            st.dataframe(result.predictions, use_container_width=True)
+            data_table(result.predictions, use_container_width=True, target=st)
             st.download_button(
                 "Predicciones CSV", export_frame(result.predictions), f"{result.id}.csv"
             )
@@ -464,7 +468,7 @@ def supervised_page(problem: str) -> None:
                 data = DatasetController.load(new_file).df
                 st.session_state[f"new_predictions_{result.id}"] = engine.predict(result, data)
             if f"new_predictions_{result.id}" in st.session_state:
-                st.dataframe(st.session_state[f"new_predictions_{result.id}"])
+                data_table(st.session_state[f"new_predictions_{result.id}"], target=st)
                 st.download_button(
                     "Descargar nuevas predicciones",
                     export_frame(st.session_state[f"new_predictions_{result.id}"]),
@@ -479,7 +483,7 @@ def supervised_page(problem: str) -> None:
                 diagnostics["importance"] = engine.feature_importance(result)
             if "importance" in diagnostics:
                 importance = diagnostics["importance"]
-                st.dataframe(importance)
+                data_table(importance, target=st)
                 limit = (
                     st.slider(
                         "Variables a mostrar",
@@ -495,7 +499,7 @@ def supervised_page(problem: str) -> None:
             if st.button("Consultar coeficientes"):
                 diagnostics["coefficients"] = engine.coefficients(result)
             if "coefficients" in diagnostics:
-                st.dataframe(diagnostics["coefficients"])
+                data_table(diagnostics["coefficients"], target=st)
                 limit = st.number_input(
                     "Máximo de coeficientes visibles",
                     1,
@@ -657,14 +661,15 @@ def clustering_page() -> None:
             if variance is not None:
                 st.write("Varianza explicada:", variance)
                 components = st.session_state.representation["modelo"].components_
-                st.dataframe(
+                data_table(
                     pd.DataFrame(
                         components.T, columns=[f"PCA {i + 1}" for i in range(len(variance))]
-                    )
+                    ),
+                    target=st,
                 )
         metric = st.selectbox("Distancia", ["euclidean", "cityblock", "cosine"])
         if st.button("Calcular matriz de distancias"):
-            st.dataframe(engine.distances(features, metric))
+            data_table(engine.distances(features, metric), target=st)
     with train:
         with st.container(border=True, key="workflow_cluster_method"):
             st.subheader("3. Encuentra grupos")
@@ -786,11 +791,11 @@ def clustering_page() -> None:
                 if name in result.metrics
             ]
         )
-        st.dataframe(pd.Series(result.metrics, name="valor").to_frame())
+        data_table(pd.Series(result.metrics, name="valor").to_frame(), target=st)
         st.caption(
             "Ruido: cluster -1. Las métricas internas excluyen ruido; no se calculan para un solo grupo."
         )
-        st.dataframe(saved.characterize(result))
+        data_table(saved.characterize(result), target=st)
     with overview:
         st.caption(
             "Comienza por el tamaño de cada grupo. Después selecciona uno para ver los registros que contiene."
@@ -809,9 +814,9 @@ def clustering_page() -> None:
             sorted(set(result.details["labels"])),
             format_func=lambda value: "Ruido" if value == -1 else f"Grupo {value}",
         )
-        st.dataframe(saved.inspect_cluster(result, int(label)), use_container_width=True)
+        data_table(saved.inspect_cluster(result, int(label)), use_container_width=True, target=st)
         with st.expander("Representantes en espacio transformado"):
-            st.dataframe(saved.representatives(result))
+            data_table(saved.representatives(result), target=st)
         dimensions = st.radio("Visualización de clusters", [2, 3], horizontal=True)
         if st.button("Ver mis grupos en un gráfico"):
             reduced = saved.reduce_dimensions(
@@ -872,21 +877,109 @@ def comparison_page() -> None:
     page_header("experiments")
     experiments = st.session_state.experiments
     if not experiments:
-        st.info("Entrena modelos o crea agrupamientos para comenzar la comparación.")
+        with st.container(border=True, key="workflow_comparison_empty"):
+            st.subheader("Tu primera comparación empieza con un análisis")
+            st.write(
+                "Cuando hayas probado alternativas, aquí podrás compararlas con el mismo criterio. Elige qué necesitas descubrir:"
+            )
+            categories, amounts, groups = st.columns(3)
+            categories.button(
+                "Predecir categorías",
+                on_click=navigate,
+                args=("🎯 Clasificación",),
+                use_container_width=True,
+            )
+            amounts.button(
+                "Predecir cantidades",
+                on_click=navigate,
+                args=("📈 Regresión",),
+                use_container_width=True,
+            )
+            groups.button(
+                "Encontrar grupos",
+                on_click=navigate,
+                args=("🧩 Clustering",),
+                use_container_width=True,
+            )
         return
+    from atlas.views.pages.experiments import METRIC_COPY, MODELS, PROBLEMS
+
     cohorts = ComparisonController.groups(experiments)
-    cohort = st.selectbox("Dataset, problema y partición compatibles", list(cohorts))
-    st.caption(
-        "Solo se ofrecen experimentos de la misma cohorte. Otras particiones permanecen en Experimentos."
-    )
-    selected = st.multiselect(
-        "Experimentos", cohorts[cohort], format_func=lambda e: f"{e.problem} · {e.name} · {e.id}"
-    )
-    if not selected:
+    labels = {
+        key: f"{PROBLEMS.get(items[0].problem, items[0].problem)} · "
+        f"{items[0].config.get('target') or 'Similitudes entre registros'} · "
+        f"{len(items)} pruebas · conjunto {index + 1}"
+        for index, (key, items) in enumerate(cohorts.items())
+    }
+    with st.container(border=True, key="comparison_selection_card"):
+        st.subheader("1. Elige las pruebas que quieres comparar")
+        st.caption("Usamos resultados guardados. Comparar no entrena modelos ni cambia tus datos.")
+        cohort = st.selectbox(
+            "¿Qué quieres evaluar?",
+            list(cohorts),
+            format_func=labels.get,
+            key="comparison_cohort",
+        )
+        candidates = cohorts[cohort]
+        by_id = {item.id: item for item in candidates}
+        numbers = {item.id: index + 1 for index, item in enumerate(experiments)}
+        selection_key = f"comparison_models_{cohort}"
+        chosen = st.multiselect(
+            "Modelos que se mostrarán",
+            list(by_id),
+            default=list(by_id),
+            format_func=lambda identifier: (
+                f"Prueba {numbers[identifier]} · {MODELS.get(by_id[identifier].name, by_id[identifier].name)}"
+            ),
+            key=selection_key,
+            placeholder="Selecciona al menos dos pruebas",
+        )
+        selected = [by_id[identifier] for identifier in chosen]
+        st.caption(
+            "Estas pruebas comparten datos, variables y reparto de evaluación. "
+            "Separamos las demás para que la comparación sea justa."
+        )
+        if len(cohorts) > 1:
+            st.info(f"Hay {len(cohorts)} conjuntos de pruebas. Puedes cambiar de conjunto arriba.")
+    if len(selected) < 2:
+        st.info("Selecciona al menos dos pruebas del mismo conjunto para ver sus diferencias.")
+        st.button(
+            "Ir a mis experimentos",
+            on_click=navigate,
+            args=(next(item.route for item in NAV_ITEMS if item.slug == "history"),),
+        )
         return
     table = compare(selected)
+    st.subheader("2. Decide qué es más importante para ti")
     controls, criterion = st.columns([2, 1])
-    metric = controls.selectbox("Métrica a comparar", list(table.select_dtypes(include=np.number)))
+    available_metrics = [
+        name
+        for name in table.select_dtypes(include=np.number)
+        if name != "clusters"
+        and table[name].replace([np.inf, -np.inf], np.nan).notna().all()
+        and (not name.startswith("CV") or len({item.config.get("cv") for item in selected}) == 1)
+    ]
+    if not available_metrics:
+        st.info("Estas pruebas no tienen indicadores comunes válidos para ordenar sus resultados.")
+        return
+    preferred = next(
+        (name for name in ("MAE", "F1_macro", "Silhouette") if name in available_metrics),
+        available_metrics[0],
+    )
+    metric = controls.selectbox(
+        "¿Qué quieres comparar?",
+        available_metrics,
+        index=available_metrics.index(preferred),
+        format_func=lambda name: METRIC_COPY.get(
+            name, ("Tiempo de ejecución" if name == "segundos" else name,)
+        )[0],
+        key=f"comparison_metric_{cohort}",
+    )
+    st.caption(
+        METRIC_COPY.get(metric, (metric, "", "Indicador registrado en las pruebas seleccionadas."))[
+            2
+        ]
+    )
     lower_default = metric in {
         "MAE",
         "MSE",
@@ -905,6 +998,7 @@ def comparison_page() -> None:
         ["Menor es mejor", "Mayor es mejor"],
         index=0 if lower_default else 1,
         horizontal=True,
+        key=f"comparison_direction_{metric}",
     )
     st.session_state.comparison_selection = {
         "experiment_ids": [experiment.id for experiment in selected],
@@ -917,16 +1011,50 @@ def comparison_page() -> None:
     ComparisonController.record_evaluation(
         st.session_state, selected, metric, "min" if direction.startswith("Menor") else "max"
     )
-    results_column, recommendation = st.columns([3, 1])
+    st.subheader("3. Entiende las diferencias")
+    with st.container(border=True, key="comparison_recommendation_card"):
+        winner = next(item for item in selected if item.id == best)
+        st.markdown(f"### Destaca: {MODELS.get(winner.name, winner.name)}")
+        label, formatting, explanation = METRIC_COPY.get(
+            metric, (metric, ",.3f", "Valor registrado en la evaluación.")
+        )
+        st.markdown(f"**{label}: {format_number(best_value, formatting)}**")
+        tied = len(table.index[table[metric].eq(best_value)])
+        st.write(
+            f"Hay {tied} alternativas empatadas en este indicador. Revisa también su tiempo y sus errores."
+            if tied > 1
+            else f"Tiene el valor más favorable entre las {len(selected)} pruebas seleccionadas, según «{direction.lower()}»."
+        )
+        st.caption(explanation)
+        st.caption(
+            "No hay un ganador para todos los casos. Si eliges modelos mirando repetidamente la prueba final, necesitarás datos nuevos para confirmar su rendimiento."
+        )
+    views = ["ranking", "runtime", "cost"]
+    if (
+        all(
+            result.details.get("cv_scores") is not None
+            and len(result.details.get("cv_scores", [])) > 0
+            for result in selected
+        )
+        and len({result.config.get("cv") for result in selected}) == 1
+    ):
+        views.append("cv")
+    for kind in ("roc", "pr"):
+        if all(
+            result.problem == "clasificacion" and result.details.get(kind) is not None
+            for result in selected
+        ):
+            views.append(kind)
+    if all(result.problem == "clustering" for result in selected):
+        views.append("k_silhouette")
     chart_kind = st.selectbox(
-        "Vista de comparación",
-        ["ranking", "runtime", "cost", "cv", "roc", "pr"]
-        + (["k_silhouette"] if all(result.problem == "clustering" for result in selected) else []),
+        "¿Cómo quieres ver las diferencias?",
+        views,
         format_func={
             "ranking": "Rendimiento por modelo",
             "runtime": "Tiempo de entrenamiento",
             "cost": "Rendimiento frente a tiempo",
-            "cv": "Distribución entre folds",
+            "cv": "Consistencia en las pruebas de validación",
             "roc": "Superposición ROC (binaria)",
             "pr": "Superposición Precision-Recall (binaria)",
             "k_silhouette": "Separación según la cantidad de grupos probada",
@@ -944,17 +1072,18 @@ def comparison_page() -> None:
         )
     except ValueError as exc:
         st.info(str(exc))
-    with results_column.container(border=True):
-        st.subheader("Resultados de la comparación")
-        st.dataframe(table, use_container_width=True)
-    with recommendation.container(border=True):
-        st.subheader("Recomendación según la métrica")
-        st.markdown(f"**{table.loc[best, 'modelo']}**")
-        st.metric(metric, f"{best_value:.4g}")
-        st.caption(f"Experimento {best}")
-        st.caption(
-            "La conclusión depende de esta métrica, partición y contexto; no hay un ganador universal. Usar reiteradamente la prueba para seleccionar modelos sesga su evaluación final."
+    with st.expander("Ver los valores de cada prueba"):
+        display_table = table.copy()
+        display_table.index = [f"Prueba {numbers[item.id]}" for item in selected]
+        display_table["modelo"] = display_table.modelo.map(lambda name: MODELS.get(name, name))
+        display_table = display_table.rename(
+            columns={
+                "modelo": "Modelo",
+                "segundos": "Tiempo (s)",
+                **{key: value[0] for key, value in METRIC_COPY.items()},
+            }
         )
+        data_table(display_table, use_container_width=True, target=st)
     metric_cards(
         [
             ("Experimentos", len(selected), "Modelos seleccionados"),
@@ -963,7 +1092,7 @@ def comparison_page() -> None:
                 f"{ComparisonController.summary(selected)['average_seconds']:.2f} s",
                 "Por entrenamiento",
             ),
-            ("Métrica", metric, direction),
+            ("Criterio", METRIC_COPY.get(metric, (metric,))[0], direction),
         ]
     )
     with st.expander("Comparar varios indicadores lado a lado"):
@@ -982,20 +1111,53 @@ def comparison_page() -> None:
                 ComparisonController.chart(selected, metric, "metrics", metrics=displayed_metrics),
                 "comparison_metrics",
             )
-    for result in selected:
-        with st.expander(f"Parámetros · {result.name} · {result.id}"):
+    with st.expander("Ver detalles técnicos de las pruebas"):
+        for result in selected:
+            st.markdown(f"**Prueba {numbers[result.id]} · {MODELS.get(result.name, result.name)}**")
             st.json(result.config)
-    st.download_button("Comparación CSV", export_frame(table.reset_index()), "comparacion.csv")
-    st.download_button(
-        "Comparación Excel", export_frame(table.reset_index(), "xlsx"), "comparacion.xlsx"
-    )
-    st.download_button(
-        "Reporte comparativo HTML",
-        html_report(
-            "Atlas · Comparación",
-            {"Resultados": table},
-            f"Métrica: {metric}; criterio: {direction}",
-        ),
-        "comparacion.html",
-        "text/html",
-    )
+    with st.container(border=True, key="atlas_downloads"):
+        st.subheader("4. Guarda tu comparación")
+        st.caption(
+            f"Incluye las {len(selected)} pruebas seleccionadas. Descargar no cambia los modelos ni vuelve a entrenarlos."
+        )
+        data, report = st.columns(2, gap="medium")
+        with data.container(border=True, key="atlas_download_data"):
+            st.markdown("#### Tabla de resultados")
+            st.caption("Modelos, indicadores y tiempos de ejecución para trabajar con las cifras.")
+            export_format = st.radio(
+                "¿Dónde vas a usar la tabla?",
+                ["xlsx", "csv"],
+                format_func={"xlsx": "Excel", "csv": "Otras herramientas (CSV)"}.get,
+                key="comparison_export_format",
+            )
+            st.download_button(
+                "Descargar tabla en Excel" if export_format == "xlsx" else "Descargar tabla CSV",
+                export_frame(table.reset_index(), export_format),
+                f"comparacion.{export_format}",
+                "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+                if export_format == "xlsx"
+                else "text/csv",
+                key="comparison_table_download",
+                type="primary",
+                use_container_width=True,
+            )
+        with report.container(border=True, key="atlas_download_reports"):
+            st.markdown("#### Informe de la comparación")
+            st.caption("Tabla de resultados y criterio elegido, reunidos en un documento.")
+            st.markdown(f"**Criterio:** {METRIC_COPY.get(metric, (metric,))[0]}")
+            st.caption(
+                "Archivo HTML: ábrelo con tu navegador. Los gráficos se descargan desde sus propias opciones."
+            )
+            st.download_button(
+                "Descargar informe",
+                html_report(
+                    "Atlas · Comparación",
+                    {"Resultados": display_table},
+                    f"Indicador: {METRIC_COPY.get(metric, (metric,))[0]}; criterio: {direction}. "
+                    "Las cifras corresponden únicamente a las pruebas seleccionadas.",
+                ),
+                "comparacion.html",
+                "text/html",
+                key="comparison_report_download",
+                use_container_width=True,
+            )

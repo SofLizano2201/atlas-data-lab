@@ -3,7 +3,7 @@
 import pandas as pd
 from test_integration import active_app, navigate
 
-import atlas.agents.agent as agent_module
+import atlas.agents.providers as agent_module
 from atlas.agents.agent import AgentFactory
 from atlas.controllers.agent_controller import AgentController
 from atlas.core.schemas import ToolCall

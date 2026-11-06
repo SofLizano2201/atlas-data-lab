@@ -31,8 +31,9 @@ AnalysisResult, ExperimentResult, ModelResult, AgentDecision, DatasetVersion,
 EvidenceRecord and Recommendation. Pydantic validates boundaries. SessionContext
 and dependency contracts are separate from the frontend.
 
-All agent logic resides in `agents/agent.py`: abstract BaseAgent, five specialists,
-factory, plans, instructions, provider adapters and shared execution. The capability
+Agent logic resides in the modular `agents/` package: abstract BaseAgent, five
+specialist modules, factory, contracts, providers and shared orchestration helpers.
+See [the module map](agents_structure.md). The capability
 gateway has a closed registry of validated operations referencing existing model
 methods. It does not accept arbitrary code or arbitrary method names.
 
@@ -46,6 +47,6 @@ metrics. No raw rows or tables are sent automatically. User questions and column
 names can themselves be sensitive; consent remains necessary. Unconfigured AI is
 reported as unavailable, while explicit local tools continue working.
 
-Tests enforce model isolation, a single agent definition file, controller/provider
+Tests enforce model isolation, one canonical definition per agent, controller/provider
 separation, inheritance, permissions and frontend integration. See
 [verification](verification_mvc_1_2.md) and [machine-readable inventory](capabilities_mvc.json).

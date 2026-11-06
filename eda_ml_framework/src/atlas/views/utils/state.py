@@ -11,7 +11,7 @@ def example(name):
     return DatasetController.example(name)
 
 
-def activate(df, name):
+def activate(df, name, autonomous=False):
     with st.status("Analizando tus datos…", expanded=True) as status:
 
         def progress(operation):
@@ -39,6 +39,21 @@ def activate(df, name):
             )
         finally:
             st.session_state.pop("eda_progress_callback", None)
+    if autonomous:
+        run_autonomous()
+
+
+def run_autonomous(target=None):
+    """Show progress while the controller executes the explicitly authorized workflow."""
+    from atlas.controllers.autonomous_controller import AutonomousController
+
+    with st.status("ATLAS está analizando tus datos de principio a fin…", expanded=True) as status:
+        run = AutonomousController.run(st.session_state, target=target, progress=status.write)
+        status.update(
+            label="Análisis automático disponible: revisa resultados y límites abajo.",
+            state="error" if run.status == "failed" else "complete",
+            expanded=False,
+        )
 
 
 def initialize():

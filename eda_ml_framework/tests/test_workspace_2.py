@@ -79,7 +79,7 @@ def test_comparison_views_use_recorded_metrics_and_validate_cohorts():
 
 
 def test_manual_end_to_end_without_ai(monkeypatch):
-    import atlas.agents.agent as agent_module
+    import atlas.agents.providers as agent_module
 
     def forbidden():
         raise AssertionError("Manual workflow must not construct an LLM")
@@ -109,8 +109,8 @@ def test_manual_end_to_end_without_ai(monkeypatch):
     assert not app.exception and len(app.session_state["experiments"]) == 2
     assert f"history_{selected.id}" in app.session_state["graphs"]
     navigate(app, "⚖️ Experimentos")
-    next(s for s in app.multiselect if s.label == "Experimentos").set_value(
-        app.session_state["experiments"]
+    next(s for s in app.multiselect if s.label == "Modelos que se mostrarán").set_value(
+        [item.id for item in app.session_state["experiments"]]
     ).run()
     assert not app.exception and not app.error
     navigate(app, "📤 Reportes")

@@ -21,6 +21,31 @@ def state_for(frame=None):
     return state
 
 
+def test_analysis_provenance_survives_contract_reload():
+    from types import SimpleNamespace
+
+    from atlas.core.schemas import ToolResult
+
+    state = state_for()
+    context = AgentController.context_for(state)
+    record = SimpleNamespace(
+        dataset=context.dataset,
+        source_dataset_id=None,
+        source_experiment_id=None,
+        metrics={},
+        tables={},
+    )
+    result = ToolResult.model_construct(
+        call=ToolCall(tool="eda.profile", parameters={}, reason="Review existing evidence"),
+        status="completed",
+        result=record,
+    )
+    agent = AgentFactory.get_agent("eda", context, NoProvider())
+    evidence = agent.interpret_result(result)["evidence"][0]
+    assert evidence["dataset_id"] == context.dataset.dataset_id
+    assert evidence["content_hash"] == context.dataset.content_hash
+
+
 def test_event_ids_and_feedback_are_stable_on_rerun():
     state = state_for()
     first = emit(state, EventType.DATASET_CONFIRMED, {"name": "example.csv"})

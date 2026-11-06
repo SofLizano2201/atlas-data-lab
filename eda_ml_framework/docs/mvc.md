@@ -12,7 +12,7 @@
 | View | `views/` | Spanish controls, rendering and user confirmation; no scientific algorithms |
 | Core | `core/` | Typed contracts, isolated session context, configuration and dependency contracts |
 | Service | `services/` | Dataset activation, experiment recording and report history |
-| Agent | `agents/agent.py` | Planning, specialist instructions, permitted tools, provider calls and interpretation |
+| Agent | `agents/` | Planning, specialist instructions, permitted tools, provider calls and interpretation |
 
 Academic inheritance remains real: `ExploratoryDataAnalysis` is the parent of
 `UnsupervisedLearning` and `SupervisedLearning`; `Clustering` inherits the former;
@@ -28,7 +28,7 @@ Assistant: view → AgentController → injected BaseAgent → validated capabil
 Sensitive plans stop before execution and require a session-bound, expiring,
 single-use confirmation. Closing assistance cancels its pending tickets.
 
-All six agent classes are defined in one file. The five specialists override
+Each specialist has its own module. The five specialists override
 `get_instructions`, `get_allowed_tools` and `interpret_result`; the abstract parent
 owns the common `run` loop. `AgentFactory.get_agent` selects the subclass.
 Controllers depend on this contract, rather than branching on concrete agents.
@@ -56,12 +56,12 @@ claims are not invented. Unavailable optional algorithms report their dependency
 2. Add an explicit controller forwarding method if needed.
 3. Register a validated ToolSpec in `controllers/capabilities.py`, referencing its
    actual backend callable and documenting outputs, module and confirmation policy.
-4. Permit the tool only for the appropriate specialist in `agents/agent.py`.
+4. Permit the tool only for the appropriate specialist in its corresponding `agents/*_agent.py` module.
 5. Render structured results in the shared panel; add permission and integration tests.
 
-Do not add agent subclasses, prompts, fallback planning, or provider transports in
-other modules. Do not introduce dynamic Python execution. New provider adapters
-implement the existing provider contract inside the canonical agent file.
+Keep agent subclasses, policies and orchestration within the `agents/` package.
+Do not introduce dynamic Python execution. New provider adapters implement the
+existing contract in `agents/providers.py`. See [module map](agents_structure.md).
 
 ## Compatibility and limits
 

@@ -1,3 +1,7 @@
+> Nota de arquitectura: la organización actual de agentes está documentada en
+> [agents_structure.md](agents_structure.md). Las referencias al antiguo archivo
+> único describen la estructura anterior a la modularización.
+
 # Asistentes naturales y contextuales
 
 Actualización del 2 de noviembre de 2026 sobre el proyecto existente.

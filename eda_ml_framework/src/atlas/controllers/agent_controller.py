@@ -9,7 +9,7 @@ from atlas.core.schemas import AgentRequest, AgentResponse, ToolCall
 from atlas.core.session import AgentContext
 
 if TYPE_CHECKING:
-    from atlas.agents.agent import BaseAgent
+    from atlas.agents.base import BaseAgent
 
 
 class AgentController:

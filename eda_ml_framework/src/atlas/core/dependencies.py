@@ -9,7 +9,8 @@ def build_gateway(context):
 
 def build_agent(name, context):
     """Assemble the configured provider and gateway without initiating an LLM call."""
-    from atlas.agents.agent import AgentFactory, NoProvider, ProviderError, configured_provider
+    from atlas.agents.factory import AgentFactory
+    from atlas.agents.providers import NoProvider, ProviderError, configured_provider
 
     error = None
     try:
@@ -20,14 +21,15 @@ def build_agent(name, context):
 
 
 def get_default_arguments(context, tool, problems):
-    """Delegate suggested tool arguments to the single agent module."""
-    from atlas.agents.agent import default_arguments
+    """Delegate suggested tool arguments to the agent defaults module."""
+    from atlas.agents.defaults import default_arguments
 
     return default_arguments(tool, context, problems)
 
 
 def build_offline_agent(name, context):
     """Construct event-driven assistance without probing any LLM configuration."""
-    from atlas.agents.agent import AgentFactory, NoProvider
+    from atlas.agents.factory import AgentFactory
+    from atlas.agents.providers import NoProvider
 
     return AgentFactory.get_agent(name, context, NoProvider(), gateway=build_gateway(context)), None

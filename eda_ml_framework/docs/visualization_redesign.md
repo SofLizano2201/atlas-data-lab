@@ -1,5 +1,45 @@
 # Rediseño de visualizaciones ATLAS
 
+## Actualización de tablas y tema interactivo
+
+Las sesiones locales que continúan abiertas entre cambios de código reciben
+una actualización visual versionada mediante `services/presentation_service.py`.
+Se actualizan explícitamente los módulos de presentación una vez, se regeneran
+los artefactos EDA y el informe automático, y se conservan los objetos entrenados,
+el original y el dataset de trabajo. Los histogramas guardados también reciben
+el morado actual. Los gráficos EDA automáticos excluyen identificadores,
+constantes y fechas sin preparar; los diagnósticos de calidad los conservan.
+
+La migración se verificó en la sesión activa `8513` con Housing.csv: 21.613 filas,
+siete experimentos conservados, distribución de `price` en morado `#694D75` y
+fondo lavanda `#F5F2F8`. Evidencia local:
+`artifacts/atlas-2.0/housing-chart-fixed-8513.png`.
+
+Las vistas usan `views/components/tables.py` para conservar los controles
+nativos de Streamlit y presentar encabezados lavanda, cuerpo blanco y filas
+alternas gris azulado. Los decimales se muestran sin ceros de relleno (hasta
+ocho cifras significativas); los valores originales y las exportaciones no se
+modifican. Tablas con más de 20.000 celdas o índices duplicados usan el renderizado
+nativo sin Styler, manteniendo el tema claro y evitando costes excesivos.
+
+La configuración de Streamlit define superficies de tablas claras; el CSS
+mantiene el fondo general crema. El estilo también se aplica a tablas de
+informes HTML mediante `TABLE_CSS`, compartido con el informe autónomo.
+
+Todos los gráficos de la aplicación se renderizan con Plotly y `theme=None`.
+La vista reaplica el tema ATLAS central sin alterar valores. Se retiró la ruta
+`st.pyplot`; una figura externa que no sea Plotly recibe un error explícito,
+en lugar de mostrarse silenciosamente como imagen estática. El área de datos
+es lavanda suave, los histogramas morados y las categorías mantienen su mapa
+de colores y símbolos. No se asignan colores arbitrarios a intervalos numéricos.
+
+Verificación de esta actualización: 279 pruebas aprobadas, siete advertencias
+conocidas; Ruff aprobado. Tras ajustar el formato numérico se repitieron las
+pruebas específicas de tablas e integración. Navegador: selección, zoom, pan y
+descarga PNG comprobados; diez pantallas sin errores. Captura de tablas:
+`artifacts/atlas-2.0/table-clean.png`; gráfico:
+`artifacts/atlas-2.0/chart-exploration.png`.
+
 ## Arquitectura y archivos
 
 Los modelos conservan los cálculos científicos. `src/atlas/models/visualization.py`

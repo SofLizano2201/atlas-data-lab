@@ -2,22 +2,23 @@
 
 from hashlib import sha256
 from html import escape
-from io import BytesIO
 from typing import Any
 
-import matplotlib.pyplot as plt
 import plotly.graph_objects as go
 import streamlit as st
 
-from atlas.controllers.charts import chart_frame
+from atlas.controllers.charts import chart_frame, style
+from atlas.views.components.tables import data_table
 
 
 def figure(fig: Any, key: str) -> None:
     """Provide figure using validated inputs."""
     if isinstance(fig, go.Figure):
+        fig = style(go.Figure(fig))
         with st.container(border=True, key=f"chart_card_{key}"):
             preferences = st.session_state.setdefault("chart_preferences", {}).setdefault(key, {})
-            if st.button(
+            actions, tools = st.columns([1, 1.4])
+            if actions.button(
                 "Abrir gráfico grande",
                 key=f"chart_fullscreen_{key}",
                 disabled=st.session_state.get("dialog_rendered_this_run", False),
@@ -33,7 +34,7 @@ def figure(fig: Any, key: str) -> None:
                     trace.name for trace in fig.data if trace.name and trace.showlegend is not False
                 )
             )
-            with st.popover("Explorar y descargar"):
+            with tools.popover("Explorar y descargar"):
                 st.caption(
                     "Arrastra para acercarte; haz doble clic para restablecer. La leyenda permite ocultar y mostrar series."
                 )
@@ -112,7 +113,7 @@ def figure(fig: Any, key: str) -> None:
                 st.session_state.setdefault("chart_selections", {})[key] = points
                 if points:
                     st.caption("Observaciones seleccionadas · valores reales del gráfico")
-                    st.dataframe(points, use_container_width=True)
+                    data_table(points, use_container_width=True, target=st)
                 else:
                     st.caption(
                         "Dibuja un rectángulo o lazo sobre los puntos para inspeccionarlos. La selección no cambia los datos ni entrena modelos."
@@ -139,18 +140,9 @@ def figure(fig: Any, key: str) -> None:
                         key=f"download_{key}",
                     )
     else:
-        native = getattr(fig, "figure", getattr(fig, "fig", fig))
-        st.pyplot(native)
-        buffer = BytesIO()
-        native.savefig(buffer, format="png", bbox_inches="tight")
-        st.download_button(
-            "Descargar gráfico PNG",
-            buffer.getvalue(),
-            f"{key}.png",
-            "image/png",
-            key=f"download_{key}",
+        raise TypeError(
+            "Este resultado no es un gráfico interactivo compatible. Vuelve a generar el gráfico con la versión actual de ATLAS."
         )
-        plt.close(native)
 
 
 def format_number(value, formatting=",.2f"):

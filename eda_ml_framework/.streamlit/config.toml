@@ -1,7 +1,11 @@
 [theme]
 primaryColor = "#1B5299"
-backgroundColor = "#F1ECCE"
-secondaryBackgroundColor = "#E5DECB"
+backgroundColor = "#FFFFFF"
+secondaryBackgroundColor = "#F2EFF6"
+borderColor = "#DAD5E1"
+dataframeBorderColor = "#DFE4EB"
+dataframeHeaderBackgroundColor = "#EAE4F0"
+dataframeHeaderTextColor = "#331832"
 textColor = "#331832"
 font = "sans serif"
 

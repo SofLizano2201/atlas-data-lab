@@ -22,6 +22,7 @@ def main() -> None:
     parser.add_argument("--all-pages", action="store_true")
     parser.add_argument("--trained-results", action="store_true")
     parser.add_argument("--chart-interactions", action="store_true")
+    parser.add_argument("--autonomous", action="store_true")
     parser.add_argument(
         "--agents", action="store_true", help="Capturar además los paneles abiertos."
     )
@@ -188,6 +189,29 @@ def main() -> None:
                 )
                 time.sleep(0.2)
                 screenshot("metric-cards")
+                evaluate(
+                    "[...document.querySelectorAll('[data-testid=stDataFrame]')].find(table=>table.offsetParent!==null)?.scrollIntoView({block:'center'})"
+                )
+                time.sleep(0.3)
+                screenshot("table-clean")
+                if args.autonomous:
+                    evaluate(
+                        "[...document.querySelectorAll('button')].find(b=>b.innerText==='Analizar todo automáticamente').click()"
+                    )
+                    wait_for("document.body.innerText.includes('Descargar el informe completo')")
+                    assert not evaluate(
+                        "Boolean(document.querySelector('[data-testid=stException]'))"
+                    )
+                    evaluate(
+                        "document.querySelector('.st-key-workflow_autonomous').scrollIntoView({block:'start'})"
+                    )
+                    time.sleep(0.5)
+                    screenshot("autonomous-results")
+                    evaluate(
+                        "[...document.querySelectorAll('[role=tab]')].find(b=>b.innerText==='Ver los gráficos').click()"
+                    )
+                    time.sleep(0.5)
+                    screenshot("autonomous-charts")
                 evaluate("document.querySelector('[data-testid=stMain]').scrollTo(0,0)")
                 if args.all_pages:
                     routes = [
@@ -459,7 +483,7 @@ def main() -> None:
                 time.sleep(0.3)
                 screenshot("compact")
                 evaluate("document.querySelector('.st-key-atlas_nav_exploration button').click()")
-                wait_for("document.body.innerText.includes('Exploración de datos')")
+                wait_for("Boolean(document.querySelector('.st-key-atlas_card_eda_summary'))")
                 evaluate("document.querySelector('.st-key-atlas_sidebar_toggle button').click()")
                 wait_for(
                     "document.querySelector('[data-testid=stSidebar]').getBoundingClientRect().width===260"
@@ -497,6 +521,15 @@ def main() -> None:
                         json.dumps(dialog_measurements), encoding="utf-8"
                     )
                     evaluate("document.querySelector('.st-key-close_EDAAgent button').click()")
+                evaluate(
+                    "(()=>{let control=document.querySelector('[data-testid=stSidebarCollapseButton]');(control?.tagName==='BUTTON'?control:control?.querySelector('button'))?.click()})()"
+                )
+                wait_for(
+                    "document.querySelector('[data-testid=stSidebar]').getBoundingClientRect().right<=0"
+                )
+                evaluate("document.querySelector('[data-testid=stMain]').scrollTo(0,0)")
+                time.sleep(0.5)
+                screenshot("mobile-content")
                 command("Browser.close")
         finally:
             try:

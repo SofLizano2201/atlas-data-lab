@@ -35,6 +35,21 @@ def test_confirmation_runs_eda_and_records_actual_missing_values():
     assert not state["experiments"]
 
 
+def test_automatic_charts_exclude_ids_and_constants():
+    frame = pd.DataFrame(
+        {"id": range(30), "price": range(100, 130), "size": range(50, 80), "constant": [1] * 30}
+    )
+    state = {"eda_limits": EDALimits(max_charts=6)}
+    DatasetService.activate(state, frame, "example.csv")
+    result = state["automatic_eda"][AutomaticEDAController.key(state["eda"])]
+    assert "chart:id" not in result.operations
+    assert "chart:constant" not in result.operations
+    assert result.operations["chart:price"]["value"].data[0].marker.color == "#694D75"
+    correlation = result.operations["chart:correlation"]["value"]
+    assert "id" not in correlation.data[0].x and "constant" not in correlation.data[0].x
+    assert "id" in result.operations["schema"]["value"].index
+
+
 def test_version_cache_and_invalidation(monkeypatch):
     model = ExploratoryDataAnalysis(pd.DataFrame({"x": [1.0, 2.0, 4.0]}))
     calls = []

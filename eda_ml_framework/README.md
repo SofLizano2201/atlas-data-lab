@@ -42,7 +42,7 @@ modelos al cambiar una preferencia de visualización.
 La implementación canónica está en `src/atlas/`: modelos científicos en `models/`,
 coordinación en `controllers/`, interfaz española en `views/`, contratos y contexto
 en `core/`, y ciclo de datasets, experimentos y reportes en `services/`.
-**Todos los agentes y proveedores están definidos en un único `agents/agent.py`.**
+**Cada agente tiene su propio módulo en `src/atlas/agents/`; `agent.py` conserva las importaciones antiguas.**
 `framework/`, `frontend/`, `agents/` y `contracts/` en la raíz conservan importaciones
 antiguas mediante adaptadores; no son implementaciones científicas paralelas.
 
@@ -135,7 +135,7 @@ src/atlas/controllers/    Coordinación, validación y gateway de capacidades
 src/atlas/views/          Páginas, componentes, estado visual y recursos
 src/atlas/core/           Contratos tipados, contexto y dependencias
 src/atlas/services/       Ciclo de datasets, experimentos y reportes
-src/atlas/agents/agent.py BaseAgent, cinco especialistas, factory y proveedores
+src/atlas/agents/         BaseAgent, cinco especialistas y módulos compartidos; ver docs/agents_structure.md
 framework/, frontend/    Adaptadores de compatibilidad (también agents/, contracts/)
 .streamlit/config.toml    Tema y límites del servidor
 datasets/examples/        Generador reproducible de ejemplos
@@ -274,3 +274,10 @@ escalas, referencias estadísticas, límites y cómo verificar las figuras.
 
 El [informe del rediseño de gráficos](docs/visualization_redesign.md) documenta
 componentes, interacciones, correcciones, pruebas y límites de exportación.
+
+El [recorrido autónomo](docs/autonomous_workflow.md) explica cómo ATLAS genera
+gráficos, entrena alternativas, compara resultados y prepara un informe local
+al confirmar un archivo, manteniendo el modo manual disponible.
+
+La [guía de diseño de producto](docs/product_redesign.md) describe la composición
+de las pantallas, los roles de color, estados interactivos y validación UX.

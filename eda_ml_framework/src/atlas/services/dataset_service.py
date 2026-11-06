@@ -31,6 +31,7 @@ class DatasetService:
     @staticmethod
     def activate(state: MutableMapping[str, Any], frame: pd.DataFrame, name: str) -> None:
         model = ExploratoryDataAnalysis(frame)
+        from atlas.services.presentation_service import REVISION
         for key in list(state):
             if key in {
                 "new_predictions",
@@ -70,6 +71,9 @@ class DatasetService:
             selected_variables=[],
             problem=None,
             eda_reviewed=False,
+            autonomous_runs={},
+            autonomous_active=None,
+            presentation_revision=REVISION,
         )
         from atlas.controllers.automatic_eda_controller import AutomaticEDAController
         from atlas.core.events import EventType, emit

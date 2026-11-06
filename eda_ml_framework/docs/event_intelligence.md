@@ -1,3 +1,7 @@
+> Nota de arquitectura: la organización actual de agentes está documentada en
+> [agents_structure.md](agents_structure.md). Las referencias al antiguo archivo
+> único describen la estructura anterior a la modularización.
+
 # Inteligencia por eventos y exploración automática
 
 Implementación sobre el proyecto existente, 3 de noviembre de 2026. No se creó una
