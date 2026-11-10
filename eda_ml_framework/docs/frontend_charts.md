@@ -1,0 +1,11 @@
+# Presentación interactiva de gráficos
+
+La vista `chart_theme.py` prepara copias de las figuras científicas. Las referencias visuales se traducen en tarjetas cálidas y compactas, títulos en ciruela, paleta azul–turquesa–violeta, leyendas laterales, ejes discretos y menú de tres puntos. Histogramas, dispersión, correlaciones y barras de comparación comparten este estilo. La altura se adapta a matrices, rankings y figuras con subgráficos.
+
+No se recalculan estadísticas ni se alteran bins, métricas, límites numéricos de escalas, máscaras N/D, tamaños de burbujas, barras de error o muestras. La paleta categórica y los colores de correlación se adaptan a las referencias; se conservan los valores y el dominio de la escala. Las figuras fuente siguen disponibles para reportes y exportaciones científicas por sus rutas existentes. La descarga HTML desde el frontend utiliza la presentación interactiva e incluye título y nota metodológica.
+
+En Exploración, la pestaña inicial **Panel visual** muestra distribución, boxplot, correlaciones, faltantes y dispersión. Los selectores cambian variables y categorías; el controlador reutiliza `EDAController.chart` y conserva hasta 12 figuras por contenido y selección. La matriz del panel resume hasta ocho variables, con aviso explícito. La vista detallada permanece disponible. Clustering muestra tamaños y perfiles en paralelo, con medias en sus unidades originales. El Comparador ofrece **Vista de panel** con ranking y coste; muestra variación entre folds solo cuando existen puntuaciones compatibles. No se fabrican intervalos de confianza, perfiles normalizados o distribuciones de silueta para imitar la referencia.
+
+`copy_chart` copia contratos de trazas para conservar matrices en Plotly 6; evita convertirlas en diccionarios binarios antes de la selección y exportación CSV. `figure` y la vista ampliada utilizan el mismo contrato. La recarga de presentación actualiza las vistas en procesos abiertos sin volver a entrenar modelos ni regenerar informes.
+
+Verificación: `tests/test_chart_theme.py` comprueba integridad de datos, figura fuente, máscaras, escalas, rankings y codificaciones visuales. Las pruebas existentes de visualización y producto verifican compatibilidad y generación de reportes.

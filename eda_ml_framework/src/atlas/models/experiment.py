@@ -80,6 +80,9 @@ def compare(experiments: list[Experiment]) -> pd.DataFrame:
     """Compare recorded experiments only when their problem and cohort agree."""
     if not experiments:
         raise FrameworkError("Seleccione al menos un experimento.")
+    from .methodological_validation import MethodologicalValidation
+
+    MethodologicalValidation.enforce(MethodologicalValidation.comparison(experiments))
     if len({(e.problem, e.cohort) for e in experiments}) != 1:
         raise FrameworkError("Compare solo el mismo dataset, variables y partición de prueba.")
     return pd.DataFrame(

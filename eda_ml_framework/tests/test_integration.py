@@ -126,7 +126,10 @@ def test_sidebar_compact_navigation_and_dataset():
     assert app.session_state["sidebar_compact"] is True
     assert len(app.sidebar.radio) == 0
     for item in NAV_ITEMS:
-        assert app.sidebar.button(key=f"atlas_page_{item.slug}").label == item.label
+        button = app.sidebar.button(key=f"atlas_page_{item.slug}")
+        assert button.label == item.label
+        assert not button.proto.help
+        assert button.proto.wrap is True  # No automatic overflow title tooltip.
     navigate(app, "🔎 Exploración")
     assert app.session_state["navigation"] == "🔎 Exploración"
     assert app.session_state["eda"].df.equals(original)

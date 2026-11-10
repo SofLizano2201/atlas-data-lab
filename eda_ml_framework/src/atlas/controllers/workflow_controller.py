@@ -13,6 +13,7 @@ AGENT_BY_ROUTE = {
     "📈 Regresión": "RegressionAgent",
     "⚖️ Experimentos": "ModelComparisonAgent",
     "experiment_history": "ModelComparisonAgent",
+    "scientific_lab": "ModelComparisonAgent",
 }
 
 
@@ -59,6 +60,9 @@ class WorkflowController:
             AutomaticEDAController.run(state)
         context = AgentController.context_for(state)
         selection = context.selections.get("analysis_selection") or {}
+        from atlas.controllers.methodological_controller import MethodologicalController
+
+        MethodologicalController.synchronize(state, selection)
         route = state.get("navigation", "🏠 Inicio")
         snapshot = state.setdefault("workflow_snapshot", {})
         facts = {
@@ -72,6 +76,7 @@ class WorkflowController:
                     state.get("atlas_cluster_algorithm"),
                 ),
             ),
+            "validation": (EventType.VALIDATION_CHANGED, {key: selection.get(key) for key in ("cv", "test_size", "scaler", "encoding")}),
         }
         for field, (kind, value) in facts.items():
             serialized = json.dumps(value, sort_keys=True, default=str)
@@ -124,6 +129,8 @@ class WorkflowController:
                         "clasificacion": "ClassificationAgent",
                         "regresion": "RegressionAgent",
                         "clustering": "ClusteringAgent",
+                        "classification": "ClassificationAgent",
+                        "regression": "RegressionAgent",
                     }.get(event.payload["problem"], responsible)
                 )
             if event.type in {EventType.EXPERIMENT_SAVED, EventType.COMPARISON_UPDATED}:

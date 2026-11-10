@@ -75,6 +75,12 @@ class SupervisedLearning(ExploratoryDataAnalysis):
         """Fit the existing estimator workflow and record reproducible experiment results."""
         self._columns([target])
         self._columns(predictors)
+        from .methodological_validation import MethodologicalValidation
+
+        findings = MethodologicalValidation.validate(
+            self, {"target": target, "predictors": predictors, "problem": self.problem}
+        )
+        MethodologicalValidation.enforce(findings)
         if target in predictors:
             raise FrameworkError("La variable objetivo no puede ser un predictor.")
         if self.problem not in {"clasificacion", "regresion"}:
@@ -127,6 +133,9 @@ class SupervisedLearning(ExploratoryDataAnalysis):
         if self.problem == "clasificacion" and set(y_train.unique()) != set(y_test.unique()):
             raise FrameworkError("La partición debe contener todas las clases en ambos conjuntos.")
         splitter = self._cv(y_train, cv)
+        findings += MethodologicalValidation.validate(
+            self, {}, train=x_train, test=x_test
+        )
         estimator = self.create_estimator(algorithm, parameters or {})
         if algorithm.startswith(("svm_", "svr_")) and len(x_train) > 10000:
             raise FrameworkError("SVM interactiva limitada a 10000 filas de entrenamiento.")
@@ -221,6 +230,7 @@ class SupervisedLearning(ExploratoryDataAnalysis):
             ).encode()
         ).hexdigest()
         details.update(
+            methodological_findings=findings,
             x_train=x_train,
             x_test=x_test,
             y_train=y_train,

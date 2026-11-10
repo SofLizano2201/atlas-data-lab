@@ -800,10 +800,20 @@ def clustering_page() -> None:
         st.caption(
             "Comienza por el tamaño de cada grupo. Después selecciona uno para ver los registros que contiene."
         )
-        figure(saved.cluster_sizes(result), f"overview_sizes_{result.id}")
-        with st.expander("¿Qué caracteriza a cada grupo?"):
+        sizes, profiles = st.columns(2, gap="small")
+        with sizes:
+            figure(
+                saved.cluster_sizes(result),
+                f"overview_sizes_{result.id}",
+                title="Tamaño de los grupos",
+            )
+        with profiles:
             try:
-                figure(saved.profile_heatmap(result), f"profiles_{result.id}")
+                figure(
+                    saved.profile_heatmap(result),
+                    f"profiles_{result.id}",
+                    title="Perfil de los grupos",
+                )
                 st.caption(
                     "Medias en unidades originales: compara grupos dentro de cada variable. El grupo -1 representa ruido."
                 )
@@ -1060,16 +1070,41 @@ def comparison_page() -> None:
             "k_silhouette": "Separación según la cantidad de grupos probada",
         }.get,
     )
+    dashboard = st.toggle("Vista de panel", value=True, key="comparison_dashboard")
     try:
-        figure(
-            ComparisonController.chart(
-                selected,
-                metric,
-                chart_kind,
-                direction="min" if direction.startswith("Menor") else "max",
-            ),
-            "comparison_detail",
-        )
+        if dashboard:
+            ranking, cost = st.columns(2, gap="small")
+            for column, kind, title in (
+                (ranking, "ranking", "Ranking de modelos"),
+                (cost, "cost", "Desempeño y tiempo de entrenamiento"),
+            ):
+                with column:
+                    figure(
+                        ComparisonController.chart(
+                            selected,
+                            metric,
+                            kind,
+                            direction="min" if direction.startswith("Menor") else "max",
+                        ),
+                        f"comparison_panel_{kind}",
+                        title=title,
+                    )
+            if "cv" in views:
+                figure(
+                    ComparisonController.chart(selected, metric, "cv"),
+                    "comparison_panel_cv",
+                    title="Variación entre folds de validación",
+                )
+        else:
+            figure(
+                ComparisonController.chart(
+                    selected,
+                    metric,
+                    chart_kind,
+                    direction="min" if direction.startswith("Menor") else "max",
+                ),
+                "comparison_detail",
+            )
     except ValueError as exc:
         st.info(str(exc))
     with st.expander("Ver los valores de cada prueba"):

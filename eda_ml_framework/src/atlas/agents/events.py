@@ -9,6 +9,18 @@ from atlas.core.schemas import (
 class AgentEventMixin:
     """Shared orchestration behavior; calculations remain in the Model layer."""
 
+    def recommend_experiment(self):
+        """Specialists propose read-only designs; this method grants no execution."""
+        recommendations = {
+            "EDAAgent": ("preprocessing", "Compara una transformación manteniendo algoritmo y variables; revisa antes los valores faltantes y la posible fuga de información."),
+            "ClusteringAgent": ("cluster_stability", "Repite el agrupamiento sobre las mismas filas y semillas coordinadas. Revisa ARI y cobertura; no confundas estabilidad con grupos naturales."),
+            "ClassificationAgent": ("algorithms", "Compara clasificadores con las mismas etiquetas, particiones y métricas. El ajuste del preprocesamiento debe permanecer dentro del Pipeline."),
+            "RegressionAgent": ("sensitivity", "Investiga una intensidad de regularización manteniendo las variables y el protocolo. Compara el error en sus unidades originales."),
+            "ModelComparisonAgent": ("model_stability", "Revisa diferencias pareadas y variabilidad entre repeticiones. No trates los folds como observaciones independientes ni conviertas el ranking en significación."),
+        }
+        template, explanation = recommendations[self.name]
+        return {"template": template, "explanation": explanation, "requires_confirmation": True}
+
     def on_event(self, event) -> IntelligenceFeedback:
         """Interpret stored evidence through specialist policies; never train from an event."""
         metadata = self.context.metadata()
@@ -21,6 +33,33 @@ class AgentEventMixin:
         candidates = []
         title, message, priority = advice.title, advice.next_step, "information"
         state = self.context.application_state or {}
+        if state.get("navigation") == "scientific_lab":
+            from atlas.models.scientific_experiment import ScientificExperiment
+
+            run = state.get("scientific_investigations", {}).get(state.get("active_investigation"))
+            return IntelligenceFeedback(
+                agent=self.name, event_id=event.id,
+                title="Investigación científica" if run else "Diseña una comparación controlada",
+                message=ScientificExperiment.interpretation(run) if run else self.recommend_experiment()["explanation"],
+                evidence=[f"{len(run['dataset'])} registros en la versión guardada"] if run else evidence,
+                warnings=run["warnings"][:3] if run else [],
+                priority="warning" if run and run["status"] in {"partial", "cancelled"} else "information",
+            )
+        findings = state.get("methodological_findings", [])
+        has_relevant_results = any(
+            result.problem in self.problems
+            and result.dataset_id in {self.context.dataset.dataset_id, self.context.dataset.content_hash}
+            for result in self.context.experiments
+        )
+        if findings and (any(item.blocking for item in findings) or not has_relevant_results):
+            finding = min(findings, key=lambda item: {"blocking": 0, "warning": 1, "suggestion": 2}[item.severity])
+            return IntelligenceFeedback(
+                agent=self.name, event_id=event.id, title=finding.title,
+                message=finding.explanation + " " + finding.recommended_action,
+                evidence=evidence, warnings=[f.title for f in findings[1:]],
+                priority={"blocking": "critical", "warning": "warning", "suggestion": "information"}[finding.severity],
+            )
+        warnings.extend(item.title for item in findings)
         if event.type == "ANALYSIS_FAILED":
             return IntelligenceFeedback(
                 agent=self.name,

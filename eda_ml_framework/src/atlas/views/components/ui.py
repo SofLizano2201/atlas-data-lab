@@ -7,24 +7,20 @@ from typing import Any
 import plotly.graph_objects as go
 import streamlit as st
 
-from atlas.controllers.charts import chart_frame, style
+from atlas.controllers.charts import chart_frame
+from atlas.views.components.chart_theme import chart_config, chart_title, copy_chart, present_chart
 from atlas.views.components.tables import data_table
 
 
-def figure(fig: Any, key: str) -> None:
+def figure(fig: Any, key: str, title: str | None = None) -> None:
     """Provide figure using validated inputs."""
     if isinstance(fig, go.Figure):
-        fig = style(go.Figure(fig))
+        title = title or chart_title(fig)
+        fig = present_chart(fig)
         with st.container(border=True, key=f"chart_card_{key}"):
             preferences = st.session_state.setdefault("chart_preferences", {}).setdefault(key, {})
-            actions, tools = st.columns([1, 1.4])
-            if actions.button(
-                "Abrir gráfico grande",
-                key=f"chart_fullscreen_{key}",
-                disabled=st.session_state.get("dialog_rendered_this_run", False),
-                help="Abre una vista amplia sin modificar el análisis. Dentro de un asistente puedes aumentar la altura desde las opciones.",
-            ):
-                enlarged_chart(fig, key)
+            heading, tools = st.columns([9, 1])
+            heading.html(f'<h3 class="atlas-chart-title">{escape(title)}</h3>')
             selectable = any(
                 trace.type in {"scatter", "scattergl"} and trace.mode and "markers" in trace.mode
                 for trace in fig.data
@@ -34,7 +30,13 @@ def figure(fig: Any, key: str) -> None:
                     trace.name for trace in fig.data if trace.name and trace.showlegend is not False
                 )
             )
-            with tools.popover("Explorar y descargar"):
+            with tools.popover("", icon=":material/more_vert:", help="Opciones del gráfico"):
+                if st.button(
+                    "Abrir gráfico grande",
+                    key=f"chart_fullscreen_{key}",
+                    disabled=st.session_state.get("dialog_rendered_this_run", False),
+                ):
+                    enlarged_chart(fig, key)
                 st.caption(
                     "Arrastra para acercarte; haz doble clic para restablecer. La leyenda permite ocultar y mostrar series."
                 )
@@ -78,7 +80,7 @@ def figure(fig: Any, key: str) -> None:
                 preferences.update(
                     zoom=zoom, inspect=inspect, large=enlarged, series=selected_names
                 )
-            display = go.Figure(fig)
+            display = copy_chart(fig)
             if enlarged:
                 display.update_layout(height=760)
             if inspect:
@@ -94,16 +96,7 @@ def figure(fig: Any, key: str) -> None:
                 key=f"plot_{key}_{revision}",
                 on_select="rerun" if inspect else "ignore",
                 selection_mode=("points", "box", "lasso"),
-                config={
-                    "displaylogo": False,
-                    "scrollZoom": zoom,
-                    "responsive": True,
-                    "toImageButtonOptions": {
-                        "format": "png",
-                        "scale": 2,
-                        "filename": "atlas_grafico",
-                    },
-                },
+                config=chart_config(zoom),
             )
             caption = (display.layout.meta or {}).get("atlas_caption", "")
             if caption:
@@ -118,7 +111,7 @@ def figure(fig: Any, key: str) -> None:
                     st.caption(
                         "Dibuja un rectángulo o lazo sobre los puntos para inspeccionarlos. La selección no cambia los datos ni entrena modelos."
                     )
-            with st.expander("Descargar este gráfico o sus datos"):
+            with st.expander("Descargar", expanded=False):
                 st.caption(
                     "PNG: usa la cámara en la barra del gráfico. HTML conserva zoom y leyendas. CSV contiene los datos de las series elegidas en las opciones; en histogramas y cajas son observaciones originales, no intervalos calculados por el navegador."
                 )
@@ -132,9 +125,9 @@ def figure(fig: Any, key: str) -> None:
                 if st.checkbox("Preparar archivo interactivo", key=f"chart_export_{key}"):
                     st.download_button(
                         "Descargar gráfico HTML",
-                        display.to_html(include_plotlyjs=True).replace(
-                            "</body>", f"<p>{escape(caption)}</p></body>"
-                        ),
+                        display.to_html(include_plotlyjs=True)
+                        .replace("<body>", f"<body><h1>{escape(title)}</h1>")
+                        .replace("</body>", f"<p>{escape(caption)}</p></body>"),
                         f"{key}.html",
                         "text/html",
                         key=f"download_{key}",
@@ -152,18 +145,15 @@ def format_number(value, formatting=",.2f"):
 
 @st.dialog("Vista ampliada del gráfico", width="large")
 def enlarged_chart(fig, key):
-    display = go.Figure(fig)
+    st.markdown(f"**{(fig.layout.meta or {}).get('atlas_display_title', chart_title(fig))}**")
+    display = copy_chart(fig)
     display.update_layout(height=720)
     st.plotly_chart(
         display,
         use_container_width=True,
         theme=None,
         key=f"expanded_plot_{key}",
-        config={
-            "displaylogo": False,
-            "responsive": True,
-            "toImageButtonOptions": {"format": "png", "scale": 2},
-        },
+        config=chart_config(),
     )
     caption = (display.layout.meta or {}).get("atlas_caption")
     if caption:

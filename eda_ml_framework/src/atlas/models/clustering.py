@@ -55,6 +55,12 @@ class Clustering(UnsupervisedLearning):
     ) -> Experiment:
         """Fit the existing estimator workflow and record reproducible experiment results."""
         start = perf_counter()
+        from .methodological_validation import MethodologicalValidation
+
+        findings = MethodologicalValidation.validate(
+            self, {"algorithm": algorithm, "columns": columns, **params}
+        )
+        MethodologicalValidation.enforce(findings)
         x = self.prepare(columns, scaler=scaler, encoding=encoding)
         if algorithm in {"spectral", "hierarchical", "kmedoids"} and len(x) > 2000:
             raise FrameworkError("Este algoritmo está limitado a 2000 filas.")
@@ -89,6 +95,7 @@ class Clustering(UnsupervisedLearning):
             model = cls(**params)
             labels = model.fit_predict(x)
         metrics = clustering_metrics(x, labels)
+        findings += MethodologicalValidation.validate(self, labels=labels)
         if hasattr(model, "inertia_"):
             metrics["Inercia"] = float(model.inertia_)
         config = {"columns": columns, "scaler": scaler, "encoding": encoding, "params": params}
@@ -105,7 +112,8 @@ class Clustering(UnsupervisedLearning):
             self.df.assign(cluster=labels),
             config,
             cohort,
-            {"x": x, "labels": labels, "preprocessor": self.preprocessor},
+            {"x": x, "labels": labels, "preprocessor": self.preprocessor,
+             "methodological_findings": findings},
         )
         self.experiments.append(result)
         result.record_provenance(self._df, len(self.experiments))

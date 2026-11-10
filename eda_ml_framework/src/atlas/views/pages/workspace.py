@@ -240,7 +240,11 @@ def eda_page() -> None:
     page_header("exploration")
     from atlas.views.components.intelligence_panel import render_automatic_eda_results
 
-    manual, automatic = st.tabs(["Explorar mis datos", "Análisis automático"])
+    visual, manual, automatic = st.tabs(["Panel visual", "Explorar mis datos", "Análisis automático"])
+    with visual, st.container(key="atlas_visual_dashboard"):
+        from atlas.views.components.visual_dashboard import render_visual_dashboard
+
+        render_visual_dashboard()
     with automatic:
         render_automatic_eda_results()
     with manual:

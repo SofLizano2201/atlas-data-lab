@@ -72,6 +72,18 @@ def render_intelligence_panel():
             )
             return
         name, feedback = WorkflowController.refresh_feedback(st.session_state)
+        from atlas.views.components.methodological_feedback import render_methodological_feedback
+
+        render_methodological_feedback()
+        if st.session_state.get("navigation") == "scientific_lab":
+            run = st.session_state.get("scientific_investigations", {}).get(st.session_state.get("active_investigation"))
+            if run:
+                st.markdown("**Pregunta de investigación**")
+                st.write(run["definition"].question)
+                st.progress(len(run["evaluations"]) / run["definition"].evaluations,
+                            text=f"{len(run['artifacts'])} evaluaciones válidas de {run['definition'].evaluations}")
+                for warning in run["warnings"][:3]:
+                    st.caption(warning)
         context = AgentController.context_for(st.session_state)
         module = {
             "EDAAgent": "Exploración y preparación",

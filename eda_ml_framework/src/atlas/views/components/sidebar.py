@@ -30,6 +30,7 @@ NAV_ITEMS = (
     NavItem("⚖️ Experimentos", "Comparador", "flask-conical", "experiments"),
     NavItem("📤 Reportes", "Reportes", "file-chart-column", "reports"),
     NavItem("experiment_history", "Experimentos", "file-chart-column", "history"),
+    NavItem("scientific_lab", "Laboratorio científico", "flask-conical", "lab"),
 )
 ASSET_ROOT = Path(__file__).resolve().parents[1] / "assets" / "lucide"
 SESSION_DETAIL = "Los datos y resultados permanecen en memoria solo durante esta sesión. Exporta los datasets y experimentos antes de cerrar o reiniciar la aplicación."
@@ -103,7 +104,7 @@ def render_sidebar() -> tuple[str, DeltaGenerator]:
             '<div class="atlas-section-label">ESPACIO DE TRABAJO</div>', unsafe_allow_html=True
         )
         with st.container(key="atlas_sidebar_nav"):
-            ordered = [*NAV_ITEMS[:7], NAV_ITEMS[9], *NAV_ITEMS[7:9]]
+            ordered = [*NAV_ITEMS[:7], NAV_ITEMS[10], NAV_ITEMS[9], *NAV_ITEMS[7:9]]
             for item in ordered:
                 group = {"clustering": "MACHINE LEARNING", "history": "RESULTADOS"}.get(item.slug)
                 if group:
@@ -116,7 +117,9 @@ def render_sidebar() -> tuple[str, DeltaGenerator]:
                         item.label,
                         key=f"atlas_page_{item.slug}",
                         type="primary" if active else "secondary",
-                        help=f"{item.label} · sección actual" if active else item.label,
+                        # Disable Streamlit's automatic overflow title tooltip.
+                        # CSS keeps the navigation label on one line.
+                        wrap=True,
                         use_container_width=True,
                         on_click=navigate,
                         args=(item.route,),

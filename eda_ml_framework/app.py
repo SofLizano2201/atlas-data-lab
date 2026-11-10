@@ -60,6 +60,14 @@ def main() -> None:
         with intelligence:
             render_intelligence_panel()
     render_sidebar_status(sidebar_status)
+    if page == "scientific_lab":
+        run = st.session_state.get("scientific_investigations", {}).get(st.session_state.get("active_investigation"))
+        if run and run["status"] == "running":
+            from atlas.controllers.experiment_lab_controller import ExperimentLabController
+
+            with st.spinner("Ejecutando la siguiente evaluación confirmada…"):
+                ExperimentLabController.step(st.session_state, run["id"])
+            st.rerun()
 
 
 def render_workspace(page):
@@ -90,6 +98,10 @@ def render_workspace(page):
             comparison_page()
         elif page == "experiment_history":
             experiments_page()
+        elif page == "scientific_lab":
+            from atlas.views.pages.experiment_lab import experiment_lab_page
+
+            experiment_lab_page()
         else:
             reports_page()
     except (ValueError, TypeError, KeyError, ImportError, OSError, RuntimeError) as exc:

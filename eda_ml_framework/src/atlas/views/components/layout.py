@@ -9,6 +9,8 @@ from atlas.views.components.agent_panel import render_agent_panel
 from atlas.views.components.sidebar import NAV_ITEMS, navigate
 
 PAGES = {
+    "lab": ("Laboratorio científico", "INVESTIGACIÓN REPRODUCIBLE", "Investiga con evidencia",
+            "Formula una pregunta, controla las condiciones y revisa la incertidumbre antes de concluir.", "ModelComparisonAgent"),
     "history": (
         "Experimentos",
         "RESULTADOS",
@@ -82,6 +84,8 @@ PAGES = {
 }
 
 PAGE_GUIDES = {
+    "lab": ("De una pregunta a una investigación reproducible",
+            ["Define y valida el diseño", "Confirma las evaluaciones", "Interpreta y reproduce"]),
     "home": (
         "Tu espacio para convertir datos en decisiones",
         ["Carga tus datos", "Explora o deja que ATLAS analice", "Revisa y comparte"],

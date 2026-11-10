@@ -90,6 +90,16 @@ class AgentController:
                 "analysis_selection": state.get("comparison_selection", {}),
                 "active_module": "comparison",
             }
+        elif route == "scientific_lab":
+            run = state.get("scientific_investigations", {}).get(state.get("active_investigation"))
+            context.selections = {"analysis_selection": {}, "active_module": "lab"}
+            if run:
+                context.selections["analysis_selection"] = {
+                    "problem": run["definition"].task, "target": run["definition"].target,
+                    "predictors": run["definition"].predictors,
+                    "investigation_id": run["id"], "status": run["status"],
+                    "completed": len(run["evaluations"]),
+                }
         context.selections["workspace_page"] = {
             "🏠 Inicio": "home",
             "📂 Datos": "data",

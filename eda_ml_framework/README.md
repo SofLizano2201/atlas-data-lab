@@ -39,6 +39,17 @@ modelos al cambiar una preferencia de visualización.
 
 ## Arquitectura MVC y agentes polimórficos
 
+El **Laboratorio científico** permite formular hipótesis, validar comparaciones
+controladas y confirmar entrenamientos con presupuesto explícito. Incluye
+repeticiones coordinadas, variabilidad descriptiva, estabilidad ARI y bootstrap
+pareado condicional para diseños compatibles. Exporta manifiesto, dataset y
+resultados para reproducirlos sin sobrescribir la investigación original.
+Consulta [la auditoría, el uso, los límites y la demostración real](docs/scientific_experiment_lab.md).
+
+```powershell
+python tools/demo_scientific_lab.py --confirm
+```
+
 La implementación canónica está en `src/atlas/`: modelos científicos en `models/`,
 coordinación en `controllers/`, interfaz española en `views/`, contratos y contexto
 en `core/`, y ciclo de datasets, experimentos y reportes en `services/`.
